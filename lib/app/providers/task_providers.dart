@@ -18,7 +18,10 @@ final diseaseTasksProvider = StreamProvider.family<List<Task>, String>(
   },
 );
 
-/// 完成任务：更新状态并写入时间线事件（闭环：Task → Event）。
+/// 完成任务：更新状态、写入时间线事件，并按规则生成后续任务。
+///
+/// 闭环（§2）：Task → Event（时间线）；周期任务 → 下一次到期；
+/// 光疗完成 → 24h 后反应记录任务（§11 依赖任务示例）。
 class CompleteTaskNotifier extends Notifier<void> {
   @override
   void build() {}
@@ -48,7 +51,65 @@ class CompleteTaskNotifier extends Notifier<void> {
           },
         ),
       );
+
+      // 周期任务：自动生成下一次到期（§11）。
+      if (task.isRecurring) {
+        await _spawnNextOccurrence(repo, task, now);
+      }
+      // 光疗完成：24 小时后提醒记录皮肤反应（§11 依赖任务示例）。
+      if (task.templateId == 'vitiligo.phototherapy') {
+        await _spawnReactionRecord(repo, task, now);
+      }
     }
+  }
+
+  /// 生成周期链的下一次任务（保持同一 templateId / recurrence 锚点）。
+  Future<void> _spawnNextOccurrence(
+    LocalRepository repo,
+    Task completed,
+    DateTime now,
+  ) async {
+    DateTime nextDue;
+    try {
+      nextDue = nextOccurrence(completed.recurrence, completed.dueAt);
+    } on StateError {
+      // 链已结束（超过 endAt）→ 不再生成。
+      return;
+    }
+    final next = completed.copyWith(
+      id: newId(),
+      status: TaskStatus.pending,
+      dueAt: nextDue,
+      clearCompletedAt: true,
+      createdAt: now,
+      updatedAt: now,
+    );
+    await repo.saveTask(next);
+  }
+
+  /// 光疗完成后的反应记录任务（24h 后，建议完成）。
+  Future<void> _spawnReactionRecord(
+    LocalRepository repo,
+    Task completed,
+    DateTime now,
+  ) async {
+    await repo.saveTask(
+      Task(
+        id: newId(),
+        patientId: completed.patientId,
+        diseaseId: completed.diseaseId,
+        title: '记录光疗后皮肤反应（红斑/瘙痒等）',
+        description: '观察治疗部位是否出现红斑、瘙痒、灼热或水疱，'
+            '并记录开始与持续时间（供复诊参考）。',
+        type: TaskType.record,
+        source: TaskSource.clinicalRule,
+        priority: TaskPriority.suggested,
+        dueAt: completed.dueAt.add(const Duration(hours: 24)),
+        templateId: 'vitiligo.phototherapy.reaction',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
   }
 }
 

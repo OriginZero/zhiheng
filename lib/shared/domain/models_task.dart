@@ -1,9 +1,13 @@
 import 'enums.dart';
+import 'recurrence.dart';
 
 /// 任务（开发文档 §10、§11）。
 ///
 /// 任务来源（[source]）必须可追踪：来自医生方案、临床规则、
 /// 管理计划、用药计划、监测计划或用户自建，不得笼统归为 AI。
+///
+/// 周期任务：[recurrence] 非空且 [recurrence.isRecurring] 为真时，
+/// 完成任务后自动生成下一次到期任务（保持同一 [templateId]，链可追踪）。
 class Task {
   const Task({
     required this.id,
@@ -18,6 +22,8 @@ class Task {
     this.status = TaskStatus.pending,
     required this.dueAt,
     this.completedAt,
+    this.recurrence = TaskRecurrence.none,
+    this.templateId,
     this.createdAt,
     this.updatedAt,
   });
@@ -36,10 +42,19 @@ class Task {
   /// 任务到期时间（首页「今日任务」按日期分组）。
   final DateTime dueAt;
   final DateTime? completedAt;
+
+  /// 重复规则（光疗每周 2–3 次、用药每日等）。
+  final TaskRecurrence recurrence;
+
+  /// 周期任务链的模板 id（同一链的所有任务共享）。
+  final String? templateId;
+
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   bool get isDone => status != TaskStatus.pending;
+
+  bool get isRecurring => recurrence.isRecurring;
 
   Task copyWith({
     String? id,
@@ -58,6 +73,9 @@ class Task {
     DateTime? dueAt,
     DateTime? completedAt,
     bool clearCompletedAt = false,
+    TaskRecurrence? recurrence,
+    String? templateId,
+    bool clearTemplateId = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -75,6 +93,8 @@ class Task {
       status: status ?? this.status,
       dueAt: dueAt ?? this.dueAt,
       completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
+      recurrence: recurrence ?? this.recurrence,
+      templateId: clearTemplateId ? null : (templateId ?? this.templateId),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -52,6 +52,8 @@ class CarePlans extends Table {
 }
 
 /// 任务表（§10）。
+///
+/// 周期性字段支持光疗（每周固定几回）、用药（每日多次）等周期任务（§11）。
 @DataClassName('TaskRow')
 class Tasks extends Table {
   TextColumn get id => text()();
@@ -66,6 +68,26 @@ class Tasks extends Table {
   TextColumn get status => text()();
   DateTimeColumn get dueAt => dateTime()();
   DateTimeColumn get completedAt => dateTime().nullable()();
+
+  // ---- 周期性字段 ----
+  /// none / daily / weekly（null 视为 none）。
+  TextColumn get recurrenceFrequency => text().nullable()();
+
+  /// 间隔：每 N 天 / 每 N 周。
+  IntColumn get recurrenceInterval => integer().nullable()();
+
+  /// JSON 数组，元素为 DateTime.weekday（1=周一 … 7=周日），仅每周重复使用。
+  TextColumn get recurrenceWeekdays => text().nullable()();
+
+  /// 重复结束日期（疗程结束，§44 历史不可变由事件体现）。
+  DateTimeColumn get recurrenceEndAt => dateTime().nullable()();
+
+  /// 周期链的锚点：链中第一次到期日（每 N 周的计数基准）。
+  DateTimeColumn get recurrenceAnchor => dateTime().nullable()();
+
+  /// 创建该任务的模板 id（来源可追踪，§10）。
+  TextColumn get templateId => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -129,7 +151,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -138,6 +160,15 @@ class AppDatabase extends _$AppDatabase {
           // v2：新增偏好表。
           if (from < 2) {
             await m.createTable(preferences);
+          }
+          // v3：任务周期性字段。
+          if (from < 3) {
+            await m.addColumn(tasks, tasks.recurrenceFrequency);
+            await m.addColumn(tasks, tasks.recurrenceInterval);
+            await m.addColumn(tasks, tasks.recurrenceWeekdays);
+            await m.addColumn(tasks, tasks.recurrenceEndAt);
+            await m.addColumn(tasks, tasks.recurrenceAnchor);
+            await m.addColumn(tasks, tasks.templateId);
           }
         },
       );

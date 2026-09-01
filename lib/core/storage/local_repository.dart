@@ -16,77 +16,87 @@ DateTime _now() => DateTime.now();
 // ---- Drift 行 -> 领域模型映射 ----
 
 Patient patientFromRow(PatientRow d) => Patient(
-      id: d.id,
-      name: d.name,
-      gender: Gender.values.byName(d.gender),
-      birthDate: d.birthDate,
-      createdAt: d.createdAt,
-      updatedAt: d.updatedAt,
-    );
+  id: d.id,
+  name: d.name,
+  gender: Gender.values.byName(d.gender),
+  birthDate: d.birthDate,
+  createdAt: d.createdAt,
+  updatedAt: d.updatedAt,
+);
 
 Disease diseaseFromRow(DiseaseRow d) => Disease(
-      id: d.id,
-      patientId: d.patientId,
-      code: d.code,
-      name: d.name,
-      status: DiseaseStatus.values.byName(d.status),
-      diagnosedAt: d.diagnosedAt,
-      notes: d.notes,
-      createdAt: d.createdAt,
-      updatedAt: d.updatedAt,
-    );
+  id: d.id,
+  patientId: d.patientId,
+  code: d.code,
+  name: d.name,
+  status: DiseaseStatus.values.byName(d.status),
+  diagnosedAt: d.diagnosedAt,
+  notes: d.notes,
+  createdAt: d.createdAt,
+  updatedAt: d.updatedAt,
+);
 
 CarePlan carePlanFromRow(CarePlanRow d) => CarePlan(
-      id: d.id,
-      patientId: d.patientId,
-      diseaseId: d.diseaseId,
-      title: d.title,
-      description: d.description,
-      status: CarePlanStatus.values.byName(d.status),
-      startAt: d.startAt,
-      endAt: d.endAt,
-      createdAt: d.createdAt,
-      updatedAt: d.updatedAt,
-    );
+  id: d.id,
+  patientId: d.patientId,
+  diseaseId: d.diseaseId,
+  title: d.title,
+  description: d.description,
+  status: CarePlanStatus.values.byName(d.status),
+  startAt: d.startAt,
+  endAt: d.endAt,
+  createdAt: d.createdAt,
+  updatedAt: d.updatedAt,
+);
 
 Task taskFromRow(TaskRow d) => Task(
-      id: d.id,
-      patientId: d.patientId,
-      diseaseId: d.diseaseId,
-      carePlanId: d.carePlanId,
-      title: d.title,
-      description: d.description,
-      type: TaskType.values.byName(d.type),
-      source: TaskSource.values.byName(d.source),
-      priority: TaskPriority.values.byName(d.priority),
-      status: TaskStatus.values.byName(d.status),
-      dueAt: d.dueAt,
-      completedAt: d.completedAt,
-      createdAt: d.createdAt,
-      updatedAt: d.updatedAt,
-    );
+  id: d.id,
+  patientId: d.patientId,
+  diseaseId: d.diseaseId,
+  carePlanId: d.carePlanId,
+  title: d.title,
+  description: d.description,
+  type: TaskType.values.byName(d.type),
+  source: TaskSource.values.byName(d.source),
+  priority: TaskPriority.values.byName(d.priority),
+  status: TaskStatus.values.byName(d.status),
+  dueAt: d.dueAt,
+  completedAt: d.completedAt,
+  recurrence: d.recurrenceFrequency == null
+      ? TaskRecurrence.none
+      : TaskRecurrence(
+          frequency: RecurrenceFrequency.values.byName(d.recurrenceFrequency!),
+          interval: d.recurrenceInterval ?? 1,
+          weekdays: TaskRecurrence.weekdaysFromJson(d.recurrenceWeekdays),
+          endAt: d.recurrenceEndAt,
+          anchor: d.recurrenceAnchor,
+        ),
+  templateId: d.templateId,
+  createdAt: d.createdAt,
+  updatedAt: d.updatedAt,
+);
 
 Reminder reminderFromRow(ReminderRow d) => Reminder(
-      id: d.id,
-      taskId: d.taskId,
-      fireAt: d.fireAt,
-      status: ReminderStatus.values.byName(d.status),
-      createdAt: d.createdAt,
-      updatedAt: d.updatedAt,
-    );
+  id: d.id,
+  taskId: d.taskId,
+  fireAt: d.fireAt,
+  status: ReminderStatus.values.byName(d.status),
+  createdAt: d.createdAt,
+  updatedAt: d.updatedAt,
+);
 
 HealthEvent eventFromRow(EventRow d) => HealthEvent(
-      id: d.id,
-      patientId: d.patientId,
-      diseaseId: d.diseaseId,
-      type: EventType.values.byName(d.type),
-      occurredAt: d.occurredAt,
-      createdAt: d.createdAt,
-      title: d.title,
-      source: EventSource.values.byName(d.source),
-      payload: (jsonDecode(d.payload) as Map).cast<String, Object?>(),
-      notes: d.notes,
-    );
+  id: d.id,
+  patientId: d.patientId,
+  diseaseId: d.diseaseId,
+  type: EventType.values.byName(d.type),
+  occurredAt: d.occurredAt,
+  createdAt: d.createdAt,
+  title: d.title,
+  source: EventSource.values.byName(d.source),
+  payload: (jsonDecode(d.payload) as Map).cast<String, Object?>(),
+  notes: d.notes,
+);
 
 /// 仓储：领域层与存储之间唯一通道（开发文档 §19）。
 ///
@@ -108,7 +118,9 @@ class LocalRepository {
 
   Future<void> savePatient(Patient patient) {
     final now = _now();
-    return _db.into(_db.patients).insertOnConflictUpdate(
+    return _db
+        .into(_db.patients)
+        .insertOnConflictUpdate(
           PatientsCompanion.insert(
             id: patient.id,
             name: patient.name,
@@ -132,7 +144,9 @@ class LocalRepository {
 
   Future<void> saveDisease(Disease disease) {
     final now = _now();
-    return _db.into(_db.diseases).insertOnConflictUpdate(
+    return _db
+        .into(_db.diseases)
+        .insertOnConflictUpdate(
           DiseasesCompanion.insert(
             id: disease.id,
             patientId: disease.patientId,
@@ -159,7 +173,9 @@ class LocalRepository {
 
   Future<void> saveCarePlan(CarePlan plan) {
     final now = _now();
-    return _db.into(_db.carePlans).insertOnConflictUpdate(
+    return _db
+        .into(_db.carePlans)
+        .insertOnConflictUpdate(
           CarePlansCompanion.insert(
             id: plan.id,
             patientId: plan.patientId,
@@ -211,6 +227,7 @@ class LocalRepository {
         .watch()
         .map((rows) => rows.map(taskFromRow).toList());
   }
+
   /// 监听某疾病下所有未完成任务（疾病详情页）。
   Stream<List<Task>> watchDiseaseTasks(String patientId, String diseaseId) {
     return (_db.select(_db.tasks)
@@ -227,7 +244,9 @@ class LocalRepository {
 
   Future<void> saveTask(Task task) {
     final now = _now();
-    return _db.into(_db.tasks).insertOnConflictUpdate(
+    return _db
+        .into(_db.tasks)
+        .insertOnConflictUpdate(
           TasksCompanion.insert(
             id: task.id,
             patientId: task.patientId,
@@ -241,6 +260,20 @@ class LocalRepository {
             status: task.status.name,
             dueAt: task.dueAt,
             completedAt: Value(task.completedAt),
+            recurrenceFrequency: Value(
+              task.recurrence.isRecurring
+                  ? task.recurrence.frequency.name
+                  : null,
+            ),
+            recurrenceInterval: Value(
+              task.recurrence.isRecurring ? task.recurrence.interval : null,
+            ),
+            recurrenceWeekdays: Value(
+              task.recurrence.isRecurring ? task.recurrence.weekdaysJson : null,
+            ),
+            recurrenceEndAt: Value(task.recurrence.endAt),
+            recurrenceAnchor: Value(task.recurrence.anchor),
+            templateId: Value(task.templateId),
             createdAt: task.createdAt ?? now,
             updatedAt: now,
           ),
@@ -253,9 +286,7 @@ class LocalRepository {
     await (_db.update(_db.tasks)..where((t) => t.id.equals(taskId))).write(
       TasksCompanion(
         status: Value(status.name),
-        completedAt: Value(
-          status == TaskStatus.completed ? now : null,
-        ),
+        completedAt: Value(status == TaskStatus.completed ? now : null),
         updatedAt: Value(now),
       ),
     );
@@ -265,7 +296,9 @@ class LocalRepository {
 
   Future<void> saveReminder(Reminder reminder) {
     final now = _now();
-    return _db.into(_db.reminders).insertOnConflictUpdate(
+    return _db
+        .into(_db.reminders)
+        .insertOnConflictUpdate(
           RemindersCompanion.insert(
             id: reminder.id,
             taskId: reminder.taskId,
@@ -312,7 +345,9 @@ class LocalRepository {
 
   /// 新增事件（追加式，不改写历史）。
   Future<void> addEvent(HealthEvent event) {
-    return _db.into(_db.events).insert(
+    return _db
+        .into(_db.events)
+        .insert(
           EventsCompanion.insert(
             id: event.id,
             patientId: event.patientId,
@@ -332,15 +367,17 @@ class LocalRepository {
 
   /// 读取偏好（不存在返回 null）。
   Future<String?> readPreference(String key) async {
-    final row = await (_db.select(_db.preferences)
-          ..where((t) => t.key.equals(key)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.preferences,
+    )..where((t) => t.key.equals(key))).getSingleOrNull();
     return row?.value;
   }
 
   /// 写入偏好（按键覆盖）。
   Future<void> writePreference(String key, String value) {
-    return _db.into(_db.preferences).insertOnConflictUpdate(
+    return _db
+        .into(_db.preferences)
+        .insertOnConflictUpdate(
           PreferencesCompanion.insert(
             key: key,
             value: value,

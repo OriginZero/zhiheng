@@ -6,12 +6,13 @@ import '../../app/providers/core_providers.dart';
 import '../../app/providers/task_providers.dart';
 import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
+import '../../features/task/disease_templates.dart';
 import '../../shared/domain/domain.dart';
 import '../../shared/forms/task_form_sheet.dart';
 import '../../shared/widgets/async_status_view.dart';
 import '../../shared/widgets/glass/glass.dart';
 
-/// 疾病详情页：当前计划、未完成任务、添加任务入口。
+/// 疾病详情页：指南模板、当前计划、未完成任务、添加任务入口。
 ///
 /// 通过路由参数 [diseaseId] 定位。
 class DiseaseDetailPage extends ConsumerWidget {
@@ -38,6 +39,7 @@ class DiseaseDetailPage extends ConsumerWidget {
 
     final tasks = ref.watch(diseaseTasksProvider(diseaseId));
     final plans = ref.watch(diseaseCarePlansProvider(diseaseId));
+    final templates = DiseaseTemplates.forDisease(disease.code);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -46,6 +48,18 @@ class DiseaseDetailPage extends ConsumerWidget {
         padding: EdgeInsets.all(SpacingTokens.x5),
         children: [
           _StatusCard(disease: disease),
+          if (templates.isNotEmpty) ...[
+            SizedBox(height: SpacingTokens.x5),
+            Text('指南推荐模板', style: context.headlineStyle),
+            SizedBox(height: SpacingTokens.x2),
+            Text(
+              '模板依据已发布的诊疗指南预填周期，具体剂量与频率以医生方案为准。',
+              style: context.captionStyle,
+            ),
+            SizedBox(height: SpacingTokens.x2),
+            for (final template in templates)
+              _TemplateCard(template: template, disease: disease),
+          ],
           SizedBox(height: SpacingTokens.x5),
           _SectionHeader(
             title: '管理计划',
@@ -110,6 +124,94 @@ class DiseaseDetailPage extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => _CarePlanFormSheet(disease: disease),
     );
+  }
+}
+
+/// 指南模板卡：展示依据，点击按模板创建周期任务。
+class _TemplateCard extends ConsumerWidget {
+  const _TemplateCard({required this.template, required this.disease});
+
+  final DiseaseTaskTemplate template;
+  final Disease disease;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final knowledge = KnowledgeBase.entries
+        .where((e) => e.id == template.knowledgeId)
+        .firstOrNull;
+
+    return GlassCard(
+      margin: EdgeInsets.only(bottom: SpacingTokens.x2),
+      onTap: () => _create(context, ref),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome_outlined, size: 18, color: colors.brand),
+              SizedBox(width: SpacingTokens.x2),
+              Expanded(
+                child: Text(template.title, style: context.bodyBoldStyle),
+              ),
+              Text(
+                template.defaultRecurrence.descriptionZh,
+                style: context.captionStyle.copyWith(color: colors.brand),
+              ),
+            ],
+          ),
+          SizedBox(height: SpacingTokens.x1),
+          Text(template.description, style: context.secondaryLabelStyle),
+          if (knowledge != null) ...[
+            SizedBox(height: SpacingTokens.x2),
+            Text(
+              '依据：${knowledge.title}（${knowledge.organization}）',
+              style: context.captionStyle,
+            ),
+          ],
+          SizedBox(height: SpacingTokens.x2),
+          Text(
+            '按此模板创建 → 首次任务将出现在首页今日管理，'
+            '完成后自动生成下一次',
+            style: context.captionStyle.copyWith(color: colors.brand),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _create(BuildContext context, WidgetRef ref) async {
+    final repo = ref.read(repositoryProvider);
+    final now = DateTime.now();
+
+    // 首次到期：从明天起按规则取最近的允许日期（保留当前时刻）。
+    final startDate = firstOccurrence(
+      template.defaultRecurrence,
+      now.add(const Duration(days: 1)),
+    );
+    final dueAt = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day,
+      now.hour,
+      now.minute,
+    );
+
+    final task = template.buildFirstTask(
+      patientId: localPatientId,
+      diseaseId: disease.id,
+      dueAt: dueAt,
+      endAtMonths:
+          template.defaultEndAtMonths > 0 ? template.defaultEndAtMonths : null,
+    );
+    await repo.saveTask(task);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已创建「${template.title}」，首次：'
+            '${DateFormat('M月d日 HH:mm').format(dueAt)}')),
+      );
+    }
   }
 }
 
@@ -211,9 +313,24 @@ class _TaskTile extends ConsumerWidget {
               children: [
                 Text(task.title, style: context.bodyBoldStyle),
                 SizedBox(height: SpacingTokens.x1),
-                Text(
-                  '${task.type.labelZh} · ${DateFormat('M/d HH:mm').format(task.dueAt)}',
-                  style: context.captionStyle,
+                Row(
+                  children: [
+                    Text(
+                      '${task.type.labelZh} · '
+                      '${DateFormat('M/d HH:mm').format(task.dueAt)}',
+                      style: context.captionStyle,
+                    ),
+                    if (task.isRecurring) ...[
+                      SizedBox(width: SpacingTokens.x2),
+                      Icon(Icons.repeat, size: 12, color: colors.brand),
+                      Text(
+                        task.recurrence.descriptionZh,
+                        style: context.captionStyle.copyWith(
+                          color: colors.brand,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),

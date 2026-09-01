@@ -110,6 +110,9 @@ void main() {
     expect(find.text('管理计划'), findsOneWidget);
     expect(find.text('待办任务'), findsOneWidget);
 
+    // 模板区在页面上方，「添加任务」按钮可能在视口外，先滚动到可见。
+    await tester.scrollUntilVisible(find.text('添加任务'), 120);
+    await tester.pump();
     await tester.tap(find.text('添加任务'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
@@ -122,7 +125,8 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 400)));
     await tester.pump();
 
-    expect(find.text('308nm 光疗'), findsOneWidget);
+    // 模板卡标题 + 新创建的任务各出现一次（此断言验证任务已出现在列表中）。
+    expect(find.text('308nm 光疗'), findsNWidgets(2));
 
     await tester.runAsync(() => repo.close());
   });

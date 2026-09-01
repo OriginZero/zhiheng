@@ -1705,6 +1705,73 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _recurrenceFrequencyMeta =
+      const VerificationMeta('recurrenceFrequency');
+  @override
+  late final GeneratedColumn<String> recurrenceFrequency =
+      GeneratedColumn<String>(
+        'recurrence_frequency',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _recurrenceIntervalMeta =
+      const VerificationMeta('recurrenceInterval');
+  @override
+  late final GeneratedColumn<int> recurrenceInterval = GeneratedColumn<int>(
+    'recurrence_interval',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _recurrenceWeekdaysMeta =
+      const VerificationMeta('recurrenceWeekdays');
+  @override
+  late final GeneratedColumn<String> recurrenceWeekdays =
+      GeneratedColumn<String>(
+        'recurrence_weekdays',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _recurrenceEndAtMeta = const VerificationMeta(
+    'recurrenceEndAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> recurrenceEndAt =
+      GeneratedColumn<DateTime>(
+        'recurrence_end_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _recurrenceAnchorMeta = const VerificationMeta(
+    'recurrenceAnchor',
+  );
+  @override
+  late final GeneratedColumn<DateTime> recurrenceAnchor =
+      GeneratedColumn<DateTime>(
+        'recurrence_anchor',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _templateIdMeta = const VerificationMeta(
+    'templateId',
+  );
+  @override
+  late final GeneratedColumn<String> templateId = GeneratedColumn<String>(
+    'template_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1741,6 +1808,12 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     status,
     dueAt,
     completedAt,
+    recurrenceFrequency,
+    recurrenceInterval,
+    recurrenceWeekdays,
+    recurrenceEndAt,
+    recurrenceAnchor,
+    templateId,
     createdAt,
     updatedAt,
   ];
@@ -1850,6 +1923,57 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
         ),
       );
     }
+    if (data.containsKey('recurrence_frequency')) {
+      context.handle(
+        _recurrenceFrequencyMeta,
+        recurrenceFrequency.isAcceptableOrUnknown(
+          data['recurrence_frequency']!,
+          _recurrenceFrequencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recurrence_interval')) {
+      context.handle(
+        _recurrenceIntervalMeta,
+        recurrenceInterval.isAcceptableOrUnknown(
+          data['recurrence_interval']!,
+          _recurrenceIntervalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recurrence_weekdays')) {
+      context.handle(
+        _recurrenceWeekdaysMeta,
+        recurrenceWeekdays.isAcceptableOrUnknown(
+          data['recurrence_weekdays']!,
+          _recurrenceWeekdaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recurrence_end_at')) {
+      context.handle(
+        _recurrenceEndAtMeta,
+        recurrenceEndAt.isAcceptableOrUnknown(
+          data['recurrence_end_at']!,
+          _recurrenceEndAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recurrence_anchor')) {
+      context.handle(
+        _recurrenceAnchorMeta,
+        recurrenceAnchor.isAcceptableOrUnknown(
+          data['recurrence_anchor']!,
+          _recurrenceAnchorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('template_id')) {
+      context.handle(
+        _templateIdMeta,
+        templateId.isAcceptableOrUnknown(data['template_id']!, _templateIdMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1923,6 +2047,30 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
       ),
+      recurrenceFrequency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recurrence_frequency'],
+      ),
+      recurrenceInterval: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}recurrence_interval'],
+      ),
+      recurrenceWeekdays: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recurrence_weekdays'],
+      ),
+      recurrenceEndAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}recurrence_end_at'],
+      ),
+      recurrenceAnchor: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}recurrence_anchor'],
+      ),
+      templateId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}template_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1953,6 +2101,24 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   final String status;
   final DateTime dueAt;
   final DateTime? completedAt;
+
+  /// none / daily / weekly（null 视为 none）。
+  final String? recurrenceFrequency;
+
+  /// 间隔：每 N 天 / 每 N 周。
+  final int? recurrenceInterval;
+
+  /// JSON 数组，元素为 DateTime.weekday（1=周一 … 7=周日），仅每周重复使用。
+  final String? recurrenceWeekdays;
+
+  /// 重复结束日期（疗程结束，§44 历史不可变由事件体现）。
+  final DateTime? recurrenceEndAt;
+
+  /// 周期链的锚点：链中第一次到期日（每 N 周的计数基准）。
+  final DateTime? recurrenceAnchor;
+
+  /// 创建该任务的模板 id（来源可追踪，§10）。
+  final String? templateId;
   final DateTime createdAt;
   final DateTime updatedAt;
   const TaskRow({
@@ -1968,6 +2134,12 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     required this.status,
     required this.dueAt,
     this.completedAt,
+    this.recurrenceFrequency,
+    this.recurrenceInterval,
+    this.recurrenceWeekdays,
+    this.recurrenceEndAt,
+    this.recurrenceAnchor,
+    this.templateId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -1993,6 +2165,24 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     map['due_at'] = Variable<DateTime>(dueAt);
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    if (!nullToAbsent || recurrenceFrequency != null) {
+      map['recurrence_frequency'] = Variable<String>(recurrenceFrequency);
+    }
+    if (!nullToAbsent || recurrenceInterval != null) {
+      map['recurrence_interval'] = Variable<int>(recurrenceInterval);
+    }
+    if (!nullToAbsent || recurrenceWeekdays != null) {
+      map['recurrence_weekdays'] = Variable<String>(recurrenceWeekdays);
+    }
+    if (!nullToAbsent || recurrenceEndAt != null) {
+      map['recurrence_end_at'] = Variable<DateTime>(recurrenceEndAt);
+    }
+    if (!nullToAbsent || recurrenceAnchor != null) {
+      map['recurrence_anchor'] = Variable<DateTime>(recurrenceAnchor);
+    }
+    if (!nullToAbsent || templateId != null) {
+      map['template_id'] = Variable<String>(templateId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -2021,6 +2211,24 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
+      recurrenceFrequency: recurrenceFrequency == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurrenceFrequency),
+      recurrenceInterval: recurrenceInterval == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurrenceInterval),
+      recurrenceWeekdays: recurrenceWeekdays == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurrenceWeekdays),
+      recurrenceEndAt: recurrenceEndAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurrenceEndAt),
+      recurrenceAnchor: recurrenceAnchor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurrenceAnchor),
+      templateId: templateId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(templateId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -2044,6 +2252,18 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       status: serializer.fromJson<String>(json['status']),
       dueAt: serializer.fromJson<DateTime>(json['dueAt']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      recurrenceFrequency: serializer.fromJson<String?>(
+        json['recurrenceFrequency'],
+      ),
+      recurrenceInterval: serializer.fromJson<int?>(json['recurrenceInterval']),
+      recurrenceWeekdays: serializer.fromJson<String?>(
+        json['recurrenceWeekdays'],
+      ),
+      recurrenceEndAt: serializer.fromJson<DateTime?>(json['recurrenceEndAt']),
+      recurrenceAnchor: serializer.fromJson<DateTime?>(
+        json['recurrenceAnchor'],
+      ),
+      templateId: serializer.fromJson<String?>(json['templateId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -2064,6 +2284,12 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       'status': serializer.toJson<String>(status),
       'dueAt': serializer.toJson<DateTime>(dueAt),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'recurrenceFrequency': serializer.toJson<String?>(recurrenceFrequency),
+      'recurrenceInterval': serializer.toJson<int?>(recurrenceInterval),
+      'recurrenceWeekdays': serializer.toJson<String?>(recurrenceWeekdays),
+      'recurrenceEndAt': serializer.toJson<DateTime?>(recurrenceEndAt),
+      'recurrenceAnchor': serializer.toJson<DateTime?>(recurrenceAnchor),
+      'templateId': serializer.toJson<String?>(templateId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -2082,6 +2308,12 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     String? status,
     DateTime? dueAt,
     Value<DateTime?> completedAt = const Value.absent(),
+    Value<String?> recurrenceFrequency = const Value.absent(),
+    Value<int?> recurrenceInterval = const Value.absent(),
+    Value<String?> recurrenceWeekdays = const Value.absent(),
+    Value<DateTime?> recurrenceEndAt = const Value.absent(),
+    Value<DateTime?> recurrenceAnchor = const Value.absent(),
+    Value<String?> templateId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => TaskRow(
@@ -2097,6 +2329,22 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     status: status ?? this.status,
     dueAt: dueAt ?? this.dueAt,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    recurrenceFrequency: recurrenceFrequency.present
+        ? recurrenceFrequency.value
+        : this.recurrenceFrequency,
+    recurrenceInterval: recurrenceInterval.present
+        ? recurrenceInterval.value
+        : this.recurrenceInterval,
+    recurrenceWeekdays: recurrenceWeekdays.present
+        ? recurrenceWeekdays.value
+        : this.recurrenceWeekdays,
+    recurrenceEndAt: recurrenceEndAt.present
+        ? recurrenceEndAt.value
+        : this.recurrenceEndAt,
+    recurrenceAnchor: recurrenceAnchor.present
+        ? recurrenceAnchor.value
+        : this.recurrenceAnchor,
+    templateId: templateId.present ? templateId.value : this.templateId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -2120,6 +2368,24 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
+      recurrenceFrequency: data.recurrenceFrequency.present
+          ? data.recurrenceFrequency.value
+          : this.recurrenceFrequency,
+      recurrenceInterval: data.recurrenceInterval.present
+          ? data.recurrenceInterval.value
+          : this.recurrenceInterval,
+      recurrenceWeekdays: data.recurrenceWeekdays.present
+          ? data.recurrenceWeekdays.value
+          : this.recurrenceWeekdays,
+      recurrenceEndAt: data.recurrenceEndAt.present
+          ? data.recurrenceEndAt.value
+          : this.recurrenceEndAt,
+      recurrenceAnchor: data.recurrenceAnchor.present
+          ? data.recurrenceAnchor.value
+          : this.recurrenceAnchor,
+      templateId: data.templateId.present
+          ? data.templateId.value
+          : this.templateId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -2140,6 +2406,12 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           ..write('status: $status, ')
           ..write('dueAt: $dueAt, ')
           ..write('completedAt: $completedAt, ')
+          ..write('recurrenceFrequency: $recurrenceFrequency, ')
+          ..write('recurrenceInterval: $recurrenceInterval, ')
+          ..write('recurrenceWeekdays: $recurrenceWeekdays, ')
+          ..write('recurrenceEndAt: $recurrenceEndAt, ')
+          ..write('recurrenceAnchor: $recurrenceAnchor, ')
+          ..write('templateId: $templateId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2160,6 +2432,12 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     status,
     dueAt,
     completedAt,
+    recurrenceFrequency,
+    recurrenceInterval,
+    recurrenceWeekdays,
+    recurrenceEndAt,
+    recurrenceAnchor,
+    templateId,
     createdAt,
     updatedAt,
   );
@@ -2179,6 +2457,12 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           other.status == this.status &&
           other.dueAt == this.dueAt &&
           other.completedAt == this.completedAt &&
+          other.recurrenceFrequency == this.recurrenceFrequency &&
+          other.recurrenceInterval == this.recurrenceInterval &&
+          other.recurrenceWeekdays == this.recurrenceWeekdays &&
+          other.recurrenceEndAt == this.recurrenceEndAt &&
+          other.recurrenceAnchor == this.recurrenceAnchor &&
+          other.templateId == this.templateId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -2196,6 +2480,12 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   final Value<String> status;
   final Value<DateTime> dueAt;
   final Value<DateTime?> completedAt;
+  final Value<String?> recurrenceFrequency;
+  final Value<int?> recurrenceInterval;
+  final Value<String?> recurrenceWeekdays;
+  final Value<DateTime?> recurrenceEndAt;
+  final Value<DateTime?> recurrenceAnchor;
+  final Value<String?> templateId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -2212,6 +2502,12 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.status = const Value.absent(),
     this.dueAt = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.recurrenceFrequency = const Value.absent(),
+    this.recurrenceInterval = const Value.absent(),
+    this.recurrenceWeekdays = const Value.absent(),
+    this.recurrenceEndAt = const Value.absent(),
+    this.recurrenceAnchor = const Value.absent(),
+    this.templateId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2229,6 +2525,12 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     required String status,
     required DateTime dueAt,
     this.completedAt = const Value.absent(),
+    this.recurrenceFrequency = const Value.absent(),
+    this.recurrenceInterval = const Value.absent(),
+    this.recurrenceWeekdays = const Value.absent(),
+    this.recurrenceEndAt = const Value.absent(),
+    this.recurrenceAnchor = const Value.absent(),
+    this.templateId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -2255,6 +2557,12 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Expression<String>? status,
     Expression<DateTime>? dueAt,
     Expression<DateTime>? completedAt,
+    Expression<String>? recurrenceFrequency,
+    Expression<int>? recurrenceInterval,
+    Expression<String>? recurrenceWeekdays,
+    Expression<DateTime>? recurrenceEndAt,
+    Expression<DateTime>? recurrenceAnchor,
+    Expression<String>? templateId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -2272,6 +2580,13 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       if (status != null) 'status': status,
       if (dueAt != null) 'due_at': dueAt,
       if (completedAt != null) 'completed_at': completedAt,
+      if (recurrenceFrequency != null)
+        'recurrence_frequency': recurrenceFrequency,
+      if (recurrenceInterval != null) 'recurrence_interval': recurrenceInterval,
+      if (recurrenceWeekdays != null) 'recurrence_weekdays': recurrenceWeekdays,
+      if (recurrenceEndAt != null) 'recurrence_end_at': recurrenceEndAt,
+      if (recurrenceAnchor != null) 'recurrence_anchor': recurrenceAnchor,
+      if (templateId != null) 'template_id': templateId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -2291,6 +2606,12 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Value<String>? status,
     Value<DateTime>? dueAt,
     Value<DateTime?>? completedAt,
+    Value<String?>? recurrenceFrequency,
+    Value<int?>? recurrenceInterval,
+    Value<String?>? recurrenceWeekdays,
+    Value<DateTime?>? recurrenceEndAt,
+    Value<DateTime?>? recurrenceAnchor,
+    Value<String?>? templateId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -2308,6 +2629,12 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       status: status ?? this.status,
       dueAt: dueAt ?? this.dueAt,
       completedAt: completedAt ?? this.completedAt,
+      recurrenceFrequency: recurrenceFrequency ?? this.recurrenceFrequency,
+      recurrenceInterval: recurrenceInterval ?? this.recurrenceInterval,
+      recurrenceWeekdays: recurrenceWeekdays ?? this.recurrenceWeekdays,
+      recurrenceEndAt: recurrenceEndAt ?? this.recurrenceEndAt,
+      recurrenceAnchor: recurrenceAnchor ?? this.recurrenceAnchor,
+      templateId: templateId ?? this.templateId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -2353,6 +2680,24 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
     }
+    if (recurrenceFrequency.present) {
+      map['recurrence_frequency'] = Variable<String>(recurrenceFrequency.value);
+    }
+    if (recurrenceInterval.present) {
+      map['recurrence_interval'] = Variable<int>(recurrenceInterval.value);
+    }
+    if (recurrenceWeekdays.present) {
+      map['recurrence_weekdays'] = Variable<String>(recurrenceWeekdays.value);
+    }
+    if (recurrenceEndAt.present) {
+      map['recurrence_end_at'] = Variable<DateTime>(recurrenceEndAt.value);
+    }
+    if (recurrenceAnchor.present) {
+      map['recurrence_anchor'] = Variable<DateTime>(recurrenceAnchor.value);
+    }
+    if (templateId.present) {
+      map['template_id'] = Variable<String>(templateId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2380,6 +2725,12 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
           ..write('status: $status, ')
           ..write('dueAt: $dueAt, ')
           ..write('completedAt: $completedAt, ')
+          ..write('recurrenceFrequency: $recurrenceFrequency, ')
+          ..write('recurrenceInterval: $recurrenceInterval, ')
+          ..write('recurrenceWeekdays: $recurrenceWeekdays, ')
+          ..write('recurrenceEndAt: $recurrenceEndAt, ')
+          ..write('recurrenceAnchor: $recurrenceAnchor, ')
+          ..write('templateId: $templateId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -4480,6 +4831,12 @@ typedef $$TasksTableCreateCompanionBuilder = TasksCompanion Function({
   required String status,
   required DateTime dueAt,
   Value<DateTime?> completedAt,
+  Value<String?> recurrenceFrequency,
+  Value<int?> recurrenceInterval,
+  Value<String?> recurrenceWeekdays,
+  Value<DateTime?> recurrenceEndAt,
+  Value<DateTime?> recurrenceAnchor,
+  Value<String?> templateId,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -4497,6 +4854,12 @@ typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
   Value<String> status,
   Value<DateTime> dueAt,
   Value<DateTime?> completedAt,
+  Value<String?> recurrenceFrequency,
+  Value<int?> recurrenceInterval,
+  Value<String?> recurrenceWeekdays,
+  Value<DateTime?> recurrenceEndAt,
+  Value<DateTime?> recurrenceAnchor,
+  Value<String?> templateId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -4567,6 +4930,36 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
 
   ColumnFilters<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recurrenceFrequency => $composableBuilder(
+    column: $table.recurrenceFrequency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get recurrenceInterval => $composableBuilder(
+    column: $table.recurrenceInterval,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recurrenceWeekdays => $composableBuilder(
+    column: $table.recurrenceWeekdays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get recurrenceEndAt => $composableBuilder(
+    column: $table.recurrenceEndAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get recurrenceAnchor => $composableBuilder(
+    column: $table.recurrenceAnchor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get templateId => $composableBuilder(
+    column: $table.templateId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4650,6 +5043,36 @@ class $$TasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get recurrenceFrequency => $composableBuilder(
+    column: $table.recurrenceFrequency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get recurrenceInterval => $composableBuilder(
+    column: $table.recurrenceInterval,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recurrenceWeekdays => $composableBuilder(
+    column: $table.recurrenceWeekdays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get recurrenceEndAt => $composableBuilder(
+    column: $table.recurrenceEndAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get recurrenceAnchor => $composableBuilder(
+    column: $table.recurrenceAnchor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get templateId => $composableBuilder(
+    column: $table.templateId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -4712,6 +5135,36 @@ class $$TasksTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get recurrenceFrequency => $composableBuilder(
+    column: $table.recurrenceFrequency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get recurrenceInterval => $composableBuilder(
+    column: $table.recurrenceInterval,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recurrenceWeekdays => $composableBuilder(
+    column: $table.recurrenceWeekdays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get recurrenceEndAt => $composableBuilder(
+    column: $table.recurrenceEndAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get recurrenceAnchor => $composableBuilder(
+    column: $table.recurrenceAnchor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get templateId => $composableBuilder(
+    column: $table.templateId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -4759,6 +5212,12 @@ class $$TasksTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<DateTime> dueAt = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<String?> recurrenceFrequency = const Value.absent(),
+                Value<int?> recurrenceInterval = const Value.absent(),
+                Value<String?> recurrenceWeekdays = const Value.absent(),
+                Value<DateTime?> recurrenceEndAt = const Value.absent(),
+                Value<DateTime?> recurrenceAnchor = const Value.absent(),
+                Value<String?> templateId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4775,6 +5234,12 @@ class $$TasksTableTableManager
                 status: status,
                 dueAt: dueAt,
                 completedAt: completedAt,
+                recurrenceFrequency: recurrenceFrequency,
+                recurrenceInterval: recurrenceInterval,
+                recurrenceWeekdays: recurrenceWeekdays,
+                recurrenceEndAt: recurrenceEndAt,
+                recurrenceAnchor: recurrenceAnchor,
+                templateId: templateId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -4793,6 +5258,12 @@ class $$TasksTableTableManager
                 required String status,
                 required DateTime dueAt,
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<String?> recurrenceFrequency = const Value.absent(),
+                Value<int?> recurrenceInterval = const Value.absent(),
+                Value<String?> recurrenceWeekdays = const Value.absent(),
+                Value<DateTime?> recurrenceEndAt = const Value.absent(),
+                Value<DateTime?> recurrenceAnchor = const Value.absent(),
+                Value<String?> templateId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -4809,6 +5280,12 @@ class $$TasksTableTableManager
                 status: status,
                 dueAt: dueAt,
                 completedAt: completedAt,
+                recurrenceFrequency: recurrenceFrequency,
+                recurrenceInterval: recurrenceInterval,
+                recurrenceWeekdays: recurrenceWeekdays,
+                recurrenceEndAt: recurrenceEndAt,
+                recurrenceAnchor: recurrenceAnchor,
+                templateId: templateId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

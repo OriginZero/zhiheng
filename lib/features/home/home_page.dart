@@ -36,17 +36,15 @@ class HomePage extends ConsumerWidget {
         SizedBox(height: SpacingTokens.x3),
         const _DiseaseSection(),
         SizedBox(height: SpacingTokens.x5),
-        _SectionHeader(
-          title: '今日管理',
-          onAdd: () => _addTask(context, ref),
-        ),
+        _SectionHeader(title: '今日管理', onAdd: () => _addTask(context, ref)),
         SizedBox(height: SpacingTokens.x3),
         AsyncStatusView(
           value: todayTasks,
           emptyState: EmptyState(
             icon: Icons.today_outlined,
             title: '今天还没有任务',
-            message: '建立管理计划后，每天的任务会在这里生成。\n'
+            message:
+                '建立管理计划后，每天的任务会在这里生成。\n'
                 '也可以先手动添加一条今日任务。',
             action: GlassButton(
               type: GlassButtonType.glass,
@@ -135,8 +133,11 @@ class _DiseaseSection extends ConsumerWidget {
         onTap: () => context.push('/diseases'),
         child: Row(
           children: [
-            Icon(Icons.medical_services_outlined,
-                size: 22, color: colors.brand),
+            Icon(
+              Icons.medical_services_outlined,
+              size: 22,
+              color: colors.brand,
+            ),
             SizedBox(width: SpacingTokens.x3),
             Expanded(
               child: Text(
@@ -184,8 +185,11 @@ class _DiseaseCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.medical_services_outlined,
-                size: 20, color: colors.brand),
+            Icon(
+              Icons.medical_services_outlined,
+              size: 20,
+              color: colors.brand,
+            ),
             SizedBox(height: SpacingTokens.x2),
             Text(
               disease.name,
@@ -278,10 +282,12 @@ class _TaskGroups extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final required =
-        tasks.where((t) => t.priority == TaskPriority.required).toList();
-    final suggested =
-        tasks.where((t) => t.priority == TaskPriority.suggested).toList();
+    final required = tasks
+        .where((t) => t.priority == TaskPriority.required)
+        .toList();
+    final suggested = tasks
+        .where((t) => t.priority == TaskPriority.suggested)
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -332,15 +338,11 @@ class _TaskTile extends ConsumerWidget {
             borderRadius: RadiusTokens.pillShape,
             onTap: done
                 ? null
-                : () => ref
-                    .read(completeTaskProvider.notifier)
-                    .complete(task),
+                : () => ref.read(completeTaskProvider.notifier).complete(task),
             child: Padding(
               padding: EdgeInsets.all(SpacingTokens.x2),
               child: Icon(
-                done
-                    ? Icons.check_circle
-                    : Icons.radio_button_unchecked,
+                done ? Icons.check_circle : Icons.radio_button_unchecked,
                 color: done
                     ? Theme.of(context).extension<ColorTokens>()!.success
                     : Theme.of(context).extension<ColorTokens>()!.textTertiary,
@@ -357,20 +359,45 @@ class _TaskTile extends ConsumerWidget {
                   style: context.bodyBoldStyle.copyWith(
                     decoration: done ? TextDecoration.lineThrough : null,
                     color: done
-                        ? Theme.of(context).extension<ColorTokens>()!.textTertiary
+                        ? Theme.of(context)
+                              .extension<ColorTokens>()!
+                              .textTertiary
                         : null,
                   ),
                 ),
                 SizedBox(height: SpacingTokens.x1),
                 Row(
                   children: [
-                    Icon(Icons.tag, size: 12,
-                        color: Theme.of(context).extension<ColorTokens>()!.textTertiary),
+                    Icon(
+                      Icons.tag,
+                      size: 12,
+                      color: Theme.of(context)
+                          .extension<ColorTokens>()!
+                          .textTertiary,
+                    ),
                     SizedBox(width: SpacingTokens.x1),
                     Text(
                       '${task.type.labelZh} · ${DateFormat('HH:mm').format(task.dueAt)}',
                       style: context.captionStyle,
                     ),
+                    if (task.isRecurring) ...[
+                      SizedBox(width: SpacingTokens.x2),
+                      Icon(
+                        Icons.repeat,
+                        size: 12,
+                        color: Theme.of(context)
+                            .extension<ColorTokens>()!
+                            .brand,
+                      ),
+                      Text(
+                        task.recurrence.descriptionZh,
+                        style: context.captionStyle.copyWith(
+                          color: Theme.of(context)
+                              .extension<ColorTokens>()!
+                              .brand,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -416,9 +443,7 @@ class _UpcomingRow extends StatelessWidget {
       margin: EdgeInsets.only(bottom: SpacingTokens.x2),
       child: Row(
         children: [
-          Expanded(
-            child: Text(task.title, style: context.bodyStyle),
-          ),
+          Expanded(child: Text(task.title, style: context.bodyStyle)),
           Text(
             DateFormat('M/d HH:mm').format(task.dueAt),
             style: context.secondaryLabelStyle,
