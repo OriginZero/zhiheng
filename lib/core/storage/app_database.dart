@@ -44,6 +44,10 @@ class CarePlans extends Table {
   TextColumn get status => text()();
   DateTimeColumn get startAt => dateTime().nullable()();
   DateTimeColumn get endAt => dateTime().nullable()();
+
+  /// 实例化该计划的模板 id（PlanDefinition 层，来源可追踪）。
+  TextColumn get templateId => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -151,7 +155,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -169,6 +173,10 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(tasks, tasks.recurrenceEndAt);
             await m.addColumn(tasks, tasks.recurrenceAnchor);
             await m.addColumn(tasks, tasks.templateId);
+          }
+          // v4：管理计划记录来源模板（PlanDefinition 层）。
+          if (from < 4) {
+            await m.addColumn(carePlans, carePlans.templateId);
           }
         },
       );

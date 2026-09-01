@@ -1055,6 +1055,17 @@ class $CarePlansTable extends CarePlans
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _templateIdMeta = const VerificationMeta(
+    'templateId',
+  );
+  @override
+  late final GeneratedColumn<String> templateId = GeneratedColumn<String>(
+    'template_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1087,6 +1098,7 @@ class $CarePlansTable extends CarePlans
     status,
     startAt,
     endAt,
+    templateId,
     createdAt,
     updatedAt,
   ];
@@ -1158,6 +1170,12 @@ class $CarePlansTable extends CarePlans
         endAt.isAcceptableOrUnknown(data['end_at']!, _endAtMeta),
       );
     }
+    if (data.containsKey('template_id')) {
+      context.handle(
+        _templateIdMeta,
+        templateId.isAcceptableOrUnknown(data['template_id']!, _templateIdMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1215,6 +1233,10 @@ class $CarePlansTable extends CarePlans
         DriftSqlType.dateTime,
         data['${effectivePrefix}end_at'],
       ),
+      templateId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}template_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1241,6 +1263,9 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
   final String status;
   final DateTime? startAt;
   final DateTime? endAt;
+
+  /// 实例化该计划的模板 id（PlanDefinition 层，来源可追踪）。
+  final String? templateId;
   final DateTime createdAt;
   final DateTime updatedAt;
   const CarePlanRow({
@@ -1252,6 +1277,7 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
     required this.status,
     this.startAt,
     this.endAt,
+    this.templateId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -1273,6 +1299,9 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
     }
     if (!nullToAbsent || endAt != null) {
       map['end_at'] = Variable<DateTime>(endAt);
+    }
+    if (!nullToAbsent || templateId != null) {
+      map['template_id'] = Variable<String>(templateId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -1297,6 +1326,9 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
       endAt: endAt == null && nullToAbsent
           ? const Value.absent()
           : Value(endAt),
+      templateId: templateId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(templateId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -1316,6 +1348,7 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
       status: serializer.fromJson<String>(json['status']),
       startAt: serializer.fromJson<DateTime?>(json['startAt']),
       endAt: serializer.fromJson<DateTime?>(json['endAt']),
+      templateId: serializer.fromJson<String?>(json['templateId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -1332,6 +1365,7 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
       'status': serializer.toJson<String>(status),
       'startAt': serializer.toJson<DateTime?>(startAt),
       'endAt': serializer.toJson<DateTime?>(endAt),
+      'templateId': serializer.toJson<String?>(templateId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -1346,6 +1380,7 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
     String? status,
     Value<DateTime?> startAt = const Value.absent(),
     Value<DateTime?> endAt = const Value.absent(),
+    Value<String?> templateId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => CarePlanRow(
@@ -1357,6 +1392,7 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
     status: status ?? this.status,
     startAt: startAt.present ? startAt.value : this.startAt,
     endAt: endAt.present ? endAt.value : this.endAt,
+    templateId: templateId.present ? templateId.value : this.templateId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -1372,6 +1408,9 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
       status: data.status.present ? data.status.value : this.status,
       startAt: data.startAt.present ? data.startAt.value : this.startAt,
       endAt: data.endAt.present ? data.endAt.value : this.endAt,
+      templateId: data.templateId.present
+          ? data.templateId.value
+          : this.templateId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -1388,6 +1427,7 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
           ..write('status: $status, ')
           ..write('startAt: $startAt, ')
           ..write('endAt: $endAt, ')
+          ..write('templateId: $templateId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1404,6 +1444,7 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
     status,
     startAt,
     endAt,
+    templateId,
     createdAt,
     updatedAt,
   );
@@ -1419,6 +1460,7 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
           other.status == this.status &&
           other.startAt == this.startAt &&
           other.endAt == this.endAt &&
+          other.templateId == this.templateId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -1432,6 +1474,7 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
   final Value<String> status;
   final Value<DateTime?> startAt;
   final Value<DateTime?> endAt;
+  final Value<String?> templateId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -1444,6 +1487,7 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
     this.status = const Value.absent(),
     this.startAt = const Value.absent(),
     this.endAt = const Value.absent(),
+    this.templateId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1457,6 +1501,7 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
     required String status,
     this.startAt = const Value.absent(),
     this.endAt = const Value.absent(),
+    this.templateId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -1475,6 +1520,7 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
     Expression<String>? status,
     Expression<DateTime>? startAt,
     Expression<DateTime>? endAt,
+    Expression<String>? templateId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -1488,6 +1534,7 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
       if (status != null) 'status': status,
       if (startAt != null) 'start_at': startAt,
       if (endAt != null) 'end_at': endAt,
+      if (templateId != null) 'template_id': templateId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -1503,6 +1550,7 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
     Value<String>? status,
     Value<DateTime?>? startAt,
     Value<DateTime?>? endAt,
+    Value<String?>? templateId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -1516,6 +1564,7 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
       status: status ?? this.status,
       startAt: startAt ?? this.startAt,
       endAt: endAt ?? this.endAt,
+      templateId: templateId ?? this.templateId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -1549,6 +1598,9 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
     if (endAt.present) {
       map['end_at'] = Variable<DateTime>(endAt.value);
     }
+    if (templateId.present) {
+      map['template_id'] = Variable<String>(templateId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1572,6 +1624,7 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
           ..write('status: $status, ')
           ..write('startAt: $startAt, ')
           ..write('endAt: $endAt, ')
+          ..write('templateId: $templateId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -4532,6 +4585,7 @@ typedef $$CarePlansTableCreateCompanionBuilder = CarePlansCompanion Function({
   required String status,
   Value<DateTime?> startAt,
   Value<DateTime?> endAt,
+  Value<String?> templateId,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -4545,6 +4599,7 @@ typedef $$CarePlansTableUpdateCompanionBuilder = CarePlansCompanion Function({
   Value<String> status,
   Value<DateTime?> startAt,
   Value<DateTime?> endAt,
+  Value<String?> templateId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -4596,6 +4651,11 @@ class $$CarePlansTableFilterComposer
 
   ColumnFilters<DateTime> get endAt => $composableBuilder(
     column: $table.endAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get templateId => $composableBuilder(
+    column: $table.templateId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4659,6 +4719,11 @@ class $$CarePlansTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get templateId => $composableBuilder(
+    column: $table.templateId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -4704,6 +4769,11 @@ class $$CarePlansTableAnnotationComposer
 
   GeneratedColumn<DateTime> get endAt =>
       $composableBuilder(column: $table.endAt, builder: (column) => column);
+
+  GeneratedColumn<String> get templateId => $composableBuilder(
+    column: $table.templateId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -4751,6 +4821,7 @@ class $$CarePlansTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<DateTime?> startAt = const Value.absent(),
                 Value<DateTime?> endAt = const Value.absent(),
+                Value<String?> templateId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4763,6 +4834,7 @@ class $$CarePlansTableTableManager
                 status: status,
                 startAt: startAt,
                 endAt: endAt,
+                templateId: templateId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -4777,6 +4849,7 @@ class $$CarePlansTableTableManager
                 required String status,
                 Value<DateTime?> startAt = const Value.absent(),
                 Value<DateTime?> endAt = const Value.absent(),
+                Value<String?> templateId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -4789,6 +4862,7 @@ class $$CarePlansTableTableManager
                 status: status,
                 startAt: startAt,
                 endAt: endAt,
+                templateId: templateId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

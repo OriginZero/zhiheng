@@ -69,6 +69,13 @@ class CompleteTaskNotifier extends Notifier<void> {
     Task completed,
     DateTime now,
   ) async {
+    // 计划控制：计划被暂停 / 完成 / 取消后，不再生成新任务。
+    if (completed.carePlanId != null) {
+      final plan = await repo.getCarePlan(completed.carePlanId!);
+      if (plan == null || plan.status != CarePlanStatus.active) {
+        return;
+      }
+    }
     DateTime nextDue;
     try {
       nextDue = nextOccurrence(completed.recurrence, completed.dueAt);
@@ -98,6 +105,7 @@ class CompleteTaskNotifier extends Notifier<void> {
         id: newId(),
         patientId: completed.patientId,
         diseaseId: completed.diseaseId,
+        carePlanId: completed.carePlanId,
         title: '记录光疗后皮肤反应（红斑/瘙痒等）',
         description: '观察治疗部位是否出现红斑、瘙痒、灼热或水疱，'
             '并记录开始与持续时间（供复诊参考）。',

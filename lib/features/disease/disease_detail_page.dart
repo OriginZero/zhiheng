@@ -95,9 +95,7 @@ class DiseaseDetailPage extends ConsumerWidget {
               ),
             ),
             builder: (list) => Column(
-              children: [
-                for (final task in list) _TaskTile(task: task),
-              ],
+              children: [for (final task in list) _TaskTile(task: task)],
             ),
           ),
         ],
@@ -106,7 +104,10 @@ class DiseaseDetailPage extends ConsumerWidget {
   }
 
   Future<void> _addTask(
-      BuildContext context, WidgetRef ref, Disease disease) async {
+    BuildContext context,
+    WidgetRef ref,
+    Disease disease,
+  ) async {
     final draft = await TaskFormSheet.show(
       context,
       diseaseId: disease.id,
@@ -197,19 +198,34 @@ class _TemplateCard extends ConsumerWidget {
       now.minute,
     );
 
+    // 1. 模板实例化为管理计划（PlanDefinition → CarePlan）。
+    final plan = template.buildCarePlan(
+      patientId: localPatientId,
+      diseaseId: disease.id,
+      startAt: dueAt,
+      endAtMonths: template.defaultEndAtMonths > 0
+          ? template.defaultEndAtMonths
+          : null,
+    );
+    await repo.saveCarePlan(plan);
+
+    // 2. 计划生成首条任务（CarePlan → Task）。
     final task = template.buildFirstTask(
       patientId: localPatientId,
       diseaseId: disease.id,
+      carePlanId: plan.id,
       dueAt: dueAt,
-      endAtMonths:
-          template.defaultEndAtMonths > 0 ? template.defaultEndAtMonths : null,
     );
     await repo.saveTask(task);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已创建「${template.title}」，首次：'
-            '${DateFormat('M月d日 HH:mm').format(dueAt)}')),
+        SnackBar(
+          content: Text(
+            '已创建计划「${template.title}」，首次任务：'
+            '${DateFormat('M月d日 HH:mm').format(dueAt)}',
+          ),
+        ),
       );
     }
   }
@@ -266,13 +282,19 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _PlanTile extends StatelessWidget {
+class _PlanTile extends ConsumerWidget {
   const _PlanTile({required this.plan});
 
   final CarePlan plan;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final template = DiseaseTemplates.all
+        .where((t) => t.id == plan.templateId)
+        .firstOrNull;
+    final active = plan.status == CarePlanStatus.active;
+
     return GlassCard(
       margin: EdgeInsets.only(bottom: SpacingTokens.x2),
       child: Column(
@@ -287,6 +309,42 @@ class _PlanTile extends StatelessWidget {
           if (plan.description != null && plan.description!.isNotEmpty) ...[
             SizedBox(height: SpacingTokens.x1),
             Text(plan.description!, style: context.secondaryLabelStyle),
+          ],
+          if (template != null) ...[
+            SizedBox(height: SpacingTokens.x1),
+            Text(
+              '周期：${template.defaultRecurrence.descriptionZh}'
+              '${plan.endAt != null ? ' · 至 ${DateFormat('yyyy/M').format(plan.endAt!)}' : ''}',
+              style: context.captionStyle.copyWith(color: colors.brand),
+            ),
+          ],
+          if (active) ...[
+            SizedBox(height: SpacingTokens.x2),
+            Row(
+              children: [
+                Expanded(
+                  child: GlassButton(
+                    type: GlassButtonType.plain,
+                    onPressed: () => ref
+                        .read(repositoryProvider)
+                        .updateCarePlanStatus(plan.id, CarePlanStatus.paused),
+                    child: const Text('暂停'),
+                  ),
+                ),
+                Expanded(
+                  child: GlassButton(
+                    type: GlassButtonType.plain,
+                    onPressed: () => ref
+                        .read(repositoryProvider)
+                        .updateCarePlanStatus(
+                          plan.id,
+                          CarePlanStatus.completed,
+                        ),
+                    child: const Text('完成计划'),
+                  ),
+                ),
+              ],
+            ),
           ],
         ],
       ),
@@ -429,9 +487,8 @@ class _CarePlanFormSheetState extends ConsumerState<_CarePlanFormSheet> {
   Future<void> _submit() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写计划名称')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('请填写计划名称')));
       return;
     }
 

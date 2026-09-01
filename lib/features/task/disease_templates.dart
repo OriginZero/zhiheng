@@ -36,27 +36,50 @@ class DiseaseTaskTemplate {
   /// 默认疗程月数（光疗按指南 6–12 个月，取 6 为默认）。
   final int defaultEndAtMonths;
 
-  /// 为当前患者生成首条任务（链的锚点）。
-  Task buildFirstTask({
+  /// 为当前患者实例化一份管理计划（PlanDefinition → CarePlan）。
+  ///
+  /// 计划是「意图」：承载重复规则与疗程，生成任务链；可暂停/完成。
+  CarePlan buildCarePlan({
     required String patientId,
     required String diseaseId,
-    required DateTime dueAt,
+    required DateTime startAt,
     int? endAtMonths,
   }) {
     final endAt = endAtMonths == null
         ? null
-        : DateTime(dueAt.year, dueAt.month + endAtMonths, dueAt.day);
+        : DateTime(startAt.year, startAt.month + endAtMonths, startAt.day);
+    return CarePlan(
+      id: newId(),
+      patientId: patientId,
+      diseaseId: diseaseId,
+      title: title,
+      description: description,
+      status: CarePlanStatus.active,
+      startAt: startAt,
+      endAt: endAt,
+      templateId: id,
+    );
+  }
+
+  /// 生成计划的首条任务（CarePlan → Task，链的锚点）。
+  Task buildFirstTask({
+    required String patientId,
+    required String diseaseId,
+    required String carePlanId,
+    required DateTime dueAt,
+  }) {
     final recurrence = TaskRecurrence(
       frequency: defaultRecurrence.frequency,
       interval: defaultRecurrence.interval,
       weekdays: defaultRecurrence.weekdays,
-      endAt: endAt,
+      endAt: null, // 由计划生命周期控制，而非任务自身
       anchor: dueAt,
     );
     return Task(
       id: newId(),
       patientId: patientId,
       diseaseId: diseaseId,
+      carePlanId: carePlanId,
       title: title,
       description: description,
       type: type,

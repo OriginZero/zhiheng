@@ -45,6 +45,7 @@ CarePlan carePlanFromRow(CarePlanRow d) => CarePlan(
   status: CarePlanStatus.values.byName(d.status),
   startAt: d.startAt,
   endAt: d.endAt,
+  templateId: d.templateId,
   createdAt: d.createdAt,
   updatedAt: d.updatedAt,
 );
@@ -163,6 +164,27 @@ class LocalRepository {
 
   // ---- CarePlan ----
 
+  /// 读取单个管理计划。
+  Future<CarePlan?> getCarePlan(String planId) async {
+    final row = await (_db.select(_db.carePlans)
+          ..where((t) => t.id.equals(planId)))
+        .getSingleOrNull();
+    return row == null ? null : carePlanFromRow(row);
+  }
+
+  /// 更新计划状态（active / paused / completed / cancelled）。
+  Future<void> updateCarePlanStatus(
+    String planId,
+    CarePlanStatus status,
+  ) async {
+    await (_db.update(_db.carePlans)..where((t) => t.id.equals(planId))).write(
+      CarePlansCompanion(
+        status: Value(status.name),
+        updatedAt: Value(_now()),
+      ),
+    );
+  }
+
   Stream<List<CarePlan>> watchCarePlans(String patientId) {
     return (_db.select(_db.carePlans)
           ..where((t) => t.patientId.equals(patientId))
@@ -185,6 +207,7 @@ class LocalRepository {
             status: plan.status.name,
             startAt: Value(plan.startAt),
             endAt: Value(plan.endAt),
+            templateId: Value(plan.templateId),
             createdAt: plan.createdAt ?? now,
             updatedAt: now,
           ),

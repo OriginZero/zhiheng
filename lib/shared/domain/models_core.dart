@@ -120,6 +120,7 @@ class CarePlan {
     this.status = CarePlanStatus.active,
     this.startAt,
     this.endAt,
+    this.templateId,
     this.createdAt,
     this.updatedAt,
   });
@@ -134,6 +135,10 @@ class CarePlan {
   final CarePlanStatus status;
   final DateTime? startAt;
   final DateTime? endAt;
+
+  /// 实例化该计划的模板 id（PlanDefinition 层，来源可追踪）。
+  final String? templateId;
+
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -150,6 +155,8 @@ class CarePlan {
     bool clearStartAt = false,
     DateTime? endAt,
     bool clearEndAt = false,
+    String? templateId,
+    bool clearTemplateId = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -163,6 +170,8 @@ class CarePlan {
       status: status ?? this.status,
       startAt: clearStartAt ? null : (startAt ?? this.startAt),
       endAt: clearEndAt ? null : (endAt ?? this.endAt),
+      templateId:
+          clearTemplateId ? null : (templateId ?? this.templateId),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
