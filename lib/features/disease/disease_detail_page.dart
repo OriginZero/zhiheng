@@ -9,6 +9,7 @@ import '../../core/theme/theme.dart';
 import '../../features/task/disease_templates.dart';
 import '../../shared/domain/domain.dart';
 import '../../shared/forms/task_form_sheet.dart';
+import '../../shared/widgets/task_sheet.dart';
 import '../../shared/widgets/async_status_view.dart';
 import '../../shared/widgets/glass/glass.dart';
 
@@ -363,6 +364,7 @@ class _TaskTile extends ConsumerWidget {
 
     return GlassCard(
       margin: EdgeInsets.only(bottom: SpacingTokens.x2),
+      onTap: () => showTaskSheet(context, ref, task),
       child: Row(
         children: [
           Expanded(

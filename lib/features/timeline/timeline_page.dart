@@ -230,6 +230,23 @@ class _EventTile extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (event.notes != null && event.notes!.isNotEmpty) ...[
+                  SizedBox(height: SpacingTokens.x2),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: SpacingTokens.x3,
+                      vertical: SpacingTokens.x2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.divider.withValues(alpha: 0.5),
+                      borderRadius: RadiusTokens.mediumShape,
+                    ),
+                    child: Text(
+                      event.notes!,
+                      style: context.secondaryLabelStyle,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

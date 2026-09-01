@@ -21,6 +21,7 @@ class HealthEvent {
     this.source = EventSource.user,
     this.payload = const {},
     this.notes,
+    this.taskId,
   });
 
   final String id;
@@ -43,6 +44,9 @@ class HealthEvent {
   final Map<String, Object?> payload;
   final String? notes;
 
+  /// 关联任务 id（任务完成事件）。
+  final String? taskId;
+
   String get payloadJson => jsonEncode(payload);
 
   HealthEvent copyWith({
@@ -59,6 +63,8 @@ class HealthEvent {
     Map<String, Object?>? payload,
     String? notes,
     bool clearNotes = false,
+    String? taskId,
+    bool clearTaskId = false,
   }) {
     return HealthEvent(
       id: id ?? this.id,
@@ -71,6 +77,7 @@ class HealthEvent {
       source: source ?? this.source,
       payload: payload ?? this.payload,
       notes: clearNotes ? null : (notes ?? this.notes),
+      taskId: clearTaskId ? null : (taskId ?? this.taskId),
     );
   }
 }

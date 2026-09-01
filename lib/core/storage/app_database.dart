@@ -92,6 +92,9 @@ class Tasks extends Table {
   /// 创建该任务的模板 id（来源可追踪，§10）。
   TextColumn get templateId => text().nullable()();
 
+  /// 执行备注（完成时填写，如剂量、感受；可事后补充）。
+  TextColumn get notes => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -129,6 +132,9 @@ class Events extends Table {
   TextColumn get payload => text()();
   TextColumn get notes => text().nullable()();
 
+  /// 关联任务 id（任务完成事件；撤销任务时用于清理）。
+  TextColumn get taskId => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -155,7 +161,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -177,6 +183,11 @@ class AppDatabase extends _$AppDatabase {
           // v4：管理计划记录来源模板（PlanDefinition 层）。
           if (from < 4) {
             await m.addColumn(carePlans, carePlans.templateId);
+          }
+          // v5：任务备注 + 事件关联任务。
+          if (from < 5) {
+            await m.addColumn(tasks, tasks.notes);
+            await m.addColumn(events, events.taskId);
           }
         },
       );

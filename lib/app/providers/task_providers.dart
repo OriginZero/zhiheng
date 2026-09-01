@@ -27,13 +27,16 @@ class CompleteTaskNotifier extends Notifier<void> {
   void build() {}
 
   Future<void> complete(Task task,
-      {TaskStatus status = TaskStatus.completed}) async {
+      {TaskStatus status = TaskStatus.completed, String? notes}) async {
     final repo = ref.read(repositoryProvider);
     await repo.completeTask(task.id, status);
 
     // 任务完成沉淀为事件，进入时间线（§7、§10 闭环）。
     if (status == TaskStatus.completed) {
       final now = DateTime.now();
+      if (notes != null && notes.trim().isNotEmpty) {
+        await repo.updateTaskNotes(task.id, notes.trim());
+      }
       await repo.addEvent(
         HealthEvent(
           id: newId(),
@@ -49,6 +52,8 @@ class CompleteTaskNotifier extends Notifier<void> {
             'task_type': task.type.name,
             'task_source': task.source.name,
           },
+          notes: notes == null || notes.trim().isEmpty ? null : notes.trim(),
+          taskId: task.id,
         ),
       );
 
@@ -123,6 +128,51 @@ class CompleteTaskNotifier extends Notifier<void> {
 
 final completeTaskProvider =
     NotifierProvider<CompleteTaskNotifier, void>(CompleteTaskNotifier.new);
+
+/// 撤销任务完成：恢复待办，清理派生任务与完成事件。
+///
+/// 撤销范围（§44 历史可更正）：
+/// - 任务本身恢复 pending；
+/// - 删除本次完成生成的周期下一次 / 光疗反应记录任务（若未完成）；
+/// - 删除本次完成沉淀的时间线事件。
+class RevertTaskNotifier extends Notifier<void> {
+  @override
+  void build() {}
+
+  Future<void> revert(Task task) async {
+    final repo = ref.read(repositoryProvider);
+
+    // 1. 清理派生任务：同一计划下、同一模板链的未完成任务。
+    final spawned = await repo.pendingSpawnedTasks(
+      carePlanId: task.carePlanId,
+      templateId: task.templateId,
+    );
+    for (final spawnedTask in spawned) {
+      if (spawnedTask.id != task.id) {
+        await repo.deleteTask(spawnedTask.id);
+      }
+    }
+    // 光疗反应记录任务模板不同，单独清理。
+    if (task.templateId == 'vitiligo.phototherapy') {
+      final reactions = await repo.pendingSpawnedTasks(
+        carePlanId: task.carePlanId,
+        templateId: 'vitiligo.phototherapy.reaction',
+      );
+      for (final reaction in reactions) {
+        await repo.deleteTask(reaction.id);
+      }
+    }
+
+    // 2. 删除本次完成的时间线事件。
+    await repo.deleteEventsByTaskId(task.id);
+
+    // 3. 任务恢复待办。
+    await repo.revertTaskCompletion(task.id);
+  }
+}
+
+final revertTaskProvider =
+    NotifierProvider<RevertTaskNotifier, void>(RevertTaskNotifier.new);
 
 /// 未来 7 天待办（首页「即将到期」）。
 final upcomingTasksProvider = StreamProvider<List<Task>>((ref) {

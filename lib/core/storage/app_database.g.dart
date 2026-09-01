@@ -1825,6 +1825,15 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1867,6 +1876,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     recurrenceEndAt,
     recurrenceAnchor,
     templateId,
+    notes,
     createdAt,
     updatedAt,
   ];
@@ -2027,6 +2037,12 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
         templateId.isAcceptableOrUnknown(data['template_id']!, _templateIdMeta),
       );
     }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -2124,6 +2140,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
         DriftSqlType.string,
         data['${effectivePrefix}template_id'],
       ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -2172,6 +2192,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
 
   /// 创建该任务的模板 id（来源可追踪，§10）。
   final String? templateId;
+
+  /// 执行备注（完成时填写，如剂量、感受；可事后补充）。
+  final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
   const TaskRow({
@@ -2193,6 +2216,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     this.recurrenceEndAt,
     this.recurrenceAnchor,
     this.templateId,
+    this.notes,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -2236,6 +2260,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     }
     if (!nullToAbsent || templateId != null) {
       map['template_id'] = Variable<String>(templateId);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -2282,6 +2309,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       templateId: templateId == null && nullToAbsent
           ? const Value.absent()
           : Value(templateId),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -2317,6 +2347,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
         json['recurrenceAnchor'],
       ),
       templateId: serializer.fromJson<String?>(json['templateId']),
+      notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -2343,6 +2374,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       'recurrenceEndAt': serializer.toJson<DateTime?>(recurrenceEndAt),
       'recurrenceAnchor': serializer.toJson<DateTime?>(recurrenceAnchor),
       'templateId': serializer.toJson<String?>(templateId),
+      'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -2367,6 +2399,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     Value<DateTime?> recurrenceEndAt = const Value.absent(),
     Value<DateTime?> recurrenceAnchor = const Value.absent(),
     Value<String?> templateId = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => TaskRow(
@@ -2398,6 +2431,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
         ? recurrenceAnchor.value
         : this.recurrenceAnchor,
     templateId: templateId.present ? templateId.value : this.templateId,
+    notes: notes.present ? notes.value : this.notes,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -2439,6 +2473,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       templateId: data.templateId.present
           ? data.templateId.value
           : this.templateId,
+      notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -2465,6 +2500,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           ..write('recurrenceEndAt: $recurrenceEndAt, ')
           ..write('recurrenceAnchor: $recurrenceAnchor, ')
           ..write('templateId: $templateId, ')
+          ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2472,7 +2508,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     patientId,
     diseaseId,
@@ -2491,9 +2527,10 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     recurrenceEndAt,
     recurrenceAnchor,
     templateId,
+    notes,
     createdAt,
     updatedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2516,6 +2553,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           other.recurrenceEndAt == this.recurrenceEndAt &&
           other.recurrenceAnchor == this.recurrenceAnchor &&
           other.templateId == this.templateId &&
+          other.notes == this.notes &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -2539,6 +2577,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   final Value<DateTime?> recurrenceEndAt;
   final Value<DateTime?> recurrenceAnchor;
   final Value<String?> templateId;
+  final Value<String?> notes;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -2561,6 +2600,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.recurrenceEndAt = const Value.absent(),
     this.recurrenceAnchor = const Value.absent(),
     this.templateId = const Value.absent(),
+    this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2584,6 +2624,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.recurrenceEndAt = const Value.absent(),
     this.recurrenceAnchor = const Value.absent(),
     this.templateId = const Value.absent(),
+    this.notes = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -2616,6 +2657,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Expression<DateTime>? recurrenceEndAt,
     Expression<DateTime>? recurrenceAnchor,
     Expression<String>? templateId,
+    Expression<String>? notes,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -2640,6 +2682,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       if (recurrenceEndAt != null) 'recurrence_end_at': recurrenceEndAt,
       if (recurrenceAnchor != null) 'recurrence_anchor': recurrenceAnchor,
       if (templateId != null) 'template_id': templateId,
+      if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -2665,6 +2708,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Value<DateTime?>? recurrenceEndAt,
     Value<DateTime?>? recurrenceAnchor,
     Value<String?>? templateId,
+    Value<String?>? notes,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -2688,6 +2732,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       recurrenceEndAt: recurrenceEndAt ?? this.recurrenceEndAt,
       recurrenceAnchor: recurrenceAnchor ?? this.recurrenceAnchor,
       templateId: templateId ?? this.templateId,
+      notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -2751,6 +2796,9 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     if (templateId.present) {
       map['template_id'] = Variable<String>(templateId.value);
     }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2784,6 +2832,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
           ..write('recurrenceEndAt: $recurrenceEndAt, ')
           ..write('recurrenceAnchor: $recurrenceAnchor, ')
           ..write('templateId: $templateId, ')
+          ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -3301,6 +3350,15 @@ class $EventsTable extends Events with TableInfo<$EventsTable, EventRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
+  @override
+  late final GeneratedColumn<String> taskId = GeneratedColumn<String>(
+    'task_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3313,6 +3371,7 @@ class $EventsTable extends Events with TableInfo<$EventsTable, EventRow> {
     source,
     payload,
     notes,
+    taskId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3397,6 +3456,12 @@ class $EventsTable extends Events with TableInfo<$EventsTable, EventRow> {
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('task_id')) {
+      context.handle(
+        _taskIdMeta,
+        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
+      );
+    }
     return context;
   }
 
@@ -3446,6 +3511,10 @@ class $EventsTable extends Events with TableInfo<$EventsTable, EventRow> {
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       ),
+      taskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}task_id'],
+      ),
     );
   }
 
@@ -3468,6 +3537,9 @@ class EventRow extends DataClass implements Insertable<EventRow> {
   /// JSON 编码的 [Map<String, Object?>] 负载。
   final String payload;
   final String? notes;
+
+  /// 关联任务 id（任务完成事件；撤销任务时用于清理）。
+  final String? taskId;
   const EventRow({
     required this.id,
     required this.patientId,
@@ -3479,6 +3551,7 @@ class EventRow extends DataClass implements Insertable<EventRow> {
     required this.source,
     required this.payload,
     this.notes,
+    this.taskId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3498,6 +3571,9 @@ class EventRow extends DataClass implements Insertable<EventRow> {
     map['payload'] = Variable<String>(payload);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || taskId != null) {
+      map['task_id'] = Variable<String>(taskId);
     }
     return map;
   }
@@ -3520,6 +3596,9 @@ class EventRow extends DataClass implements Insertable<EventRow> {
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
+      taskId: taskId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(taskId),
     );
   }
 
@@ -3539,6 +3618,7 @@ class EventRow extends DataClass implements Insertable<EventRow> {
       source: serializer.fromJson<String>(json['source']),
       payload: serializer.fromJson<String>(json['payload']),
       notes: serializer.fromJson<String?>(json['notes']),
+      taskId: serializer.fromJson<String?>(json['taskId']),
     );
   }
   @override
@@ -3555,6 +3635,7 @@ class EventRow extends DataClass implements Insertable<EventRow> {
       'source': serializer.toJson<String>(source),
       'payload': serializer.toJson<String>(payload),
       'notes': serializer.toJson<String?>(notes),
+      'taskId': serializer.toJson<String?>(taskId),
     };
   }
 
@@ -3569,6 +3650,7 @@ class EventRow extends DataClass implements Insertable<EventRow> {
     String? source,
     String? payload,
     Value<String?> notes = const Value.absent(),
+    Value<String?> taskId = const Value.absent(),
   }) => EventRow(
     id: id ?? this.id,
     patientId: patientId ?? this.patientId,
@@ -3580,6 +3662,7 @@ class EventRow extends DataClass implements Insertable<EventRow> {
     source: source ?? this.source,
     payload: payload ?? this.payload,
     notes: notes.present ? notes.value : this.notes,
+    taskId: taskId.present ? taskId.value : this.taskId,
   );
   EventRow copyWithCompanion(EventsCompanion data) {
     return EventRow(
@@ -3595,6 +3678,7 @@ class EventRow extends DataClass implements Insertable<EventRow> {
       source: data.source.present ? data.source.value : this.source,
       payload: data.payload.present ? data.payload.value : this.payload,
       notes: data.notes.present ? data.notes.value : this.notes,
+      taskId: data.taskId.present ? data.taskId.value : this.taskId,
     );
   }
 
@@ -3610,7 +3694,8 @@ class EventRow extends DataClass implements Insertable<EventRow> {
           ..write('title: $title, ')
           ..write('source: $source, ')
           ..write('payload: $payload, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('taskId: $taskId')
           ..write(')'))
         .toString();
   }
@@ -3627,6 +3712,7 @@ class EventRow extends DataClass implements Insertable<EventRow> {
     source,
     payload,
     notes,
+    taskId,
   );
   @override
   bool operator ==(Object other) =>
@@ -3641,7 +3727,8 @@ class EventRow extends DataClass implements Insertable<EventRow> {
           other.title == this.title &&
           other.source == this.source &&
           other.payload == this.payload &&
-          other.notes == this.notes);
+          other.notes == this.notes &&
+          other.taskId == this.taskId);
 }
 
 class EventsCompanion extends UpdateCompanion<EventRow> {
@@ -3655,6 +3742,7 @@ class EventsCompanion extends UpdateCompanion<EventRow> {
   final Value<String> source;
   final Value<String> payload;
   final Value<String?> notes;
+  final Value<String?> taskId;
   final Value<int> rowid;
   const EventsCompanion({
     this.id = const Value.absent(),
@@ -3667,6 +3755,7 @@ class EventsCompanion extends UpdateCompanion<EventRow> {
     this.source = const Value.absent(),
     this.payload = const Value.absent(),
     this.notes = const Value.absent(),
+    this.taskId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   EventsCompanion.insert({
@@ -3680,6 +3769,7 @@ class EventsCompanion extends UpdateCompanion<EventRow> {
     required String source,
     required String payload,
     this.notes = const Value.absent(),
+    this.taskId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        patientId = Value(patientId),
@@ -3699,6 +3789,7 @@ class EventsCompanion extends UpdateCompanion<EventRow> {
     Expression<String>? source,
     Expression<String>? payload,
     Expression<String>? notes,
+    Expression<String>? taskId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3712,6 +3803,7 @@ class EventsCompanion extends UpdateCompanion<EventRow> {
       if (source != null) 'source': source,
       if (payload != null) 'payload': payload,
       if (notes != null) 'notes': notes,
+      if (taskId != null) 'task_id': taskId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3727,6 +3819,7 @@ class EventsCompanion extends UpdateCompanion<EventRow> {
     Value<String>? source,
     Value<String>? payload,
     Value<String?>? notes,
+    Value<String?>? taskId,
     Value<int>? rowid,
   }) {
     return EventsCompanion(
@@ -3740,6 +3833,7 @@ class EventsCompanion extends UpdateCompanion<EventRow> {
       source: source ?? this.source,
       payload: payload ?? this.payload,
       notes: notes ?? this.notes,
+      taskId: taskId ?? this.taskId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3777,6 +3871,9 @@ class EventsCompanion extends UpdateCompanion<EventRow> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (taskId.present) {
+      map['task_id'] = Variable<String>(taskId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3796,6 +3893,7 @@ class EventsCompanion extends UpdateCompanion<EventRow> {
           ..write('source: $source, ')
           ..write('payload: $payload, ')
           ..write('notes: $notes, ')
+          ..write('taskId: $taskId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4911,6 +5009,7 @@ typedef $$TasksTableCreateCompanionBuilder = TasksCompanion Function({
   Value<DateTime?> recurrenceEndAt,
   Value<DateTime?> recurrenceAnchor,
   Value<String?> templateId,
+  Value<String?> notes,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -4934,6 +5033,7 @@ typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
   Value<DateTime?> recurrenceEndAt,
   Value<DateTime?> recurrenceAnchor,
   Value<String?> templateId,
+  Value<String?> notes,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -5034,6 +5134,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
 
   ColumnFilters<String> get templateId => $composableBuilder(
     column: $table.templateId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5147,6 +5252,11 @@ class $$TasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -5239,6 +5349,9 @@ class $$TasksTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -5292,6 +5405,7 @@ class $$TasksTableTableManager
                 Value<DateTime?> recurrenceEndAt = const Value.absent(),
                 Value<DateTime?> recurrenceAnchor = const Value.absent(),
                 Value<String?> templateId = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5314,6 +5428,7 @@ class $$TasksTableTableManager
                 recurrenceEndAt: recurrenceEndAt,
                 recurrenceAnchor: recurrenceAnchor,
                 templateId: templateId,
+                notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -5338,6 +5453,7 @@ class $$TasksTableTableManager
                 Value<DateTime?> recurrenceEndAt = const Value.absent(),
                 Value<DateTime?> recurrenceAnchor = const Value.absent(),
                 Value<String?> templateId = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -5360,6 +5476,7 @@ class $$TasksTableTableManager
                 recurrenceEndAt: recurrenceEndAt,
                 recurrenceAnchor: recurrenceAnchor,
                 templateId: templateId,
+                notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -5614,6 +5731,7 @@ typedef $$EventsTableCreateCompanionBuilder = EventsCompanion Function({
   required String source,
   required String payload,
   Value<String?> notes,
+  Value<String?> taskId,
   Value<int> rowid,
 });
 typedef $$EventsTableUpdateCompanionBuilder = EventsCompanion Function({
@@ -5627,6 +5745,7 @@ typedef $$EventsTableUpdateCompanionBuilder = EventsCompanion Function({
   Value<String> source,
   Value<String> payload,
   Value<String?> notes,
+  Value<String?> taskId,
   Value<int> rowid,
 });
 
@@ -5686,6 +5805,11 @@ class $$EventsTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taskId => $composableBuilder(
+    column: $table.taskId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5748,6 +5872,11 @@ class $$EventsTableOrderingComposer
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$EventsTableAnnotationComposer
@@ -5790,6 +5919,9 @@ class $$EventsTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get taskId =>
+      $composableBuilder(column: $table.taskId, builder: (column) => column);
 }
 
 class $$EventsTableTableManager
@@ -5830,6 +5962,7 @@ class $$EventsTableTableManager
                 Value<String> source = const Value.absent(),
                 Value<String> payload = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String?> taskId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EventsCompanion(
                 id: id,
@@ -5842,6 +5975,7 @@ class $$EventsTableTableManager
                 source: source,
                 payload: payload,
                 notes: notes,
+                taskId: taskId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5856,6 +5990,7 @@ class $$EventsTableTableManager
                 required String source,
                 required String payload,
                 Value<String?> notes = const Value.absent(),
+                Value<String?> taskId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EventsCompanion.insert(
                 id: id,
@@ -5868,6 +6003,7 @@ class $$EventsTableTableManager
                 source: source,
                 payload: payload,
                 notes: notes,
+                taskId: taskId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

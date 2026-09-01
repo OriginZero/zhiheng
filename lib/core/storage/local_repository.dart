@@ -73,6 +73,7 @@ Task taskFromRow(TaskRow d) => Task(
           anchor: d.recurrenceAnchor,
         ),
   templateId: d.templateId,
+  notes: d.notes,
   createdAt: d.createdAt,
   updatedAt: d.updatedAt,
 );
@@ -97,6 +98,7 @@ HealthEvent eventFromRow(EventRow d) => HealthEvent(
   source: EventSource.values.byName(d.source),
   payload: (jsonDecode(d.payload) as Map).cast<String, Object?>(),
   notes: d.notes,
+  taskId: d.taskId,
 );
 
 /// 仓储：领域层与存储之间唯一通道（开发文档 §19）。
@@ -297,6 +299,7 @@ class LocalRepository {
             recurrenceEndAt: Value(task.recurrence.endAt),
             recurrenceAnchor: Value(task.recurrence.anchor),
             templateId: Value(task.templateId),
+            notes: Value(task.notes),
             createdAt: task.createdAt ?? now,
             updatedAt: now,
           ),
@@ -313,6 +316,58 @@ class LocalRepository {
         updatedAt: Value(now),
       ),
     );
+  }
+
+  /// 撤销完成：任务恢复待办，清除完成时间与备注。
+  Future<void> revertTaskCompletion(String taskId) async {
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(taskId))).write(
+      TasksCompanion(
+        status: Value(TaskStatus.pending.name),
+        completedAt: const Value(null),
+        notes: const Value(null),
+        updatedAt: Value(_now()),
+      ),
+    );
+  }
+
+  /// 删除任务（撤销时清理派生的下一次任务）。
+  Future<void> deleteTask(String taskId) async {
+    await (_db.delete(_db.tasks)..where((t) => t.id.equals(taskId))).go();
+  }
+
+  /// 删除某任务的完成事件（撤销时清理时间线）。
+  Future<void> deleteEventsByTaskId(String taskId) async {
+    await (_db.delete(_db.events)..where((t) => t.taskId.equals(taskId))).go();
+  }
+
+  /// 补写任务备注。
+  Future<void> updateTaskNotes(String taskId, String? notes) async {
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(taskId))).write(
+      TasksCompanion(
+        notes: Value(notes),
+        updatedAt: Value(_now()),
+      ),
+    );
+  }
+
+  /// 查找同一计划/模板下未完成的派生任务（周期链的下一次、反应记录等）。
+  Future<List<Task>> pendingSpawnedTasks({
+    String? carePlanId,
+    String? templateId,
+  }) async {
+    final query = _db.select(_db.tasks)
+      ..where((t) {
+        var expr = t.status.equals(TaskStatus.pending.name);
+        if (carePlanId != null) {
+          expr = expr & t.carePlanId.equals(carePlanId);
+        }
+        if (templateId != null) {
+          expr = expr & t.templateId.equals(templateId);
+        }
+        return expr;
+      });
+    final rows = await query.get();
+    return rows.map(taskFromRow).toList();
   }
 
   // ---- Reminder ----
@@ -382,6 +437,7 @@ class LocalRepository {
             source: event.source.name,
             payload: event.payloadJson,
             notes: Value(event.notes),
+            taskId: Value(event.taskId),
           ),
         );
   }

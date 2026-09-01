@@ -24,6 +24,7 @@ class Task {
     this.completedAt,
     this.recurrence = TaskRecurrence.none,
     this.templateId,
+    this.notes,
     this.createdAt,
     this.updatedAt,
   });
@@ -48,6 +49,9 @@ class Task {
 
   /// 周期任务链的模板 id（同一链的所有任务共享）。
   final String? templateId;
+
+  /// 执行备注（完成时填写，可事后补充）。
+  final String? notes;
 
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -76,6 +80,8 @@ class Task {
     TaskRecurrence? recurrence,
     String? templateId,
     bool clearTemplateId = false,
+    String? notes,
+    bool clearNotes = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -95,6 +101,7 @@ class Task {
       completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
       recurrence: recurrence ?? this.recurrence,
       templateId: clearTemplateId ? null : (templateId ?? this.templateId),
+      notes: clearNotes ? null : (notes ?? this.notes),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
