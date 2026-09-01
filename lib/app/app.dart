@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/theme.dart';
+import 'providers/preferences_providers.dart';
 import 'router/app_router.dart';
 
 /// 应用根 Widget。
@@ -12,6 +13,7 @@ class ZhiHengApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final themeMode = ref.watch(themeModeProvider).value ?? ThemeMode.system;
 
     return MaterialApp.router(
       title: '知衡',
@@ -25,7 +27,7 @@ class ZhiHengApp extends ConsumerWidget {
       supportedLocales: const [Locale('zh', 'CN')],
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.system,
+      themeMode: themeMode,
       routerConfig: router,
     );
   }

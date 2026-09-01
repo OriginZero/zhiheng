@@ -107,19 +107,38 @@ class Events extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// 应用偏好（主题模式等本地设置的键值存储）。
+@DataClassName('PreferenceRow')
+class Preferences extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
 /// 应用本地数据库。
 ///
 /// 当前为纯本地存储（无后端）；表结构已带 createdAt/updatedAt，
 /// 未来接入同步时按 §20 补充 version / syncStatus / deviceId。
-@DriftDatabase(tables: [Patients, Diseases, CarePlans, Tasks, Reminders, Events])
+@DriftDatabase(
+  tables: [Patients, Diseases, CarePlans, Tasks, Reminders, Events, Preferences],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          // v2：新增偏好表。
+          if (from < 2) {
+            await m.createTable(preferences);
+          }
+        },
       );
 }

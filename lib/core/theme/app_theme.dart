@@ -59,6 +59,7 @@ abstract final class AppTheme {
           horizontal: SpacingTokens.x4,
         ),
       ),
+      inputDecorationTheme: _inputDecoration(tokens),
       dividerTheme: DividerThemeData(
         color: tokens.divider,
         thickness: 0.5,
@@ -77,6 +78,29 @@ abstract final class AppTheme {
       labelLarge: TypographyTokens.labelBold(tokens.textPrimary),
       labelMedium: TypographyTokens.label(tokens.textPrimary),
       bodySmall: TypographyTokens.caption(tokens.textTertiary),
+    );
+  }
+  /// 表单输入框统一样式（创建功能使用）。
+  static InputDecorationTheme _inputDecoration(ColorTokens tokens) {
+    final border = OutlineInputBorder(
+      borderRadius: RadiusTokens.mediumShape,
+      borderSide: BorderSide(color: tokens.divider),
+    );
+    return InputDecorationTheme(
+      filled: true,
+      fillColor: tokens.divider.withValues(alpha: 0.5),
+      border: border,
+      enabledBorder: border,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: RadiusTokens.mediumShape,
+        borderSide: BorderSide(color: tokens.brand, width: 1.5),
+      ),
+      labelStyle: TextStyle(color: tokens.textSecondary),
+      floatingLabelStyle: TextStyle(color: tokens.brand),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: SpacingTokens.x4,
+        vertical: SpacingTokens.x3,
+      ),
     );
   }
 }

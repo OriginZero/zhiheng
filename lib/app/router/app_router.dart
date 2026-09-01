@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/disease/disease_detail_page.dart';
+import '../../features/disease/diseases_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/settings/settings_page.dart';
 import '../../features/timeline/timeline_page.dart';
@@ -12,11 +14,13 @@ abstract final class AppRoutes {
   static const String home = '/';
   static const String timeline = '/timeline';
   static const String settings = '/settings';
+  static const String diseases = '/diseases';
+  static const String diseaseDetail = '/disease/:id';
 }
 
 /// 全局路由（开发文档 §17）。
 ///
-/// 三个主页面共享玻璃导航壳。
+/// 三个主页面共享玻璃导航壳；疾病页为独立路由。
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.home,
@@ -40,6 +44,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 const NoTransitionPage(child: SettingsPage()),
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.diseases,
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: GlassBackground(child: DiseasesPage()),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.diseaseDetail,
+        pageBuilder: (context, state) => NoTransitionPage(
+          child: GlassBackground(
+            child: DiseaseDetailPage(
+              diseaseId: state.pathParameters['id']!,
+            ),
+          ),
+        ),
       ),
     ],
   );

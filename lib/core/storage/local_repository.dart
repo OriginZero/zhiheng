@@ -211,6 +211,19 @@ class LocalRepository {
         .watch()
         .map((rows) => rows.map(taskFromRow).toList());
   }
+  /// 监听某疾病下所有未完成任务（疾病详情页）。
+  Stream<List<Task>> watchDiseaseTasks(String patientId, String diseaseId) {
+    return (_db.select(_db.tasks)
+          ..where(
+            (t) =>
+                t.patientId.equals(patientId) &
+                t.diseaseId.equals(diseaseId) &
+                t.status.equals(TaskStatus.pending.name),
+          )
+          ..orderBy([(t) => OrderingTerm.asc(t.dueAt)]))
+        .watch()
+        .map((rows) => rows.map(taskFromRow).toList());
+  }
 
   Future<void> saveTask(Task task) {
     final now = _now();
@@ -311,6 +324,27 @@ class LocalRepository {
             source: event.source.name,
             payload: event.payloadJson,
             notes: Value(event.notes),
+          ),
+        );
+  }
+
+  // ---- Preferences ----
+
+  /// 读取偏好（不存在返回 null）。
+  Future<String?> readPreference(String key) async {
+    final row = await (_db.select(_db.preferences)
+          ..where((t) => t.key.equals(key)))
+        .getSingleOrNull();
+    return row?.value;
+  }
+
+  /// 写入偏好（按键覆盖）。
+  Future<void> writePreference(String key, String value) {
+    return _db.into(_db.preferences).insertOnConflictUpdate(
+          PreferencesCompanion.insert(
+            key: key,
+            value: value,
+            updatedAt: _now(),
           ),
         );
   }

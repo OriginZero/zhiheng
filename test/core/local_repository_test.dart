@@ -149,4 +149,43 @@ void main() {
       expect(vitiligoEvents.map((e) => e.id), ['vitiligo-event']);
     });
   });
+  group('Preferences', () {
+    test('未写入时读取返回 null', () async {
+      expect(await repo.readPreference('missing'), isNull);
+    });
+
+    test('写入后读取一致，重复写入按键覆盖', () async {
+      await repo.writePreference('theme_mode', 'dark');
+      expect(await repo.readPreference('theme_mode'), 'dark');
+
+      await repo.writePreference('theme_mode', 'light');
+      expect(await repo.readPreference('theme_mode'), 'light');
+    });
+  });
+
+  group('疾病任务', () {
+    test('watchDiseaseTasks 只返回该疾病的未完成任务', () async {
+      await repo.saveTask(Task(
+        id: 't-a',
+        patientId: 'p1',
+        diseaseId: 'd-a',
+        title: '疾病 A 任务',
+        type: TaskType.treatment,
+        source: TaskSource.userCreated,
+        dueAt: DateTime(2026, 9, 1),
+      ));
+      await repo.saveTask(Task(
+        id: 't-b',
+        patientId: 'p1',
+        diseaseId: 'd-b',
+        title: '疾病 B 任务',
+        type: TaskType.treatment,
+        source: TaskSource.userCreated,
+        dueAt: DateTime(2026, 9, 1),
+      ));
+
+      final tasks = await repo.watchDiseaseTasks('p1', 'd-a').first;
+      expect(tasks.map((t) => t.id), ['t-a']);
+    });
+  });
 }

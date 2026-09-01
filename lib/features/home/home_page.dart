@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../app/providers/task_providers.dart';
 import '../../app/providers/core_providers.dart';
+import '../../app/providers/task_providers.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
+import '../../shared/forms/task_form_sheet.dart';
 import '../../shared/widgets/async_status_view.dart';
 import '../../shared/widgets/glass/glass.dart';
 
@@ -31,16 +33,27 @@ class HomePage extends ConsumerWidget {
       ),
       children: [
         _Greeting(patientName: patient),
+        SizedBox(height: SpacingTokens.x3),
+        const _DiseaseSection(),
         SizedBox(height: SpacingTokens.x5),
-        Text('今日管理', style: context.headlineStyle),
+        _SectionHeader(
+          title: '今日管理',
+          onAdd: () => _addTask(context, ref),
+        ),
         SizedBox(height: SpacingTokens.x3),
         AsyncStatusView(
           value: todayTasks,
-          emptyState: const EmptyState(
+          emptyState: EmptyState(
             icon: Icons.today_outlined,
             title: '今天还没有任务',
             message: '建立管理计划后，每天的任务会在这里生成。\n'
                 '也可以先手动添加一条今日任务。',
+            action: GlassButton(
+              type: GlassButtonType.glass,
+              icon: Icons.add,
+              onPressed: () => _addTask(context, ref),
+              child: const Text('添加任务'),
+            ),
           ),
           builder: (tasks) => _TaskGroups(tasks: tasks),
         ),
@@ -56,12 +69,159 @@ class HomePage extends ConsumerWidget {
           ),
           builder: (tasks) => Column(
             children: [
-              for (final task in tasks.take(3))
-                _UpcomingRow(task: task),
+              for (final task in tasks.take(3)) _UpcomingRow(task: task),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _addTask(BuildContext context, WidgetRef ref) async {
+    final draft = await TaskFormSheet.show(context);
+    if (draft != null) {
+      await saveTaskDraft(ref, draft);
+    }
+  }
+}
+
+/// 带添加按钮的分区标题。
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, required this.onAdd});
+
+  final String title;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+
+    return Row(
+      children: [
+        Expanded(child: Text(title, style: context.headlineStyle)),
+        Semantics(
+          button: true,
+          label: '添加任务',
+          child: InkWell(
+            borderRadius: RadiusTokens.pillShape,
+            onTap: onAdd,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: colors.brand.withValues(alpha: 0.14),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.add, size: 20, color: colors.brand),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 疾病区：快速进入各疾病的管理页（§32 疾病入口）。
+class _DiseaseSection extends ConsumerWidget {
+  const _DiseaseSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final diseases = ref.watch(diseasesProvider).value ?? const <Disease>[];
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+
+    if (diseases.isEmpty) {
+      return GlassCard(
+        onTap: () => context.push('/diseases'),
+        child: Row(
+          children: [
+            Icon(Icons.medical_services_outlined,
+                size: 22, color: colors.brand),
+            SizedBox(width: SpacingTokens.x3),
+            Expanded(
+              child: Text(
+                '添加你在管理的疾病，开始建立管理计划',
+                style: context.secondaryBodyStyle,
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 20, color: colors.textTertiary),
+          ],
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 96,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: diseases.length + 1,
+        separatorBuilder: (context, _) => SizedBox(width: SpacingTokens.x3),
+        itemBuilder: (context, index) {
+          if (index == diseases.length) {
+            return _AddDiseaseCard();
+          }
+          return _DiseaseCard(disease: diseases[index]);
+        },
+      ),
+    );
+  }
+}
+
+class _DiseaseCard extends StatelessWidget {
+  const _DiseaseCard({required this.disease});
+
+  final Disease disease;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+
+    return SizedBox(
+      width: 180,
+      child: GlassCard(
+        onTap: () => context.push('/disease/${disease.id}'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.medical_services_outlined,
+                size: 20, color: colors.brand),
+            SizedBox(height: SpacingTokens.x2),
+            Text(
+              disease.name,
+              style: context.labelBoldStyle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: SpacingTokens.x1),
+            Text(disease.status.labelZh, style: context.captionStyle),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddDiseaseCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+
+    return SizedBox(
+      width: 88,
+      child: GlassCard(
+        onTap: () => context.push('/diseases'),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add, size: 22, color: colors.brand),
+              SizedBox(height: SpacingTokens.x1),
+              Text('添加', style: context.captionStyle),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
