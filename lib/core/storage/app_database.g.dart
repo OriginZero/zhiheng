@@ -4162,6 +4162,1172 @@ class PreferencesCompanion extends UpdateCompanion<PreferenceRow> {
   }
 }
 
+class $PhototherapyRecordsTable extends PhototherapyRecords
+    with TableInfo<$PhototherapyRecordsTable, PhototherapyRecordRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PhototherapyRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _patientIdMeta = const VerificationMeta(
+    'patientId',
+  );
+  @override
+  late final GeneratedColumn<String> patientId = GeneratedColumn<String>(
+    'patient_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _diseaseIdMeta = const VerificationMeta(
+    'diseaseId',
+  );
+  @override
+  late final GeneratedColumn<String> diseaseId = GeneratedColumn<String>(
+    'disease_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _occurredAtMeta = const VerificationMeta(
+    'occurredAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> occurredAt = GeneratedColumn<DateTime>(
+    'occurred_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deviceMeta = const VerificationMeta('device');
+  @override
+  late final GeneratedColumn<String> device = GeneratedColumn<String>(
+    'device',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _bodyPartMeta = const VerificationMeta(
+    'bodyPart',
+  );
+  @override
+  late final GeneratedColumn<String> bodyPart = GeneratedColumn<String>(
+    'body_part',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lateralityMeta = const VerificationMeta(
+    'laterality',
+  );
+  @override
+  late final GeneratedColumn<String> laterality = GeneratedColumn<String>(
+    'laterality',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _doseMeta = const VerificationMeta('dose');
+  @override
+  late final GeneratedColumn<double> dose = GeneratedColumn<double>(
+    'dose',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _doseUnitMeta = const VerificationMeta(
+    'doseUnit',
+  );
+  @override
+  late final GeneratedColumn<String> doseUnit = GeneratedColumn<String>(
+    'dose_unit',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _erythemaMeta = const VerificationMeta(
+    'erythema',
+  );
+  @override
+  late final GeneratedColumn<bool> erythema = GeneratedColumn<bool>(
+    'erythema',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("erythema" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _erythemaStartMeta = const VerificationMeta(
+    'erythemaStart',
+  );
+  @override
+  late final GeneratedColumn<DateTime> erythemaStart =
+      GeneratedColumn<DateTime>(
+        'erythema_start',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _erythemaDurationHoursMeta =
+      const VerificationMeta('erythemaDurationHours');
+  @override
+  late final GeneratedColumn<int> erythemaDurationHours = GeneratedColumn<int>(
+    'erythema_duration_hours',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _painLevelMeta = const VerificationMeta(
+    'painLevel',
+  );
+  @override
+  late final GeneratedColumn<int> painLevel = GeneratedColumn<int>(
+    'pain_level',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _itchingLevelMeta = const VerificationMeta(
+    'itchingLevel',
+  );
+  @override
+  late final GeneratedColumn<int> itchingLevel = GeneratedColumn<int>(
+    'itching_level',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _burningLevelMeta = const VerificationMeta(
+    'burningLevel',
+  );
+  @override
+  late final GeneratedColumn<int> burningLevel = GeneratedColumn<int>(
+    'burning_level',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _blisterMeta = const VerificationMeta(
+    'blister',
+  );
+  @override
+  late final GeneratedColumn<bool> blister = GeneratedColumn<bool>(
+    'blister',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("blister" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _otherReactionMeta = const VerificationMeta(
+    'otherReaction',
+  );
+  @override
+  late final GeneratedColumn<String> otherReaction = GeneratedColumn<String>(
+    'other_reaction',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _doctorNotesMeta = const VerificationMeta(
+    'doctorNotes',
+  );
+  @override
+  late final GeneratedColumn<String> doctorNotes = GeneratedColumn<String>(
+    'doctor_notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _patientNotesMeta = const VerificationMeta(
+    'patientNotes',
+  );
+  @override
+  late final GeneratedColumn<String> patientNotes = GeneratedColumn<String>(
+    'patient_notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    patientId,
+    diseaseId,
+    occurredAt,
+    device,
+    bodyPart,
+    laterality,
+    dose,
+    doseUnit,
+    erythema,
+    erythemaStart,
+    erythemaDurationHours,
+    painLevel,
+    itchingLevel,
+    burningLevel,
+    blister,
+    otherReaction,
+    doctorNotes,
+    patientNotes,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'phototherapy_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PhototherapyRecordRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('patient_id')) {
+      context.handle(
+        _patientIdMeta,
+        patientId.isAcceptableOrUnknown(data['patient_id']!, _patientIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_patientIdMeta);
+    }
+    if (data.containsKey('disease_id')) {
+      context.handle(
+        _diseaseIdMeta,
+        diseaseId.isAcceptableOrUnknown(data['disease_id']!, _diseaseIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_diseaseIdMeta);
+    }
+    if (data.containsKey('occurred_at')) {
+      context.handle(
+        _occurredAtMeta,
+        occurredAt.isAcceptableOrUnknown(data['occurred_at']!, _occurredAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_occurredAtMeta);
+    }
+    if (data.containsKey('device')) {
+      context.handle(
+        _deviceMeta,
+        device.isAcceptableOrUnknown(data['device']!, _deviceMeta),
+      );
+    }
+    if (data.containsKey('body_part')) {
+      context.handle(
+        _bodyPartMeta,
+        bodyPart.isAcceptableOrUnknown(data['body_part']!, _bodyPartMeta),
+      );
+    }
+    if (data.containsKey('laterality')) {
+      context.handle(
+        _lateralityMeta,
+        laterality.isAcceptableOrUnknown(data['laterality']!, _lateralityMeta),
+      );
+    }
+    if (data.containsKey('dose')) {
+      context.handle(
+        _doseMeta,
+        dose.isAcceptableOrUnknown(data['dose']!, _doseMeta),
+      );
+    }
+    if (data.containsKey('dose_unit')) {
+      context.handle(
+        _doseUnitMeta,
+        doseUnit.isAcceptableOrUnknown(data['dose_unit']!, _doseUnitMeta),
+      );
+    }
+    if (data.containsKey('erythema')) {
+      context.handle(
+        _erythemaMeta,
+        erythema.isAcceptableOrUnknown(data['erythema']!, _erythemaMeta),
+      );
+    }
+    if (data.containsKey('erythema_start')) {
+      context.handle(
+        _erythemaStartMeta,
+        erythemaStart.isAcceptableOrUnknown(
+          data['erythema_start']!,
+          _erythemaStartMeta,
+        ),
+      );
+    }
+    if (data.containsKey('erythema_duration_hours')) {
+      context.handle(
+        _erythemaDurationHoursMeta,
+        erythemaDurationHours.isAcceptableOrUnknown(
+          data['erythema_duration_hours']!,
+          _erythemaDurationHoursMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pain_level')) {
+      context.handle(
+        _painLevelMeta,
+        painLevel.isAcceptableOrUnknown(data['pain_level']!, _painLevelMeta),
+      );
+    }
+    if (data.containsKey('itching_level')) {
+      context.handle(
+        _itchingLevelMeta,
+        itchingLevel.isAcceptableOrUnknown(
+          data['itching_level']!,
+          _itchingLevelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('burning_level')) {
+      context.handle(
+        _burningLevelMeta,
+        burningLevel.isAcceptableOrUnknown(
+          data['burning_level']!,
+          _burningLevelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('blister')) {
+      context.handle(
+        _blisterMeta,
+        blister.isAcceptableOrUnknown(data['blister']!, _blisterMeta),
+      );
+    }
+    if (data.containsKey('other_reaction')) {
+      context.handle(
+        _otherReactionMeta,
+        otherReaction.isAcceptableOrUnknown(
+          data['other_reaction']!,
+          _otherReactionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('doctor_notes')) {
+      context.handle(
+        _doctorNotesMeta,
+        doctorNotes.isAcceptableOrUnknown(
+          data['doctor_notes']!,
+          _doctorNotesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('patient_notes')) {
+      context.handle(
+        _patientNotesMeta,
+        patientNotes.isAcceptableOrUnknown(
+          data['patient_notes']!,
+          _patientNotesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PhototherapyRecordRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PhototherapyRecordRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      patientId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}patient_id'],
+      )!,
+      diseaseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}disease_id'],
+      )!,
+      occurredAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}occurred_at'],
+      )!,
+      device: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device'],
+      ),
+      bodyPart: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body_part'],
+      ),
+      laterality: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}laterality'],
+      ),
+      dose: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}dose'],
+      ),
+      doseUnit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dose_unit'],
+      ),
+      erythema: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}erythema'],
+      )!,
+      erythemaStart: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}erythema_start'],
+      ),
+      erythemaDurationHours: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}erythema_duration_hours'],
+      ),
+      painLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pain_level'],
+      ),
+      itchingLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}itching_level'],
+      ),
+      burningLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}burning_level'],
+      ),
+      blister: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}blister'],
+      )!,
+      otherReaction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}other_reaction'],
+      ),
+      doctorNotes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}doctor_notes'],
+      ),
+      patientNotes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}patient_notes'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PhototherapyRecordsTable createAlias(String alias) {
+    return $PhototherapyRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class PhototherapyRecordRow extends DataClass
+    implements Insertable<PhototherapyRecordRow> {
+  final String id;
+  final String patientId;
+  final String diseaseId;
+  final DateTime occurredAt;
+
+  /// 治疗设备（如 308nm 准分子光）。
+  final String? device;
+
+  /// 治疗部位（如 手背）。
+  final String? bodyPart;
+
+  /// 左右侧（left / right / bilateral / none）。
+  final String? laterality;
+
+  /// 单次剂量。
+  final double? dose;
+
+  /// 剂量单位（如 J/cm²）。
+  final String? doseUnit;
+
+  /// 红斑：有无 / 开始时间 / 持续时间（小时）。
+  final bool erythema;
+  final DateTime? erythemaStart;
+  final int? erythemaDurationHours;
+
+  /// 疼痛 / 瘙痒 / 灼热：0=无 1=轻 2=中 3=重。
+  final int? painLevel;
+  final int? itchingLevel;
+  final int? burningLevel;
+
+  /// 水疱与其他反应。
+  final bool blister;
+  final String? otherReaction;
+  final String? doctorNotes;
+  final String? patientNotes;
+  final DateTime createdAt;
+  const PhototherapyRecordRow({
+    required this.id,
+    required this.patientId,
+    required this.diseaseId,
+    required this.occurredAt,
+    this.device,
+    this.bodyPart,
+    this.laterality,
+    this.dose,
+    this.doseUnit,
+    required this.erythema,
+    this.erythemaStart,
+    this.erythemaDurationHours,
+    this.painLevel,
+    this.itchingLevel,
+    this.burningLevel,
+    required this.blister,
+    this.otherReaction,
+    this.doctorNotes,
+    this.patientNotes,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['patient_id'] = Variable<String>(patientId);
+    map['disease_id'] = Variable<String>(diseaseId);
+    map['occurred_at'] = Variable<DateTime>(occurredAt);
+    if (!nullToAbsent || device != null) {
+      map['device'] = Variable<String>(device);
+    }
+    if (!nullToAbsent || bodyPart != null) {
+      map['body_part'] = Variable<String>(bodyPart);
+    }
+    if (!nullToAbsent || laterality != null) {
+      map['laterality'] = Variable<String>(laterality);
+    }
+    if (!nullToAbsent || dose != null) {
+      map['dose'] = Variable<double>(dose);
+    }
+    if (!nullToAbsent || doseUnit != null) {
+      map['dose_unit'] = Variable<String>(doseUnit);
+    }
+    map['erythema'] = Variable<bool>(erythema);
+    if (!nullToAbsent || erythemaStart != null) {
+      map['erythema_start'] = Variable<DateTime>(erythemaStart);
+    }
+    if (!nullToAbsent || erythemaDurationHours != null) {
+      map['erythema_duration_hours'] = Variable<int>(erythemaDurationHours);
+    }
+    if (!nullToAbsent || painLevel != null) {
+      map['pain_level'] = Variable<int>(painLevel);
+    }
+    if (!nullToAbsent || itchingLevel != null) {
+      map['itching_level'] = Variable<int>(itchingLevel);
+    }
+    if (!nullToAbsent || burningLevel != null) {
+      map['burning_level'] = Variable<int>(burningLevel);
+    }
+    map['blister'] = Variable<bool>(blister);
+    if (!nullToAbsent || otherReaction != null) {
+      map['other_reaction'] = Variable<String>(otherReaction);
+    }
+    if (!nullToAbsent || doctorNotes != null) {
+      map['doctor_notes'] = Variable<String>(doctorNotes);
+    }
+    if (!nullToAbsent || patientNotes != null) {
+      map['patient_notes'] = Variable<String>(patientNotes);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  PhototherapyRecordsCompanion toCompanion(bool nullToAbsent) {
+    return PhototherapyRecordsCompanion(
+      id: Value(id),
+      patientId: Value(patientId),
+      diseaseId: Value(diseaseId),
+      occurredAt: Value(occurredAt),
+      device: device == null && nullToAbsent
+          ? const Value.absent()
+          : Value(device),
+      bodyPart: bodyPart == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bodyPart),
+      laterality: laterality == null && nullToAbsent
+          ? const Value.absent()
+          : Value(laterality),
+      dose: dose == null && nullToAbsent ? const Value.absent() : Value(dose),
+      doseUnit: doseUnit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(doseUnit),
+      erythema: Value(erythema),
+      erythemaStart: erythemaStart == null && nullToAbsent
+          ? const Value.absent()
+          : Value(erythemaStart),
+      erythemaDurationHours: erythemaDurationHours == null && nullToAbsent
+          ? const Value.absent()
+          : Value(erythemaDurationHours),
+      painLevel: painLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(painLevel),
+      itchingLevel: itchingLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(itchingLevel),
+      burningLevel: burningLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(burningLevel),
+      blister: Value(blister),
+      otherReaction: otherReaction == null && nullToAbsent
+          ? const Value.absent()
+          : Value(otherReaction),
+      doctorNotes: doctorNotes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(doctorNotes),
+      patientNotes: patientNotes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(patientNotes),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PhototherapyRecordRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PhototherapyRecordRow(
+      id: serializer.fromJson<String>(json['id']),
+      patientId: serializer.fromJson<String>(json['patientId']),
+      diseaseId: serializer.fromJson<String>(json['diseaseId']),
+      occurredAt: serializer.fromJson<DateTime>(json['occurredAt']),
+      device: serializer.fromJson<String?>(json['device']),
+      bodyPart: serializer.fromJson<String?>(json['bodyPart']),
+      laterality: serializer.fromJson<String?>(json['laterality']),
+      dose: serializer.fromJson<double?>(json['dose']),
+      doseUnit: serializer.fromJson<String?>(json['doseUnit']),
+      erythema: serializer.fromJson<bool>(json['erythema']),
+      erythemaStart: serializer.fromJson<DateTime?>(json['erythemaStart']),
+      erythemaDurationHours: serializer.fromJson<int?>(
+        json['erythemaDurationHours'],
+      ),
+      painLevel: serializer.fromJson<int?>(json['painLevel']),
+      itchingLevel: serializer.fromJson<int?>(json['itchingLevel']),
+      burningLevel: serializer.fromJson<int?>(json['burningLevel']),
+      blister: serializer.fromJson<bool>(json['blister']),
+      otherReaction: serializer.fromJson<String?>(json['otherReaction']),
+      doctorNotes: serializer.fromJson<String?>(json['doctorNotes']),
+      patientNotes: serializer.fromJson<String?>(json['patientNotes']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'patientId': serializer.toJson<String>(patientId),
+      'diseaseId': serializer.toJson<String>(diseaseId),
+      'occurredAt': serializer.toJson<DateTime>(occurredAt),
+      'device': serializer.toJson<String?>(device),
+      'bodyPart': serializer.toJson<String?>(bodyPart),
+      'laterality': serializer.toJson<String?>(laterality),
+      'dose': serializer.toJson<double?>(dose),
+      'doseUnit': serializer.toJson<String?>(doseUnit),
+      'erythema': serializer.toJson<bool>(erythema),
+      'erythemaStart': serializer.toJson<DateTime?>(erythemaStart),
+      'erythemaDurationHours': serializer.toJson<int?>(erythemaDurationHours),
+      'painLevel': serializer.toJson<int?>(painLevel),
+      'itchingLevel': serializer.toJson<int?>(itchingLevel),
+      'burningLevel': serializer.toJson<int?>(burningLevel),
+      'blister': serializer.toJson<bool>(blister),
+      'otherReaction': serializer.toJson<String?>(otherReaction),
+      'doctorNotes': serializer.toJson<String?>(doctorNotes),
+      'patientNotes': serializer.toJson<String?>(patientNotes),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  PhototherapyRecordRow copyWith({
+    String? id,
+    String? patientId,
+    String? diseaseId,
+    DateTime? occurredAt,
+    Value<String?> device = const Value.absent(),
+    Value<String?> bodyPart = const Value.absent(),
+    Value<String?> laterality = const Value.absent(),
+    Value<double?> dose = const Value.absent(),
+    Value<String?> doseUnit = const Value.absent(),
+    bool? erythema,
+    Value<DateTime?> erythemaStart = const Value.absent(),
+    Value<int?> erythemaDurationHours = const Value.absent(),
+    Value<int?> painLevel = const Value.absent(),
+    Value<int?> itchingLevel = const Value.absent(),
+    Value<int?> burningLevel = const Value.absent(),
+    bool? blister,
+    Value<String?> otherReaction = const Value.absent(),
+    Value<String?> doctorNotes = const Value.absent(),
+    Value<String?> patientNotes = const Value.absent(),
+    DateTime? createdAt,
+  }) => PhototherapyRecordRow(
+    id: id ?? this.id,
+    patientId: patientId ?? this.patientId,
+    diseaseId: diseaseId ?? this.diseaseId,
+    occurredAt: occurredAt ?? this.occurredAt,
+    device: device.present ? device.value : this.device,
+    bodyPart: bodyPart.present ? bodyPart.value : this.bodyPart,
+    laterality: laterality.present ? laterality.value : this.laterality,
+    dose: dose.present ? dose.value : this.dose,
+    doseUnit: doseUnit.present ? doseUnit.value : this.doseUnit,
+    erythema: erythema ?? this.erythema,
+    erythemaStart: erythemaStart.present
+        ? erythemaStart.value
+        : this.erythemaStart,
+    erythemaDurationHours: erythemaDurationHours.present
+        ? erythemaDurationHours.value
+        : this.erythemaDurationHours,
+    painLevel: painLevel.present ? painLevel.value : this.painLevel,
+    itchingLevel: itchingLevel.present ? itchingLevel.value : this.itchingLevel,
+    burningLevel: burningLevel.present ? burningLevel.value : this.burningLevel,
+    blister: blister ?? this.blister,
+    otherReaction: otherReaction.present
+        ? otherReaction.value
+        : this.otherReaction,
+    doctorNotes: doctorNotes.present ? doctorNotes.value : this.doctorNotes,
+    patientNotes: patientNotes.present ? patientNotes.value : this.patientNotes,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PhototherapyRecordRow copyWithCompanion(PhototherapyRecordsCompanion data) {
+    return PhototherapyRecordRow(
+      id: data.id.present ? data.id.value : this.id,
+      patientId: data.patientId.present ? data.patientId.value : this.patientId,
+      diseaseId: data.diseaseId.present ? data.diseaseId.value : this.diseaseId,
+      occurredAt: data.occurredAt.present
+          ? data.occurredAt.value
+          : this.occurredAt,
+      device: data.device.present ? data.device.value : this.device,
+      bodyPart: data.bodyPart.present ? data.bodyPart.value : this.bodyPart,
+      laterality: data.laterality.present
+          ? data.laterality.value
+          : this.laterality,
+      dose: data.dose.present ? data.dose.value : this.dose,
+      doseUnit: data.doseUnit.present ? data.doseUnit.value : this.doseUnit,
+      erythema: data.erythema.present ? data.erythema.value : this.erythema,
+      erythemaStart: data.erythemaStart.present
+          ? data.erythemaStart.value
+          : this.erythemaStart,
+      erythemaDurationHours: data.erythemaDurationHours.present
+          ? data.erythemaDurationHours.value
+          : this.erythemaDurationHours,
+      painLevel: data.painLevel.present ? data.painLevel.value : this.painLevel,
+      itchingLevel: data.itchingLevel.present
+          ? data.itchingLevel.value
+          : this.itchingLevel,
+      burningLevel: data.burningLevel.present
+          ? data.burningLevel.value
+          : this.burningLevel,
+      blister: data.blister.present ? data.blister.value : this.blister,
+      otherReaction: data.otherReaction.present
+          ? data.otherReaction.value
+          : this.otherReaction,
+      doctorNotes: data.doctorNotes.present
+          ? data.doctorNotes.value
+          : this.doctorNotes,
+      patientNotes: data.patientNotes.present
+          ? data.patientNotes.value
+          : this.patientNotes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PhototherapyRecordRow(')
+          ..write('id: $id, ')
+          ..write('patientId: $patientId, ')
+          ..write('diseaseId: $diseaseId, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('device: $device, ')
+          ..write('bodyPart: $bodyPart, ')
+          ..write('laterality: $laterality, ')
+          ..write('dose: $dose, ')
+          ..write('doseUnit: $doseUnit, ')
+          ..write('erythema: $erythema, ')
+          ..write('erythemaStart: $erythemaStart, ')
+          ..write('erythemaDurationHours: $erythemaDurationHours, ')
+          ..write('painLevel: $painLevel, ')
+          ..write('itchingLevel: $itchingLevel, ')
+          ..write('burningLevel: $burningLevel, ')
+          ..write('blister: $blister, ')
+          ..write('otherReaction: $otherReaction, ')
+          ..write('doctorNotes: $doctorNotes, ')
+          ..write('patientNotes: $patientNotes, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    patientId,
+    diseaseId,
+    occurredAt,
+    device,
+    bodyPart,
+    laterality,
+    dose,
+    doseUnit,
+    erythema,
+    erythemaStart,
+    erythemaDurationHours,
+    painLevel,
+    itchingLevel,
+    burningLevel,
+    blister,
+    otherReaction,
+    doctorNotes,
+    patientNotes,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PhototherapyRecordRow &&
+          other.id == this.id &&
+          other.patientId == this.patientId &&
+          other.diseaseId == this.diseaseId &&
+          other.occurredAt == this.occurredAt &&
+          other.device == this.device &&
+          other.bodyPart == this.bodyPart &&
+          other.laterality == this.laterality &&
+          other.dose == this.dose &&
+          other.doseUnit == this.doseUnit &&
+          other.erythema == this.erythema &&
+          other.erythemaStart == this.erythemaStart &&
+          other.erythemaDurationHours == this.erythemaDurationHours &&
+          other.painLevel == this.painLevel &&
+          other.itchingLevel == this.itchingLevel &&
+          other.burningLevel == this.burningLevel &&
+          other.blister == this.blister &&
+          other.otherReaction == this.otherReaction &&
+          other.doctorNotes == this.doctorNotes &&
+          other.patientNotes == this.patientNotes &&
+          other.createdAt == this.createdAt);
+}
+
+class PhototherapyRecordsCompanion
+    extends UpdateCompanion<PhototherapyRecordRow> {
+  final Value<String> id;
+  final Value<String> patientId;
+  final Value<String> diseaseId;
+  final Value<DateTime> occurredAt;
+  final Value<String?> device;
+  final Value<String?> bodyPart;
+  final Value<String?> laterality;
+  final Value<double?> dose;
+  final Value<String?> doseUnit;
+  final Value<bool> erythema;
+  final Value<DateTime?> erythemaStart;
+  final Value<int?> erythemaDurationHours;
+  final Value<int?> painLevel;
+  final Value<int?> itchingLevel;
+  final Value<int?> burningLevel;
+  final Value<bool> blister;
+  final Value<String?> otherReaction;
+  final Value<String?> doctorNotes;
+  final Value<String?> patientNotes;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const PhototherapyRecordsCompanion({
+    this.id = const Value.absent(),
+    this.patientId = const Value.absent(),
+    this.diseaseId = const Value.absent(),
+    this.occurredAt = const Value.absent(),
+    this.device = const Value.absent(),
+    this.bodyPart = const Value.absent(),
+    this.laterality = const Value.absent(),
+    this.dose = const Value.absent(),
+    this.doseUnit = const Value.absent(),
+    this.erythema = const Value.absent(),
+    this.erythemaStart = const Value.absent(),
+    this.erythemaDurationHours = const Value.absent(),
+    this.painLevel = const Value.absent(),
+    this.itchingLevel = const Value.absent(),
+    this.burningLevel = const Value.absent(),
+    this.blister = const Value.absent(),
+    this.otherReaction = const Value.absent(),
+    this.doctorNotes = const Value.absent(),
+    this.patientNotes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PhototherapyRecordsCompanion.insert({
+    required String id,
+    required String patientId,
+    required String diseaseId,
+    required DateTime occurredAt,
+    this.device = const Value.absent(),
+    this.bodyPart = const Value.absent(),
+    this.laterality = const Value.absent(),
+    this.dose = const Value.absent(),
+    this.doseUnit = const Value.absent(),
+    this.erythema = const Value.absent(),
+    this.erythemaStart = const Value.absent(),
+    this.erythemaDurationHours = const Value.absent(),
+    this.painLevel = const Value.absent(),
+    this.itchingLevel = const Value.absent(),
+    this.burningLevel = const Value.absent(),
+    this.blister = const Value.absent(),
+    this.otherReaction = const Value.absent(),
+    this.doctorNotes = const Value.absent(),
+    this.patientNotes = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       patientId = Value(patientId),
+       diseaseId = Value(diseaseId),
+       occurredAt = Value(occurredAt),
+       createdAt = Value(createdAt);
+  static Insertable<PhototherapyRecordRow> custom({
+    Expression<String>? id,
+    Expression<String>? patientId,
+    Expression<String>? diseaseId,
+    Expression<DateTime>? occurredAt,
+    Expression<String>? device,
+    Expression<String>? bodyPart,
+    Expression<String>? laterality,
+    Expression<double>? dose,
+    Expression<String>? doseUnit,
+    Expression<bool>? erythema,
+    Expression<DateTime>? erythemaStart,
+    Expression<int>? erythemaDurationHours,
+    Expression<int>? painLevel,
+    Expression<int>? itchingLevel,
+    Expression<int>? burningLevel,
+    Expression<bool>? blister,
+    Expression<String>? otherReaction,
+    Expression<String>? doctorNotes,
+    Expression<String>? patientNotes,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (patientId != null) 'patient_id': patientId,
+      if (diseaseId != null) 'disease_id': diseaseId,
+      if (occurredAt != null) 'occurred_at': occurredAt,
+      if (device != null) 'device': device,
+      if (bodyPart != null) 'body_part': bodyPart,
+      if (laterality != null) 'laterality': laterality,
+      if (dose != null) 'dose': dose,
+      if (doseUnit != null) 'dose_unit': doseUnit,
+      if (erythema != null) 'erythema': erythema,
+      if (erythemaStart != null) 'erythema_start': erythemaStart,
+      if (erythemaDurationHours != null)
+        'erythema_duration_hours': erythemaDurationHours,
+      if (painLevel != null) 'pain_level': painLevel,
+      if (itchingLevel != null) 'itching_level': itchingLevel,
+      if (burningLevel != null) 'burning_level': burningLevel,
+      if (blister != null) 'blister': blister,
+      if (otherReaction != null) 'other_reaction': otherReaction,
+      if (doctorNotes != null) 'doctor_notes': doctorNotes,
+      if (patientNotes != null) 'patient_notes': patientNotes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PhototherapyRecordsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? patientId,
+    Value<String>? diseaseId,
+    Value<DateTime>? occurredAt,
+    Value<String?>? device,
+    Value<String?>? bodyPart,
+    Value<String?>? laterality,
+    Value<double?>? dose,
+    Value<String?>? doseUnit,
+    Value<bool>? erythema,
+    Value<DateTime?>? erythemaStart,
+    Value<int?>? erythemaDurationHours,
+    Value<int?>? painLevel,
+    Value<int?>? itchingLevel,
+    Value<int?>? burningLevel,
+    Value<bool>? blister,
+    Value<String?>? otherReaction,
+    Value<String?>? doctorNotes,
+    Value<String?>? patientNotes,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return PhototherapyRecordsCompanion(
+      id: id ?? this.id,
+      patientId: patientId ?? this.patientId,
+      diseaseId: diseaseId ?? this.diseaseId,
+      occurredAt: occurredAt ?? this.occurredAt,
+      device: device ?? this.device,
+      bodyPart: bodyPart ?? this.bodyPart,
+      laterality: laterality ?? this.laterality,
+      dose: dose ?? this.dose,
+      doseUnit: doseUnit ?? this.doseUnit,
+      erythema: erythema ?? this.erythema,
+      erythemaStart: erythemaStart ?? this.erythemaStart,
+      erythemaDurationHours:
+          erythemaDurationHours ?? this.erythemaDurationHours,
+      painLevel: painLevel ?? this.painLevel,
+      itchingLevel: itchingLevel ?? this.itchingLevel,
+      burningLevel: burningLevel ?? this.burningLevel,
+      blister: blister ?? this.blister,
+      otherReaction: otherReaction ?? this.otherReaction,
+      doctorNotes: doctorNotes ?? this.doctorNotes,
+      patientNotes: patientNotes ?? this.patientNotes,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (patientId.present) {
+      map['patient_id'] = Variable<String>(patientId.value);
+    }
+    if (diseaseId.present) {
+      map['disease_id'] = Variable<String>(diseaseId.value);
+    }
+    if (occurredAt.present) {
+      map['occurred_at'] = Variable<DateTime>(occurredAt.value);
+    }
+    if (device.present) {
+      map['device'] = Variable<String>(device.value);
+    }
+    if (bodyPart.present) {
+      map['body_part'] = Variable<String>(bodyPart.value);
+    }
+    if (laterality.present) {
+      map['laterality'] = Variable<String>(laterality.value);
+    }
+    if (dose.present) {
+      map['dose'] = Variable<double>(dose.value);
+    }
+    if (doseUnit.present) {
+      map['dose_unit'] = Variable<String>(doseUnit.value);
+    }
+    if (erythema.present) {
+      map['erythema'] = Variable<bool>(erythema.value);
+    }
+    if (erythemaStart.present) {
+      map['erythema_start'] = Variable<DateTime>(erythemaStart.value);
+    }
+    if (erythemaDurationHours.present) {
+      map['erythema_duration_hours'] = Variable<int>(
+        erythemaDurationHours.value,
+      );
+    }
+    if (painLevel.present) {
+      map['pain_level'] = Variable<int>(painLevel.value);
+    }
+    if (itchingLevel.present) {
+      map['itching_level'] = Variable<int>(itchingLevel.value);
+    }
+    if (burningLevel.present) {
+      map['burning_level'] = Variable<int>(burningLevel.value);
+    }
+    if (blister.present) {
+      map['blister'] = Variable<bool>(blister.value);
+    }
+    if (otherReaction.present) {
+      map['other_reaction'] = Variable<String>(otherReaction.value);
+    }
+    if (doctorNotes.present) {
+      map['doctor_notes'] = Variable<String>(doctorNotes.value);
+    }
+    if (patientNotes.present) {
+      map['patient_notes'] = Variable<String>(patientNotes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PhototherapyRecordsCompanion(')
+          ..write('id: $id, ')
+          ..write('patientId: $patientId, ')
+          ..write('diseaseId: $diseaseId, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('device: $device, ')
+          ..write('bodyPart: $bodyPart, ')
+          ..write('laterality: $laterality, ')
+          ..write('dose: $dose, ')
+          ..write('doseUnit: $doseUnit, ')
+          ..write('erythema: $erythema, ')
+          ..write('erythemaStart: $erythemaStart, ')
+          ..write('erythemaDurationHours: $erythemaDurationHours, ')
+          ..write('painLevel: $painLevel, ')
+          ..write('itchingLevel: $itchingLevel, ')
+          ..write('burningLevel: $burningLevel, ')
+          ..write('blister: $blister, ')
+          ..write('otherReaction: $otherReaction, ')
+          ..write('doctorNotes: $doctorNotes, ')
+          ..write('patientNotes: $patientNotes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4172,6 +5338,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RemindersTable reminders = $RemindersTable(this);
   late final $EventsTable events = $EventsTable(this);
   late final $PreferencesTable preferences = $PreferencesTable(this);
+  late final $PhototherapyRecordsTable phototherapyRecords =
+      $PhototherapyRecordsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4184,6 +5352,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     reminders,
     events,
     preferences,
+    phototherapyRecords,
   ];
 }
 
@@ -6190,6 +7359,525 @@ typedef $$PreferencesTableProcessedTableManager =
       PreferenceRow,
       PrefetchHooks Function()
     >;
+typedef $$PhototherapyRecordsTableCreateCompanionBuilder =
+    PhototherapyRecordsCompanion Function({
+      required String id,
+      required String patientId,
+      required String diseaseId,
+      required DateTime occurredAt,
+      Value<String?> device,
+      Value<String?> bodyPart,
+      Value<String?> laterality,
+      Value<double?> dose,
+      Value<String?> doseUnit,
+      Value<bool> erythema,
+      Value<DateTime?> erythemaStart,
+      Value<int?> erythemaDurationHours,
+      Value<int?> painLevel,
+      Value<int?> itchingLevel,
+      Value<int?> burningLevel,
+      Value<bool> blister,
+      Value<String?> otherReaction,
+      Value<String?> doctorNotes,
+      Value<String?> patientNotes,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$PhototherapyRecordsTableUpdateCompanionBuilder =
+    PhototherapyRecordsCompanion Function({
+      Value<String> id,
+      Value<String> patientId,
+      Value<String> diseaseId,
+      Value<DateTime> occurredAt,
+      Value<String?> device,
+      Value<String?> bodyPart,
+      Value<String?> laterality,
+      Value<double?> dose,
+      Value<String?> doseUnit,
+      Value<bool> erythema,
+      Value<DateTime?> erythemaStart,
+      Value<int?> erythemaDurationHours,
+      Value<int?> painLevel,
+      Value<int?> itchingLevel,
+      Value<int?> burningLevel,
+      Value<bool> blister,
+      Value<String?> otherReaction,
+      Value<String?> doctorNotes,
+      Value<String?> patientNotes,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$PhototherapyRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $PhototherapyRecordsTable> {
+  $$PhototherapyRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get patientId => $composableBuilder(
+    column: $table.patientId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get diseaseId => $composableBuilder(
+    column: $table.diseaseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get device => $composableBuilder(
+    column: $table.device,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bodyPart => $composableBuilder(
+    column: $table.bodyPart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get laterality => $composableBuilder(
+    column: $table.laterality,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get dose => $composableBuilder(
+    column: $table.dose,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get doseUnit => $composableBuilder(
+    column: $table.doseUnit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get erythema => $composableBuilder(
+    column: $table.erythema,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get erythemaStart => $composableBuilder(
+    column: $table.erythemaStart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get erythemaDurationHours => $composableBuilder(
+    column: $table.erythemaDurationHours,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get painLevel => $composableBuilder(
+    column: $table.painLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get itchingLevel => $composableBuilder(
+    column: $table.itchingLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get burningLevel => $composableBuilder(
+    column: $table.burningLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get blister => $composableBuilder(
+    column: $table.blister,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get otherReaction => $composableBuilder(
+    column: $table.otherReaction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get doctorNotes => $composableBuilder(
+    column: $table.doctorNotes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get patientNotes => $composableBuilder(
+    column: $table.patientNotes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PhototherapyRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PhototherapyRecordsTable> {
+  $$PhototherapyRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get patientId => $composableBuilder(
+    column: $table.patientId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get diseaseId => $composableBuilder(
+    column: $table.diseaseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get device => $composableBuilder(
+    column: $table.device,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bodyPart => $composableBuilder(
+    column: $table.bodyPart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get laterality => $composableBuilder(
+    column: $table.laterality,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get dose => $composableBuilder(
+    column: $table.dose,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get doseUnit => $composableBuilder(
+    column: $table.doseUnit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get erythema => $composableBuilder(
+    column: $table.erythema,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get erythemaStart => $composableBuilder(
+    column: $table.erythemaStart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get erythemaDurationHours => $composableBuilder(
+    column: $table.erythemaDurationHours,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get painLevel => $composableBuilder(
+    column: $table.painLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get itchingLevel => $composableBuilder(
+    column: $table.itchingLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get burningLevel => $composableBuilder(
+    column: $table.burningLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get blister => $composableBuilder(
+    column: $table.blister,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get otherReaction => $composableBuilder(
+    column: $table.otherReaction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get doctorNotes => $composableBuilder(
+    column: $table.doctorNotes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get patientNotes => $composableBuilder(
+    column: $table.patientNotes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PhototherapyRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PhototherapyRecordsTable> {
+  $$PhototherapyRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get patientId =>
+      $composableBuilder(column: $table.patientId, builder: (column) => column);
+
+  GeneratedColumn<String> get diseaseId =>
+      $composableBuilder(column: $table.diseaseId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get device =>
+      $composableBuilder(column: $table.device, builder: (column) => column);
+
+  GeneratedColumn<String> get bodyPart =>
+      $composableBuilder(column: $table.bodyPart, builder: (column) => column);
+
+  GeneratedColumn<String> get laterality => $composableBuilder(
+    column: $table.laterality,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get dose =>
+      $composableBuilder(column: $table.dose, builder: (column) => column);
+
+  GeneratedColumn<String> get doseUnit =>
+      $composableBuilder(column: $table.doseUnit, builder: (column) => column);
+
+  GeneratedColumn<bool> get erythema =>
+      $composableBuilder(column: $table.erythema, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get erythemaStart => $composableBuilder(
+    column: $table.erythemaStart,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get erythemaDurationHours => $composableBuilder(
+    column: $table.erythemaDurationHours,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get painLevel =>
+      $composableBuilder(column: $table.painLevel, builder: (column) => column);
+
+  GeneratedColumn<int> get itchingLevel => $composableBuilder(
+    column: $table.itchingLevel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get burningLevel => $composableBuilder(
+    column: $table.burningLevel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get blister =>
+      $composableBuilder(column: $table.blister, builder: (column) => column);
+
+  GeneratedColumn<String> get otherReaction => $composableBuilder(
+    column: $table.otherReaction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get doctorNotes => $composableBuilder(
+    column: $table.doctorNotes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get patientNotes => $composableBuilder(
+    column: $table.patientNotes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$PhototherapyRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PhototherapyRecordsTable,
+          PhototherapyRecordRow,
+          $$PhototherapyRecordsTableFilterComposer,
+          $$PhototherapyRecordsTableOrderingComposer,
+          $$PhototherapyRecordsTableAnnotationComposer,
+          $$PhototherapyRecordsTableCreateCompanionBuilder,
+          $$PhototherapyRecordsTableUpdateCompanionBuilder,
+          (
+            PhototherapyRecordRow,
+            BaseReferences<
+              _$AppDatabase,
+              $PhototherapyRecordsTable,
+              PhototherapyRecordRow
+            >,
+          ),
+          PhototherapyRecordRow,
+          PrefetchHooks Function()
+        > {
+  $$PhototherapyRecordsTableTableManager(
+    _$AppDatabase db,
+    $PhototherapyRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PhototherapyRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PhototherapyRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PhototherapyRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> patientId = const Value.absent(),
+                Value<String> diseaseId = const Value.absent(),
+                Value<DateTime> occurredAt = const Value.absent(),
+                Value<String?> device = const Value.absent(),
+                Value<String?> bodyPart = const Value.absent(),
+                Value<String?> laterality = const Value.absent(),
+                Value<double?> dose = const Value.absent(),
+                Value<String?> doseUnit = const Value.absent(),
+                Value<bool> erythema = const Value.absent(),
+                Value<DateTime?> erythemaStart = const Value.absent(),
+                Value<int?> erythemaDurationHours = const Value.absent(),
+                Value<int?> painLevel = const Value.absent(),
+                Value<int?> itchingLevel = const Value.absent(),
+                Value<int?> burningLevel = const Value.absent(),
+                Value<bool> blister = const Value.absent(),
+                Value<String?> otherReaction = const Value.absent(),
+                Value<String?> doctorNotes = const Value.absent(),
+                Value<String?> patientNotes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PhototherapyRecordsCompanion(
+                id: id,
+                patientId: patientId,
+                diseaseId: diseaseId,
+                occurredAt: occurredAt,
+                device: device,
+                bodyPart: bodyPart,
+                laterality: laterality,
+                dose: dose,
+                doseUnit: doseUnit,
+                erythema: erythema,
+                erythemaStart: erythemaStart,
+                erythemaDurationHours: erythemaDurationHours,
+                painLevel: painLevel,
+                itchingLevel: itchingLevel,
+                burningLevel: burningLevel,
+                blister: blister,
+                otherReaction: otherReaction,
+                doctorNotes: doctorNotes,
+                patientNotes: patientNotes,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String patientId,
+                required String diseaseId,
+                required DateTime occurredAt,
+                Value<String?> device = const Value.absent(),
+                Value<String?> bodyPart = const Value.absent(),
+                Value<String?> laterality = const Value.absent(),
+                Value<double?> dose = const Value.absent(),
+                Value<String?> doseUnit = const Value.absent(),
+                Value<bool> erythema = const Value.absent(),
+                Value<DateTime?> erythemaStart = const Value.absent(),
+                Value<int?> erythemaDurationHours = const Value.absent(),
+                Value<int?> painLevel = const Value.absent(),
+                Value<int?> itchingLevel = const Value.absent(),
+                Value<int?> burningLevel = const Value.absent(),
+                Value<bool> blister = const Value.absent(),
+                Value<String?> otherReaction = const Value.absent(),
+                Value<String?> doctorNotes = const Value.absent(),
+                Value<String?> patientNotes = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PhototherapyRecordsCompanion.insert(
+                id: id,
+                patientId: patientId,
+                diseaseId: diseaseId,
+                occurredAt: occurredAt,
+                device: device,
+                bodyPart: bodyPart,
+                laterality: laterality,
+                dose: dose,
+                doseUnit: doseUnit,
+                erythema: erythema,
+                erythemaStart: erythemaStart,
+                erythemaDurationHours: erythemaDurationHours,
+                painLevel: painLevel,
+                itchingLevel: itchingLevel,
+                burningLevel: burningLevel,
+                blister: blister,
+                otherReaction: otherReaction,
+                doctorNotes: doctorNotes,
+                patientNotes: patientNotes,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PhototherapyRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PhototherapyRecordsTable,
+      PhototherapyRecordRow,
+      $$PhototherapyRecordsTableFilterComposer,
+      $$PhototherapyRecordsTableOrderingComposer,
+      $$PhototherapyRecordsTableAnnotationComposer,
+      $$PhototherapyRecordsTableCreateCompanionBuilder,
+      $$PhototherapyRecordsTableUpdateCompanionBuilder,
+      (
+        PhototherapyRecordRow,
+        BaseReferences<
+          _$AppDatabase,
+          $PhototherapyRecordsTable,
+          PhototherapyRecordRow
+        >,
+      ),
+      PhototherapyRecordRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6208,4 +7896,6 @@ class $AppDatabaseManager {
       $$EventsTableTableManager(_db, _db.events);
   $$PreferencesTableTableManager get preferences =>
       $$PreferencesTableTableManager(_db, _db.preferences);
+  $$PhototherapyRecordsTableTableManager get phototherapyRecords =>
+      $$PhototherapyRecordsTableTableManager(_db, _db.phototherapyRecords);
 }

@@ -66,52 +66,97 @@ class DiseasesPage extends ConsumerWidget {
   }
 }
 
-class _DiseaseTile extends StatelessWidget {
+class _DiseaseTile extends ConsumerWidget {
   const _DiseaseTile({required this.disease});
 
   final Disease disease;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).extension<ColorTokens>()!;
 
-    return GlassCard(
-      onTap: () => context.push('/disease/${disease.id}'),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: colors.brand.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
+    return GestureDetector(
+      onLongPress: () => _showStatusSheet(context, ref),
+      child: GlassCard(
+        onTap: () => context.push('/disease/${disease.id}'),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: colors.brand.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.medical_services_outlined,
+                color: colors.brand,
+                size: 22,
+              ),
             ),
-            child: Icon(
-              Icons.medical_services_outlined,
-              color: colors.brand,
-              size: 22,
+            SizedBox(width: SpacingTokens.x3),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(disease.name, style: context.bodyBoldStyle),
+                  SizedBox(height: SpacingTokens.x1),
+                  Text(
+                    [
+                      disease.status.labelZh,
+                      if (disease.diagnosedAt != null)
+                        '确诊于 ${DateFormat('yyyy/M/d').format(disease.diagnosedAt!)}',
+                    ].join(' · '),
+                    style: context.captionStyle,
+                  ),
+                ],
+              ),
             ),
-          ),
-          SizedBox(width: SpacingTokens.x3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(disease.name, style: context.bodyBoldStyle),
-                SizedBox(height: SpacingTokens.x1),
-                Text(
-                  [
-                    disease.status.labelZh,
-                    if (disease.diagnosedAt != null)
-                      '确诊于 ${DateFormat('yyyy/M/d').format(disease.diagnosedAt!)}',
-                  ].join(' · '),
-                  style: context.captionStyle,
-                ),
-              ],
-            ),
-          ),
-          Icon(Icons.chevron_right, color: colors.textTertiary),
-        ],
+            Icon(Icons.chevron_right, color: colors.textTertiary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 长按弹出疾病状态选择：管理中 / 缓解期 / 已痊愈。
+  void _showStatusSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => GlassSurface(
+        level: GlassLevel.overlay,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(RadiusTokens.xlarge),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          SpacingTokens.x5,
+          SpacingTokens.x4,
+          SpacingTokens.x5,
+          SpacingTokens.x6,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('${disease.name} · 状态', style: context.headlineStyle),
+            SizedBox(height: SpacingTokens.x4),
+            for (final status in DiseaseStatus.values)
+              _DiseaseOption(
+                title: status.labelZh,
+                selected: disease.status == status,
+                onTap: () async {
+                  await ref
+                      .read(repositoryProvider)
+                      .updateDiseaseStatus(disease.id, status);
+                  if (sheetContext.mounted) {
+                    Navigator.of(sheetContext).pop();
+                  }
+                },
+              ),
+          ],
+        ),
       ),
     );
   }

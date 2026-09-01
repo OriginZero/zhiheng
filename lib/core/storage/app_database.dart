@@ -139,6 +139,52 @@ class Events extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// 308nm 光疗记录表（§4：部位/剂量/红斑等结构化字段）。
+@DataClassName('PhototherapyRecordRow')
+class PhototherapyRecords extends Table {
+  TextColumn get id => text()();
+  TextColumn get patientId => text()();
+  TextColumn get diseaseId => text()();
+  DateTimeColumn get occurredAt => dateTime()();
+
+  /// 治疗设备（如 308nm 准分子光）。
+  TextColumn get device => text().nullable()();
+
+  /// 治疗部位（如 手背）。
+  TextColumn get bodyPart => text().nullable()();
+
+  /// 左右侧（left / right / bilateral / none）。
+  TextColumn get laterality => text().nullable()();
+
+  /// 单次剂量。
+  RealColumn get dose => real().nullable()();
+
+  /// 剂量单位（如 J/cm²）。
+  TextColumn get doseUnit => text().nullable()();
+
+  /// 红斑：有无 / 开始时间 / 持续时间（小时）。
+  BoolColumn get erythema => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get erythemaStart => dateTime().nullable()();
+  IntColumn get erythemaDurationHours => integer().nullable()();
+
+  /// 疼痛 / 瘙痒 / 灼热：0=无 1=轻 2=中 3=重。
+  IntColumn get painLevel => integer().nullable()();
+  IntColumn get itchingLevel => integer().nullable()();
+  IntColumn get burningLevel => integer().nullable()();
+
+  /// 水疱与其他反应。
+  BoolColumn get blister => boolean().withDefault(const Constant(false))();
+  TextColumn get otherReaction => text().nullable()();
+
+  TextColumn get doctorNotes => text().nullable()();
+  TextColumn get patientNotes => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// 应用偏好（主题模式等本地设置的键值存储）。
 @DataClassName('PreferenceRow')
 class Preferences extends Table {
@@ -155,13 +201,22 @@ class Preferences extends Table {
 /// 当前为纯本地存储（无后端）；表结构已带 createdAt/updatedAt，
 /// 未来接入同步时按 §20 补充 version / syncStatus / deviceId。
 @DriftDatabase(
-  tables: [Patients, Diseases, CarePlans, Tasks, Reminders, Events, Preferences],
+  tables: [
+    Patients,
+    Diseases,
+    CarePlans,
+    Tasks,
+    Reminders,
+    Events,
+    Preferences,
+    PhototherapyRecords,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -188,6 +243,10 @@ class AppDatabase extends _$AppDatabase {
           if (from < 5) {
             await m.addColumn(tasks, tasks.notes);
             await m.addColumn(events, events.taskId);
+          }
+          // v6：光疗记录表。
+          if (from < 6) {
+            await m.createTable(phototherapyRecords);
           }
         },
       );

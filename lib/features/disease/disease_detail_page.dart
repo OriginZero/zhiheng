@@ -12,6 +12,7 @@ import '../../shared/forms/task_form_sheet.dart';
 import '../../shared/widgets/task_sheet.dart';
 import '../../shared/widgets/async_status_view.dart';
 import '../../shared/widgets/glass/glass.dart';
+import '../phototherapy/phototherapy_form_sheet.dart';
 
 /// 疾病详情页：指南模板、当前计划、未完成任务、添加任务入口。
 ///
@@ -99,6 +100,28 @@ class DiseaseDetailPage extends ConsumerWidget {
               children: [for (final task in list) _TaskTile(task: task)],
             ),
           ),
+          if (disease.code == DiseaseCodes.vitiligo) ...[
+            SizedBox(height: SpacingTokens.x5),
+            _SectionHeader(
+              title: '光疗记录',
+              onAdd: () => _addPhototherapyRecord(context, ref, disease),
+            ),
+            SizedBox(height: SpacingTokens.x2),
+            AsyncStatusView(
+              value: ref.watch(phototherapyRecordsProvider(disease.id)),
+              emptyState: const EmptyState(
+                icon: Icons.flash_on_outlined,
+                title: '还没有光疗记录',
+                message: '完成第一次治疗后这里会显示记录',
+              ),
+              builder: (records) => Column(
+                children: [
+                  for (final record in records)
+                    _PhototherapyTile(record: record),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -125,6 +148,18 @@ class DiseaseDetailPage extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _CarePlanFormSheet(disease: disease),
+    );
+  }
+
+  Future<void> _addPhototherapyRecord(
+    BuildContext context,
+    WidgetRef ref,
+    Disease disease,
+  ) async {
+    await PhototherapyFormSheet.show(
+      context,
+      patientId: localPatientId,
+      diseaseId: disease.id,
     );
   }
 }
@@ -347,6 +382,79 @@ class _PlanTile extends ConsumerWidget {
               ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 光疗记录卡：日期、部位、剂量与皮肤反应摘要。
+class _PhototherapyTile extends StatelessWidget {
+  const _PhototherapyTile({required this.record});
+
+  final PhototherapyRecord record;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final laterality = record.laterality == null
+        ? null
+        : BodyLaterality.values
+              .where((v) => v.name == record.laterality)
+              .firstOrNull;
+    final bodyPart = [
+      if (record.bodyPart != null && record.bodyPart!.isNotEmpty)
+        record.bodyPart,
+      if (laterality != null && laterality != BodyLaterality.none)
+        laterality.labelZh,
+    ].join(' · ');
+    final noReaction = record.reactionSummary == '无不适';
+    final reactionColor = record.blister
+        ? colors.critical
+        : (noReaction ? colors.success : colors.warning);
+
+    return GlassCard(
+      margin: EdgeInsets.only(bottom: SpacingTokens.x2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            DateFormat('M月d日 HH:mm').format(record.occurredAt),
+            style: context.bodyBoldStyle,
+          ),
+          SizedBox(height: SpacingTokens.x1),
+          Row(
+            children: [
+              Text(
+                '部位：${bodyPart.isEmpty ? '未记录' : bodyPart}',
+                style: context.secondaryLabelStyle,
+              ),
+              SizedBox(width: SpacingTokens.x2),
+              Text(
+                '剂量：${record.doseLabel}',
+                style: context.secondaryLabelStyle,
+              ),
+            ],
+          ),
+          if (record.device != null && record.device!.isNotEmpty) ...[
+            SizedBox(height: SpacingTokens.x1),
+            Text('设备：${record.device}', style: context.captionStyle),
+          ],
+          SizedBox(height: SpacingTokens.x2),
+          Row(
+            children: [
+              Icon(
+                noReaction ? Icons.check_circle_outline : Icons.warning_amber,
+                size: 16,
+                color: reactionColor,
+              ),
+              SizedBox(width: SpacingTokens.x1),
+              Text(
+                record.reactionSummary,
+                style: context.labelStyle.copyWith(color: reactionColor),
+              ),
+            ],
+          ),
         ],
       ),
     );

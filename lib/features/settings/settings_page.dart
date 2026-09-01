@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../app/providers/core_providers.dart';
 import '../../app/providers/preferences_providers.dart';
@@ -84,61 +85,246 @@ class _ProfileCard extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.edit_outlined, size: 20),
-            tooltip: '修改名字',
+            tooltip: '编辑档案',
             onPressed: patient == null
                 ? null
-                : () => _showRenameSheet(context, ref, patient!),
+                : () => _showProfileSheet(context, patient!),
           ),
         ],
       ),
     );
   }
 
-  void _showRenameSheet(BuildContext context, WidgetRef ref, Patient patient) {
-    final controller = TextEditingController(text: patient.name);
-
+  void _showProfileSheet(BuildContext context, Patient patient) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-        ),
-        child: GlassSurface(
-          level: GlassLevel.overlay,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(RadiusTokens.xlarge),
+      builder: (_) => _ProfileSheet(patient: patient),
+    );
+  }
+}
+
+/// 档案编辑弹层：姓名 + 性别 + 出生日期。
+class _ProfileSheet extends ConsumerStatefulWidget {
+  const _ProfileSheet({required this.patient});
+
+  final Patient patient;
+
+  @override
+  ConsumerState<_ProfileSheet> createState() => _ProfileSheetState();
+}
+
+class _ProfileSheetState extends ConsumerState<_ProfileSheet> {
+  late final TextEditingController _nameController;
+  late Gender _gender;
+  DateTime? _birthDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.patient.name);
+    _gender = widget.patient.gender;
+    _birthDate = widget.patient.birthDate;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _birthDate ?? today,
+      firstDate: DateTime(1900),
+      lastDate: today,
+      helpText: '选择出生日期',
+    );
+    if (picked != null) {
+      setState(() => _birthDate = picked);
+    }
+  }
+
+  Future<void> _save() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) return;
+    await ref.read(repositoryProvider).savePatient(
+          widget.patient.copyWith(
+            name: name,
+            gender: _gender,
+            birthDate: _birthDate,
+            clearBirthDate: _birthDate == null,
           ),
-          padding: EdgeInsets.all(SpacingTokens.x5),
+        );
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: GlassSurface(
+        level: GlassLevel.overlay,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(RadiusTokens.xlarge),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          SpacingTokens.x5,
+          SpacingTokens.x4,
+          SpacingTokens.x5,
+          SpacingTokens.x6,
+        ),
+        child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('修改名字', style: context.headlineStyle),
+              Text('编辑档案', style: context.headlineStyle),
               SizedBox(height: SpacingTokens.x4),
               TextField(
-                controller: controller,
+                controller: _nameController,
                 autofocus: true,
                 decoration: const InputDecoration(labelText: '名字'),
               ),
               SizedBox(height: SpacingTokens.x4),
+              Text('性别', style: context.labelBoldStyle),
+              SizedBox(height: SpacingTokens.x2),
+              Wrap(
+                spacing: SpacingTokens.x2,
+                runSpacing: SpacingTokens.x2,
+                children: [
+                  for (final gender in Gender.values)
+                    _GenderChip(
+                      label: gender.labelZh,
+                      selected: _gender == gender,
+                      onTap: () => setState(() => _gender = gender),
+                    ),
+                ],
+              ),
+              SizedBox(height: SpacingTokens.x4),
+              Text('出生日期', style: context.labelBoldStyle),
+              SizedBox(height: SpacingTokens.x2),
+              _BirthDateField(
+                date: _birthDate,
+                onTap: _pickBirthDate,
+                onClear: _birthDate == null
+                    ? null
+                    : () => setState(() => _birthDate = null),
+              ),
+              SizedBox(height: SpacingTokens.x4),
               GlassButton(
                 expanded: true,
-                onPressed: () async {
-                  final name = controller.text.trim();
-                  if (name.isEmpty) return;
-                  await ref
-                      .read(repositoryProvider)
-                      .savePatient(patient.copyWith(name: name));
-                  if (sheetContext.mounted) {
-                    Navigator.of(sheetContext).pop();
-                  }
-                },
+                onPressed: _save,
                 child: const Text('保存'),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 性别选择 chip。
+class _GenderChip extends StatelessWidget {
+  const _GenderChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+
+    return InkWell(
+      borderRadius: RadiusTokens.pillShape,
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: SpacingTokens.x3,
+          vertical: SpacingTokens.x2,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? colors.brand : colors.divider,
+          borderRadius: RadiusTokens.pillShape,
+        ),
+        child: Text(
+          label,
+          style: context.labelStyle.copyWith(
+            color: selected ? colors.onBrand : colors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 出生日期选择字段：点击弹日期选择器，已选时显示日期与清除按钮。
+class _BirthDateField extends StatelessWidget {
+  const _BirthDateField({
+    required this.date,
+    required this.onTap,
+    this.onClear,
+  });
+
+  final DateTime? date;
+  final VoidCallback onTap;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+
+    return InkWell(
+      borderRadius: RadiusTokens.mediumShape,
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: SpacingTokens.x4,
+          vertical: SpacingTokens.x3,
+        ),
+        decoration: BoxDecoration(
+          color: colors.divider.withValues(alpha: 0.5),
+          borderRadius: RadiusTokens.mediumShape,
+          border: Border.all(color: colors.divider),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.cake_outlined, size: 18, color: colors.textSecondary),
+            SizedBox(width: SpacingTokens.x2),
+            Expanded(
+              child: Text(
+                date == null
+                    ? '未设置'
+                    : DateFormat('yyyy年M月d日').format(date!),
+                style: date == null
+                    ? context.labelStyle.copyWith(color: colors.textTertiary)
+                    : context.labelStyle,
+              ),
+            ),
+            if (onClear != null)
+              GestureDetector(
+                onTap: onClear,
+                child: Padding(
+                  padding: EdgeInsets.all(SpacingTokens.x1),
+                  child: Text(
+                    '清除',
+                    style: context.labelStyle.copyWith(color: colors.brand),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

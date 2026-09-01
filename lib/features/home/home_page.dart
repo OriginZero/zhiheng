@@ -11,6 +11,7 @@ import '../../shared/forms/task_form_sheet.dart';
 import '../../shared/widgets/task_sheet.dart';
 import '../../shared/widgets/async_status_view.dart';
 import '../../shared/widgets/glass/glass.dart';
+import '../../shared/widgets/event_record_sheet.dart';
 
 /// 首页：Today（开发文档 §31）。
 ///
@@ -35,9 +36,14 @@ class HomePage extends ConsumerWidget {
       children: [
         _Greeting(patientName: patient),
         SizedBox(height: SpacingTokens.x3),
+        const _OverdueSection(),
         const _DiseaseSection(),
         SizedBox(height: SpacingTokens.x5),
-        _SectionHeader(title: '今日管理', onAdd: () => _addTask(context, ref)),
+        _SectionHeader(
+          title: '今日管理',
+          onAdd: () => _addTask(context, ref),
+          onRecord: () => EventRecordSheet.show(context),
+        ),
         SizedBox(height: SpacingTokens.x3),
         AsyncStatusView(
           value: todayTasks,
@@ -86,10 +92,17 @@ class HomePage extends ConsumerWidget {
 
 /// 带添加按钮的分区标题。
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.onAdd});
+  const _SectionHeader({
+    required this.title,
+    required this.onAdd,
+    this.onRecord,
+  });
 
   final String title;
   final VoidCallback onAdd;
+
+  /// 可选：「记录」入口（打开手动健康记录表单）。
+  final VoidCallback? onRecord;
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +111,26 @@ class _SectionHeader extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: Text(title, style: context.headlineStyle)),
+        if (onRecord != null) ...[
+          Semantics(
+            button: true,
+            label: '记录',
+            child: InkWell(
+              borderRadius: RadiusTokens.pillShape,
+              onTap: onRecord,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: colors.brand.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.edit_note, size: 20, color: colors.brand),
+              ),
+            ),
+          ),
+          SizedBox(width: SpacingTokens.x2),
+        ],
         Semantics(
           button: true,
           label: '添加任务',
@@ -270,6 +303,60 @@ class _Greeting extends StatelessWidget {
             style: context.secondaryLabelStyle,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 需要关注：逾期任务提醒（§10 首页关注区）。
+///
+/// 有逾期未完成任务时显示警告卡，最多列出 3 条标题；无逾期时不显示。
+class _OverdueSection extends ConsumerWidget {
+  const _OverdueSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final overdue = ref.watch(overdueTasksProvider).value ?? const <Task>[];
+    if (overdue.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: SpacingTokens.x5),
+      child: GlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  size: 22,
+                  color: colors.warning,
+                ),
+                SizedBox(width: SpacingTokens.x2),
+                Expanded(
+                  child: Text(
+                    '有 ${overdue.length} 个逾期未完成的任务',
+                    style: context.labelBoldStyle,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: SpacingTokens.x2),
+            for (final task in overdue.take(3))
+              Padding(
+                padding: EdgeInsets.only(bottom: SpacingTokens.x1),
+                child: Text(
+                  '· ${task.title}',
+                  style: context.secondaryBodyStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

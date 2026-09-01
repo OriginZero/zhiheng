@@ -129,6 +129,24 @@ class CompleteTaskNotifier extends Notifier<void> {
 final completeTaskProvider =
     NotifierProvider<CompleteTaskNotifier, void>(CompleteTaskNotifier.new);
 
+/// 逾期未完成任务（首页「需要关注」区）。
+final overdueTasksProvider = StreamProvider<List<Task>>((ref) {
+  final repo = ref.watch(repositoryProvider);
+  return repo.watchOverdueTasks(localPatientId);
+});
+
+/// 某疾病的光疗记录（时间倒序）。
+final phototherapyRecordsProvider =
+    StreamProvider.family<List<PhototherapyRecord>, String>(
+  (ref, diseaseId) {
+    final repo = ref.watch(repositoryProvider);
+    return repo.watchPhototherapyRecords(
+      localPatientId,
+      diseaseId: diseaseId,
+    );
+  },
+);
+
 /// 撤销任务完成：恢复待办，清理派生任务与完成事件。
 ///
 /// 撤销范围（§44 历史可更正）：

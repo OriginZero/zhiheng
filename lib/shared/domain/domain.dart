@@ -3,4 +3,5 @@ export 'knowledge_base.dart';
 export 'models_core.dart';
 export 'models_event.dart';
 export 'models_task.dart';
+export 'phototherapy.dart';
 export 'recurrence.dart';

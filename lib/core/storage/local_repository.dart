@@ -101,6 +101,30 @@ HealthEvent eventFromRow(EventRow d) => HealthEvent(
   taskId: d.taskId,
 );
 
+PhototherapyRecord phototherapyFromRow(PhototherapyRecordRow d) =>
+    PhototherapyRecord(
+      id: d.id,
+      patientId: d.patientId,
+      diseaseId: d.diseaseId,
+      occurredAt: d.occurredAt,
+      device: d.device,
+      bodyPart: d.bodyPart,
+      laterality: d.laterality,
+      dose: d.dose,
+      doseUnit: d.doseUnit,
+      erythema: d.erythema,
+      erythemaStart: d.erythemaStart,
+      erythemaDurationHours: d.erythemaDurationHours,
+      painLevel: d.painLevel,
+      itchingLevel: d.itchingLevel,
+      burningLevel: d.burningLevel,
+      blister: d.blister,
+      otherReaction: d.otherReaction,
+      doctorNotes: d.doctorNotes,
+      patientNotes: d.patientNotes,
+      createdAt: d.createdAt,
+    );
+
 /// 仓储：领域层与存储之间唯一通道（开发文档 §19）。
 ///
 /// 上层（UseCase / Notifier）只面向领域模型，不接触 Drift 行类型。
@@ -162,6 +186,17 @@ class LocalRepository {
             updatedAt: now,
           ),
         );
+  }
+
+  /// 更新疾病状态（管理中 / 缓解期 / 已痊愈）。
+  Future<void> updateDiseaseStatus(String diseaseId, DiseaseStatus status) {
+    return (_db.update(_db.diseases)..where((t) => t.id.equals(diseaseId)))
+        .write(
+      DiseasesCompanion(
+        status: Value(status.name),
+        updatedAt: Value(_now()),
+      ),
+    );
   }
 
   // ---- CarePlan ----
@@ -247,6 +282,25 @@ class LocalRepository {
                 t.status.equals(TaskStatus.pending.name) &
                 t.dueAt.isBiggerOrEqualValue(start) &
                 t.dueAt.isSmallerThanValue(end),
+          )
+          ..orderBy([(t) => OrderingTerm.asc(t.dueAt)]))
+        .watch()
+        .map((rows) => rows.map(taskFromRow).toList());
+  }
+
+  /// 逾期未完成任务（dueAt 早于今天且 pending，首页「需要关注」）。
+  Stream<List<Task>> watchOverdueTasks(String patientId) {
+    final todayStart = DateTime(
+      _now().year,
+      _now().month,
+      _now().day,
+    );
+    return (_db.select(_db.tasks)
+          ..where(
+            (t) =>
+                t.patientId.equals(patientId) &
+                t.status.equals(TaskStatus.pending.name) &
+                t.dueAt.isSmallerThanValue(todayStart),
           )
           ..orderBy([(t) => OrderingTerm.asc(t.dueAt)]))
         .watch()
@@ -438,6 +492,53 @@ class LocalRepository {
             payload: event.payloadJson,
             notes: Value(event.notes),
             taskId: Value(event.taskId),
+          ),
+        );
+  }
+
+  // ---- Phototherapy ----
+
+  /// 光疗记录（按疾病过滤，时间倒序）。
+  Stream<List<PhototherapyRecord>> watchPhototherapyRecords(
+    String patientId, {
+    String? diseaseId,
+  }) {
+    final query = _db.select(_db.phototherapyRecords)
+      ..where((t) {
+        var expr = t.patientId.equals(patientId);
+        if (diseaseId != null) {
+          expr = expr & t.diseaseId.equals(diseaseId);
+        }
+        return expr;
+      })
+      ..orderBy([(t) => OrderingTerm.desc(t.occurredAt)]);
+    return query.watch().map((rows) => rows.map(phototherapyFromRow).toList());
+  }
+
+  /// 新增光疗记录（追加式，历史不可变）。
+  Future<void> addPhototherapyRecord(PhototherapyRecord record) {
+    return _db.into(_db.phototherapyRecords).insert(
+          PhototherapyRecordsCompanion.insert(
+            id: record.id,
+            patientId: record.patientId,
+            diseaseId: record.diseaseId,
+            occurredAt: record.occurredAt,
+            device: Value(record.device),
+            bodyPart: Value(record.bodyPart),
+            laterality: Value(record.laterality),
+            dose: Value(record.dose),
+            doseUnit: Value(record.doseUnit),
+            erythema: Value(record.erythema),
+            erythemaStart: Value(record.erythemaStart),
+            erythemaDurationHours: Value(record.erythemaDurationHours),
+            painLevel: Value(record.painLevel),
+            itchingLevel: Value(record.itchingLevel),
+            burningLevel: Value(record.burningLevel),
+            blister: Value(record.blister),
+            otherReaction: Value(record.otherReaction),
+            doctorNotes: Value(record.doctorNotes),
+            patientNotes: Value(record.patientNotes),
+            createdAt: record.createdAt ?? _now(),
           ),
         );
   }
