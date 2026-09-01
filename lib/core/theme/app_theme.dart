@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'tokens/accent_palette.dart';
 import 'tokens/color_tokens.dart';
 import 'tokens/radius_tokens.dart';
 import 'tokens/spacing_tokens.dart';
@@ -10,8 +11,11 @@ import 'tokens/typography_tokens.dart';
 /// 所有页面从 [AppTheme] 获取 [ThemeData]；颜色一律经 [ColorTokens]，
 /// 禁止在业务代码中出现裸的 Color(...) / TextStyle(...) / BorderRadius。
 abstract final class AppTheme {
-  static ThemeData light() => _build(ColorTokens.light, Brightness.light);
-  static ThemeData dark() => _build(ColorTokens.dark, Brightness.dark);
+  static ThemeData light([AccentPalette palette = AccentPalettes.ocean]) =>
+      _build(ColorTokens.light(palette), Brightness.light);
+
+  static ThemeData dark([AccentPalette palette = AccentPalettes.ocean]) =>
+      _build(ColorTokens.dark(palette), Brightness.dark);
 
   static ThemeData _build(ColorTokens tokens, Brightness brightness) {
     return ThemeData(

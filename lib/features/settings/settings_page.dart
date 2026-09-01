@@ -172,7 +172,7 @@ class _DiseaseEntry extends ConsumerWidget {
   }
 }
 
-/// 外观设置：主题模式切换（跟随系统 / 亮色 / 暗色）。
+/// 外观设置：主题模式（明暗）+ 强调色配色（iOS 26 tint 风格）。
 class _ThemeCard extends ConsumerWidget {
   const _ThemeCard();
 
@@ -219,8 +219,85 @@ class _ThemeCard extends ConsumerWidget {
                 ),
             ],
           ),
+          SizedBox(height: SpacingTokens.x4),
+          Text('配色', style: context.labelBoldStyle),
+          SizedBox(height: SpacingTokens.x2),
+          _PalettePicker(
+            currentId: ref.watch(accentPaletteProvider).value?.id,
+            onSelect: (palette) =>
+                ref.read(accentPaletteProvider.notifier).setPalette(palette),
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// 强调色选择器（iOS 26 tint 风格，低饱和 5 色）。
+class _PalettePicker extends StatelessWidget {
+  const _PalettePicker({required this.currentId, required this.onSelect});
+
+  final String? currentId;
+  final ValueChanged<AccentPalette> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+
+    return Wrap(
+      spacing: SpacingTokens.x3,
+      runSpacing: SpacingTokens.x2,
+      children: [
+        for (final palette in AccentPalettes.all)
+          Semantics(
+            button: true,
+            selected: palette.id == currentId,
+            label: palette.labelZh,
+            child: InkWell(
+              borderRadius: RadiusTokens.pillShape,
+              onTap: () => onSelect(palette),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: palette.brand,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: palette.id == currentId
+                            ? colors.textPrimary
+                            : Colors.transparent,
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        if (palette.id == currentId)
+                          BoxShadow(
+                            color: palette.brand.withValues(alpha: 0.4),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                      ],
+                    ),
+                    child: palette.id == currentId
+                        ? Icon(Icons.check, size: 18, color: palette.onBrand)
+                        : null,
+                  ),
+                  SizedBox(height: SpacingTokens.x1),
+                  Text(
+                    palette.labelZh,
+                    style: context.captionStyle.copyWith(
+                      color: palette.id == currentId
+                          ? colors.brand
+                          : colors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

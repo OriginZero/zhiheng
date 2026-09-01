@@ -14,6 +14,8 @@ class ZhiHengApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider).value ?? ThemeMode.system;
+    final palette =
+        ref.watch(accentPaletteProvider).value ?? AccentPalettes.ocean;
 
     return MaterialApp.router(
       title: '知衡',
@@ -25,8 +27,8 @@ class ZhiHengApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [Locale('zh', 'CN')],
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      theme: AppTheme.light(palette),
+      darkTheme: AppTheme.dark(palette),
       themeMode: themeMode,
       routerConfig: router,
     );
