@@ -1,0 +1,31 @@
+# CI：analyze + test（开发文档 §42、§46）。
+# 每次 push / PR 到 main 都会运行，保证合并前代码可编译、测试通过。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Flutter 版本由 mise.toml 锁定（本地与 CI 同一来源）。
+      - uses: jdx/mise-action@v2
+        with:
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze --fatal-infos
+
+      - name: Test
+        run: flutter test
