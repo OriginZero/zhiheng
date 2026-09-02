@@ -143,4 +143,76 @@ void main() {
 
     await tester.runAsync(() => repo.close());
   });
+
+  testWidgets('模板创建光疗计划：首次任务从今天立即开始', (tester) async {
+    await initializeDateFormatting('zh_CN', null);
+
+    late LocalRepository repo;
+    await tester.runAsync(() async {
+      repo = LocalRepository(AppDatabase(NativeDatabase.memory()));
+      await bootstrapLocalPatient(repo);
+      await repo.saveDisease(
+        Disease(
+          id: 'd1',
+          patientId: localPatientId,
+          code: 'vitiligo',
+          name: '白癜风',
+        ),
+      );
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [repositoryProvider.overrideWithValue(repo)],
+        child: const ZhiHengApp(),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 500)),
+    );
+    await tester.pump();
+
+    // 进入白癜风详情页。
+    await tester.tap(find.text('白癜风'));
+    await tester.pump();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
+    await tester.pump();
+
+    // 点击「308nm 光疗」模板卡（可能需滚动到可见）。
+    await tester.scrollUntilVisible(find.text('308nm 光疗'), 120);
+    await tester.pump();
+    await tester.tap(find.text('308nm 光疗'));
+    await tester.pump();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 500)),
+    );
+    await tester.pump();
+
+    // 创建提示出现。
+    expect(find.textContaining('已创建计划「308nm 光疗」'), findsOneWidget);
+
+    // 首次任务从今天开始（出现在首页今日管理）。
+    await tester.runAsync(() async {
+      final now = DateTime.now();
+      final todayTasks =
+          await repo.watchTasksForDay(localPatientId, now).first;
+      final phototherapy = todayTasks
+          .where((t) => t.templateId == 'vitiligo.phototherapy')
+          .toList();
+      expect(phototherapy, isNotEmpty, reason: '模板创建后今天应有光疗任务');
+      final due = phototherapy.first.dueAt;
+      expect(
+        due.year == now.year && due.month == now.month && due.day == now.day,
+        isTrue,
+        reason: '首次任务到期日必须是今天',
+      );
+      // 计划落库且关联模板。
+      final plans = await repo.watchCarePlans(localPatientId).first;
+      expect(plans.single.templateId, 'vitiligo.phototherapy');
+    });
+
+    await tester.runAsync(() => repo.close());
+  });
 }

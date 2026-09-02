@@ -6,3 +6,4 @@ export 'models_task.dart';
 export 'photo.dart';
 export 'phototherapy.dart';
 export 'recurrence.dart';
+export 'supplement.dart';

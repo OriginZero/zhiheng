@@ -84,7 +84,7 @@ void main() {
     expect(dayTasks.single.notes, '补记：有点瘙痒');
   });
 
-  test('撤销完成：任务恢复待办，时间线事件删除', () async {
+  test('撤销完成：任务恢复待办并保留备注，时间线事件删除', () async {
     final task = await saveTask();
     await container
         .read(completeTaskProvider.notifier)
@@ -97,7 +97,8 @@ void main() {
         await repo.watchTasksForDay(localPatientId, DateTime(2026, 9, 1)).first;
     expect(dayTasks.single.status, TaskStatus.pending);
     expect(dayTasks.single.completedAt, isNull);
-    expect(dayTasks.single.notes, isNull);
+    // 撤销保留执行备注与补充（§44 更正语义：只有用户主动删除才丢弃）。
+    expect(dayTasks.single.notes, '备注内容');
 
     // 时间线事件删除。
     final events = await repo.watchEvents(localPatientId).first;
@@ -122,7 +123,9 @@ void main() {
     await repo.saveTask(first);
 
     // 完成 → 生成周三任务 + 24h 反应任务。
-    await container.read(completeTaskProvider.notifier).complete(first);
+    await container
+        .read(completeTaskProvider.notifier)
+        .complete(first, completedAt: first.dueAt);
     var tasks = await repo.watchDiseaseTasks(localPatientId, 'd1').first;
     expect(tasks.length, 2);
 
@@ -150,11 +153,100 @@ void main() {
     );
     await repo.saveTask(first);
 
-    await container.read(completeTaskProvider.notifier).complete(first);
+    await container
+        .read(completeTaskProvider.notifier)
+        .complete(first, completedAt: first.dueAt);
     await container.read(revertTaskProvider.notifier).revert(first);
-    await container.read(completeTaskProvider.notifier).complete(first);
+    await container
+        .read(completeTaskProvider.notifier)
+        .complete(first, completedAt: first.dueAt);
 
     final tasks = await repo.watchDiseaseTasks(localPatientId, 'd1').first;
     expect(tasks.any((t) => t.dueAt == DateTime(2026, 9, 9, 19)), isTrue);
+  });
+
+  test('完成带治疗补充：补充落库，事件标记 has_supplement', () async {
+    final task = await saveTask(title: '308nm 光疗');
+    final supplement = TaskSupplement(
+      schema: kPhototherapyExposureSchema,
+      content: {
+        'parts': [
+          {
+            'partId': 'p1',
+            'name': '左前臂',
+            'durationSeconds': 90, // 1 分半
+            'photoIds': <String>[],
+          },
+        ],
+      },
+    );
+    await container
+        .read(completeTaskProvider.notifier)
+        .complete(task, supplement: supplement, completedAt: task.dueAt);
+
+    final dayTasks =
+        await repo.watchTasksForDay(localPatientId, DateTime(2026, 9, 1)).first;
+    final stored = dayTasks.single.supplement;
+    expect(stored, isNotNull);
+    expect(stored!.schema, kPhototherapyExposureSchema);
+    expect(
+      phototherapyExposureParts(stored).single.name,
+      '左前臂',
+    );
+    expect(
+      phototherapyExposureParts(stored).single.durationSeconds,
+      90,
+    );
+
+    final events = await repo.watchEvents(localPatientId).first;
+    expect(events.single.payload['has_supplement'], isTrue);
+  });
+
+  test('撤销保留补充记录；主动删除才丢弃（照片行一并清理）', () async {
+    final task = await saveTask(title: '308nm 光疗');
+    final supplement = TaskSupplement(
+      schema: kPhototherapyExposureSchema,
+      content: {
+        'parts': [
+          {
+            'partId': 'p1',
+            'name': '颈部',
+            'durationSeconds': 60,
+            'photoIds': ['ph1'],
+          },
+        ],
+      },
+    );
+    await repo.addCarePhoto(
+      CarePhoto(
+        id: 'ph1',
+        patientId: localPatientId,
+        diseaseId: 'd1',
+        taskId: task.id,
+        kind: PhotoKind.lesion,
+        filePath: 'C:/nonexistent/photo.jpg',
+        takenAt: DateTime(2026, 9, 1, 9, 5),
+      ),
+    );
+    await container
+        .read(completeTaskProvider.notifier)
+        .complete(task, notes: '有点红', supplement: supplement,
+            completedAt: task.dueAt);
+
+    // 撤销完成：状态恢复，但补充/备注/照片都保留。
+    await container.read(revertTaskProvider.notifier).revert(task);
+    var dayTasks =
+        await repo.watchTasksForDay(localPatientId, DateTime(2026, 9, 1)).first;
+    expect(dayTasks.single.status, TaskStatus.pending);
+    expect(dayTasks.single.notes, '有点红');
+    expect(dayTasks.single.supplement, isNotNull);
+    expect(await repo.photosForTask(task.id), hasLength(1));
+
+    // 用户主动删除补充：内容与关联照片行一并清理。
+    await repo.deleteTaskSupplement(task.id);
+    dayTasks =
+        await repo.watchTasksForDay(localPatientId, DateTime(2026, 9, 1)).first;
+    expect(dayTasks.single.supplement, isNull);
+    expect(await repo.photosForTask(task.id), isEmpty);
   });
 }

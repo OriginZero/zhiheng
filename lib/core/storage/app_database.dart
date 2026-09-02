@@ -98,6 +98,9 @@ class Tasks extends Table {
   /// 提前提醒分钟数（null=不提醒）。
   IntColumn get remindBeforeMinutes => integer().nullable()();
 
+  /// 执行补充记录 JSON（v8，schema 可扩展；撤销不清空，仅用户主动删除）。
+  TextColumn get supplementJson => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -197,6 +200,7 @@ class CarePhotos extends Table {
 
   /// 关联的光疗记录（可选）。
   TextColumn get phototherapyRecordId => text().nullable()();
+  TextColumn get taskId => text().nullable()();
 
   /// before=治疗前 after=治疗后 lesion=患处。
   TextColumn get kind => text()();
@@ -247,7 +251,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -283,6 +287,11 @@ class AppDatabase extends _$AppDatabase {
           if (from < 7) {
             await m.addColumn(tasks, tasks.remindBeforeMinutes);
             await m.createTable(carePhotos);
+          }
+          // v8：任务执行补充 JSON + 照片关联任务。
+          if (from < 8) {
+            await m.addColumn(tasks, tasks.supplementJson);
+            await m.addColumn(carePhotos, carePhotos.taskId);
           }
         },
       );

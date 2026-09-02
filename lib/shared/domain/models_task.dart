@@ -1,5 +1,6 @@
 import 'enums.dart';
 import 'recurrence.dart';
+import 'supplement.dart';
 
 /// 任务（开发文档 §10、§11）。
 ///
@@ -8,6 +9,9 @@ import 'recurrence.dart';
 ///
 /// 周期任务：[recurrence] 非空且 [recurrence.isRecurring] 为真时，
 /// 完成任务后自动生成下一次到期任务（保持同一 [templateId]，链可追踪）。
+///
+/// 执行补充：[supplement] 保存本次执行的非标细节（部位/时长/照片等，
+/// 见 supplement.dart）；撤销完成不清空，仅用户主动删除时移除。
 class Task {
   const Task({
     required this.id,
@@ -26,6 +30,7 @@ class Task {
     this.templateId,
     this.notes,
     this.remindBeforeMinutes,
+    this.supplement,
     this.createdAt,
     this.updatedAt,
   });
@@ -56,6 +61,9 @@ class Task {
 
   /// 提前提醒分钟数（null=不提醒）。
   final int? remindBeforeMinutes;
+
+  /// 执行补充记录（schema 可扩展；撤销保留，仅主动删除时丢弃）。
+  final TaskSupplement? supplement;
 
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -88,6 +96,8 @@ class Task {
     bool clearNotes = false,
     int? remindBeforeMinutes,
     bool clearRemindBeforeMinutes = false,
+    TaskSupplement? supplement,
+    bool clearSupplement = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -111,6 +121,8 @@ class Task {
       remindBeforeMinutes: clearRemindBeforeMinutes
           ? null
           : (remindBeforeMinutes ?? this.remindBeforeMinutes),
+      supplement:
+          clearSupplement ? null : (supplement ?? this.supplement),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

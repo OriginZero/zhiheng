@@ -2,7 +2,7 @@
     <!-- flutter_local_notifications：定时通知所需的权限与接收器 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
-        android:label="zhiheng"
+        android:label="知衡"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -52,6 +52,19 @@ abstract final class KnowledgeBase {
       reference: 'PMC12092322 / doi:10.1186/s12950-025（Canadian Consensus 2025）',
     ),
     KnowledgeEntry(
+      id: 'vitiligo.phototherapy.cn2024',
+      source: 'consensus',
+      title: '白癜风诊疗共识（2024 版）——光疗建议',
+      organization: '中国中西医结合学会皮肤性病专委会色素病学组、中华医学会皮肤性病学分会、中国医师协会皮肤科医师分会色素病专委会',
+      publicationDate: '2024-12',
+      disease: 'vitiligo',
+      recommendation: '308nm 单色准分子光 / 准分子激光：每周治疗 2～3 次，'
+          '起始剂量及下次剂量调整参考 NB-UVB 方案（无红斑或红斑持续 <24h 提高 10%～20%；'
+          '红斑持续 24～72h 维持原剂量；红斑持续 >72h 或出现水疱，待症状消失后再治疗并降低 20%～50%）；'
+          '连续照射超过 20 次可能出现平台期。具体剂量与频率以主治医生方案为准。',
+      reference: '中华皮肤科杂志 2024;57(12) / doi:10.35541/cjd.20240260',
+    ),
+    KnowledgeEntry(
       id: 'diabetes.hba1c.monitoring',
       source: 'guideline',
       title: 'ADA 糖尿病诊疗标准（2025）——HbA1c 监测',

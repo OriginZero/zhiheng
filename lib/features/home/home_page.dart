@@ -12,6 +12,7 @@ import '../../shared/widgets/task_sheet.dart';
 import '../../shared/widgets/async_status_view.dart';
 import '../../shared/widgets/glass/glass.dart';
 import '../../shared/widgets/event_record_sheet.dart';
+import '../phototherapy/phototherapy_task_flow.dart';
 
 /// 首页：Today（开发文档 §31）。
 ///
@@ -63,7 +64,7 @@ class HomePage extends ConsumerWidget {
           builder: (tasks) => _TaskGroups(tasks: tasks),
         ),
         SizedBox(height: SpacingTokens.x6),
-        Text('即将到期', style: context.headlineStyle),
+        Text('未来任务', style: context.headlineStyle),
         SizedBox(height: SpacingTokens.x3),
         AsyncStatusView(
           value: upcomingTasks,
@@ -427,7 +428,9 @@ class _TaskTile extends ConsumerWidget {
             borderRadius: RadiusTokens.pillShape,
             onTap: done
                 ? null
-                : () => ref.read(completeTaskProvider.notifier).complete(task),
+                : () => task.templateId == 'vitiligo.phototherapy'
+                    ? completePhototherapyTaskFlow(context, ref, task)
+                    : ref.read(completeTaskProvider.notifier).complete(task),
             child: Padding(
               padding: EdgeInsets.all(SpacingTokens.x2),
               child: Icon(

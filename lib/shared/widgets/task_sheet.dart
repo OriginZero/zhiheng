@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -8,10 +10,12 @@ import '../../core/theme/theme.dart';
 import '../domain/domain.dart';
 import '../widgets/glass/glass.dart';
 
-/// 任务操作弹层：查看任务、补写备注、撤销完成。
+/// 任务操作弹层：查看任务、补写备注、查看/删除执行补充、撤销完成。
 ///
 /// - 未完成：可补备注（保存到任务）；
-/// - 已完成：可撤销（恢复待办，清理派生任务与时间线事件）。
+/// - 有执行补充：查看部位/时长/照片，可主动删除（含关联照片）；
+/// - 已完成：可撤销（恢复待办，清理派生任务与时间线事件；
+///   备注与执行补充保留，只有主动删除才丢弃）。
 Future<void> showTaskSheet(
   BuildContext context,
   WidgetRef ref,
@@ -38,10 +42,24 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
   late final TextEditingController _notesController;
   bool _saving = false;
 
+  /// 该任务的补充照片（v8：勾选光疗任务时按部位上传）。
+  List<CarePhoto> _photos = const [];
+
   @override
   void initState() {
     super.initState();
     _notesController = TextEditingController(text: widget.task.notes ?? '');
+    _loadPhotos();
+  }
+
+  Future<void> _loadPhotos() async {
+    if (widget.task.supplement == null) return;
+    final photos = await ref
+        .read(repositoryProvider)
+        .photosForTask(widget.task.id);
+    if (mounted) {
+      setState(() => _photos = photos);
+    }
   }
 
   @override
@@ -123,6 +141,10 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
                   style: context.captionStyle.copyWith(color: colors.success),
                 ),
               ],
+              if (task.supplement != null) ...[
+                SizedBox(height: SpacingTokens.x4),
+                _buildSupplementSection(task, colors),
+              ],
               SizedBox(height: SpacingTokens.x4),
               TextField(
                 controller: _notesController,
@@ -171,12 +193,126 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
     }
   }
 
+  /// 补充记录展示：部位/时长 + 照片缩略 + 主动删除入口。
+  Widget _buildSupplementSection(Task task, ColorTokens colors) {
+    final parts = phototherapyExposureParts(task.supplement);
+    return Container(
+      padding: EdgeInsets.all(SpacingTokens.x3),
+      decoration: BoxDecoration(
+        color: colors.divider.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(RadiusTokens.largeShape),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.healing_outlined, size: 16, color: colors.brand),
+              SizedBox(width: SpacingTokens.x2),
+              Expanded(
+                child: Text('本次治疗补充', style: context.labelBoldStyle),
+              ),
+              InkWell(
+                borderRadius: RadiusTokens.pillShape,
+                onTap: _saving ? null : _deleteSupplement,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: SpacingTokens.x2,
+                    vertical: SpacingTokens.x1,
+                  ),
+                  child: Text(
+                    '删除记录',
+                    style: context.captionStyle.copyWith(color: colors.warning),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: SpacingTokens.x2),
+          if (parts.isEmpty)
+            Text('已记录执行补充。', style: context.secondaryLabelStyle)
+          else
+            for (final part in parts) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      part.name,
+                      style: context.bodyStyle,
+                    ),
+                  ),
+                  Text(
+                    formatDurationZh(part.durationSeconds) ?? '时长未记录',
+                    style: context.secondaryLabelStyle,
+                  ),
+                  if (part.photoIds.isNotEmpty) ...[
+                    SizedBox(width: SpacingTokens.x2),
+                    Text(
+                      '${part.photoIds.length} 张照片',
+                      style: context.captionStyle,
+                    ),
+                  ],
+                ],
+              ),
+              SizedBox(height: SpacingTokens.x1),
+            ],
+          if (_photos.isNotEmpty) ...[
+            SizedBox(height: SpacingTokens.x2),
+            SizedBox(
+              height: 64,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _photos.length,
+                separatorBuilder: (_, _) => SizedBox(width: SpacingTokens.x2),
+                itemBuilder: (context, index) {
+                  final photo = _photos[index];
+                  return ClipRRect(
+                    borderRadius: RadiusTokens.smallShape,
+                    child: Image.file(
+                      File(photo.filePath),
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
+                      cacheWidth: 200,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 主动删除本次治疗补充（含关联照片）。
+  /// 撤销完成不清空补充，只有这里（或重新记录覆盖）才会丢弃。
+  Future<void> _deleteSupplement() async {
+    final confirmed = await showGlassConfirm(
+      context,
+      title: '删除本次治疗记录',
+      message: '将删除「${widget.task.title}」上记录的部位时长与照片。'
+          '删除后不可恢复，确定？',
+      confirmLabel: '删除',
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _saving = true);
+    await ref.read(repositoryProvider).deleteTaskSupplement(widget.task.id);
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('已删除本次治疗记录')),
+    );
+  }
+
   Future<void> _revert() async {
     final confirmed = await showGlassConfirm(
       context,
       title: '撤销完成',
       message: '将「${widget.task.title}」恢复为待完成，'
-          '并删除本次完成记录及自动生成的下一次任务。确定？',
+          '并删除本次完成沉淀的时间线记录与自动生成的下一次任务。\n\n'
+          '已填写的备注与本次治疗补充（含照片）会保留，可在确认无误后手动删除。确定？',
       confirmLabel: '撤销',
     );
     if (confirmed != true || !mounted) return;

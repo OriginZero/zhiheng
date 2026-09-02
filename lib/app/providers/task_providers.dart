@@ -26,9 +26,19 @@ class CompleteTaskNotifier extends Notifier<void> {
   @override
   void build() {}
 
-  Future<void> complete(Task task,
-      {TaskStatus status = TaskStatus.completed, String? notes}) async {
+  Future<void> complete(
+    Task task, {
+    TaskStatus status = TaskStatus.completed,
+    String? notes,
+    TaskSupplement? supplement,
+    DateTime? completedAt,
+  }) async {
     final repo = ref.read(repositoryProvider);
+    final now = completedAt ?? DateTime.now();
+    // 补充记录先落库再完成任务：中途失败时任务仍为待办且数据不丢。
+    if (supplement != null) {
+      await repo.saveTaskSupplement(task.id, supplement);
+    }
     await repo.completeTask(task.id, status);
 
     // 任务完成后取消未触发的提醒。
@@ -36,10 +46,14 @@ class CompleteTaskNotifier extends Notifier<void> {
 
     // 任务完成沉淀为事件，进入时间线（§7、§10 闭环）。
     if (status == TaskStatus.completed) {
-      final now = DateTime.now();
-      if (notes != null && notes.trim().isNotEmpty) {
-        await repo.updateTaskNotes(task.id, notes.trim());
+      final userNotes =
+          notes == null || notes.trim().isEmpty ? null : notes.trim();
+      if (userNotes != null) {
+        await repo.updateTaskNotes(task.id, userNotes);
       }
+      // 时间线备注：用户备注优先；无备注时展示补充记录自动摘要
+      // （如「治疗记录：左前臂 1 分 30 秒（2 张照片）」），任务本身不写摘要。
+      final eventNotes = userNotes ?? supplementSummaryZh(supplement);
       await repo.addEvent(
         HealthEvent(
           id: newId(),
@@ -54,8 +68,9 @@ class CompleteTaskNotifier extends Notifier<void> {
             'task_id': task.id,
             'task_type': task.type.name,
             'task_source': task.source.name,
+            'has_supplement': supplement != null,
           },
-          notes: notes == null || notes.trim().isEmpty ? null : notes.trim(),
+          notes: eventNotes,
           taskId: task.id,
         ),
       );
@@ -86,7 +101,16 @@ class CompleteTaskNotifier extends Notifier<void> {
     }
     DateTime nextDue;
     try {
-      nextDue = nextOccurrence(completed.recurrence, completed.dueAt);
+      // 光疗模板链按「实际完成时刻」排程：完成日与计划日不一致
+      // （提前完成/补做）时，从实际治疗日起算下次（至少隔 2 个自然日，
+      // 见 recurrence.nextPhototherapyOccurrence 与医学知识库）。
+      nextDue = completed.templateId == 'vitiligo.phototherapy'
+          ? nextPhototherapyOccurrence(
+              completed.recurrence,
+              now,
+              completed.dueAt,
+            )
+          : nextOccurrence(completed.recurrence, completed.dueAt);
     } on StateError {
       // 链已结束（超过 endAt）→ 不再生成。
       return;
@@ -96,6 +120,9 @@ class CompleteTaskNotifier extends Notifier<void> {
       status: TaskStatus.pending,
       dueAt: nextDue,
       clearCompletedAt: true,
+      // 备注与执行补充属于「本次执行」，不得带入下一次任务。
+      clearNotes: true,
+      clearSupplement: true,
       createdAt: now,
       updatedAt: now,
     );
@@ -120,7 +147,7 @@ class CompleteTaskNotifier extends Notifier<void> {
         type: TaskType.record,
         source: TaskSource.clinicalRule,
         priority: TaskPriority.suggested,
-        dueAt: completed.dueAt.add(const Duration(hours: 24)),
+        dueAt: now.add(const Duration(hours: 24)),
         templateId: 'vitiligo.phototherapy.reaction',
         createdAt: now,
         updatedAt: now,
@@ -172,13 +199,16 @@ class RevertTaskNotifier extends Notifier<void> {
     final repo = ref.read(repositoryProvider);
 
     // 1. 清理派生任务：同一计划下、同一模板链的未完成任务。
-    final spawned = await repo.pendingSpawnedTasks(
-      carePlanId: task.carePlanId,
-      templateId: task.templateId,
-    );
-    for (final spawnedTask in spawned) {
-      if (spawnedTask.id != task.id) {
-        await repo.deleteTask(spawnedTask.id);
+    // （task 无计划/模板时不存在派生链；直接查全库会把其他待办误删——v1.8 修复）
+    if (task.carePlanId != null || task.templateId != null) {
+      final spawned = await repo.pendingSpawnedTasks(
+        carePlanId: task.carePlanId,
+        templateId: task.templateId,
+      );
+      for (final spawnedTask in spawned) {
+        if (spawnedTask.id != task.id) {
+          await repo.deleteTask(spawnedTask.id);
+        }
       }
     }
     // 光疗反应记录任务模板不同，单独清理。

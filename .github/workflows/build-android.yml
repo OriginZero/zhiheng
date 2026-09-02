@@ -4,10 +4,11 @@
 # - 推送 `v*` tag → 打包并自动创建 GitHub Release（附安装包）
 # - 手动触发（workflow_dispatch）→ 只产出 artifact
 #
-# 签名（可选）：配置以下 Secrets 后 release 包使用正式签名；
-# 未配置时回退 debug 签名（可安装，不可上架）。
+# 签名（必需）：release 构建强制正式签名（gradle 无 key.properties 直接失败）。
+# v1.0–v1.6 未配置 Secrets、回退 debug 签名：CI 每次运行 debug 证书都不同，
+# 导致覆盖安装全部报「签名不正确」。必须配置以下 Secrets（与本地 android/key.properties 同一把 key）：
 #
-#   ANDROID_KEYSTORE_BASE64   keystore 文件的 base64（base64 upload-keystore.jks）
+#   ANDROID_KEYSTORE_BASE64   keystore 文件 base64（android/app/upload-keystore.jks）
 #   ANDROID_KEYSTORE_PASSWORD keystore 密码
 #   ANDROID_KEY_PASSWORD      key 密码
 #   ANDROID_KEY_ALIAS         key 别名
@@ -50,7 +51,7 @@ jobs:
             echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
             echo "keyPassword=$ANDROID_KEY_PASSWORD"
             echo "keyAlias=$ANDROID_KEY_ALIAS"
-            echo "storeFile=app/upload-keystore.jks"
+            echo "storeFile=upload-keystore.jks"
           } > android/key.properties
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}

@@ -4,12 +4,14 @@ import 'dart:convert';
 ///
 /// 治疗前后 / 患处变化照片，记录拍摄引导通过项，
 /// 照片文件存应用私有目录，数据库只存路径与元数据。
+/// 可关联光疗记录（[phototherapyRecordId]）或任务执行补充（[taskId]）。
 class CarePhoto {
   const CarePhoto({
     required this.id,
     required this.patientId,
     required this.diseaseId,
     this.phototherapyRecordId,
+    this.taskId,
     required this.kind,
     required this.filePath,
     required this.takenAt,
@@ -23,6 +25,9 @@ class CarePhoto {
 
   /// 关联的光疗记录（可选）。
   final String? phototherapyRecordId;
+
+  /// 关联的任务执行补充（可选，v8 起：勾选任务时按部位上传的照片）。
+  final String? taskId;
 
   /// 拍摄时机：治疗前 / 治疗后 / 患处。
   final PhotoKind kind;
@@ -50,6 +55,8 @@ class CarePhoto {
     String? diseaseId,
     String? phototherapyRecordId,
     bool clearPhototherapyRecordId = false,
+    String? taskId,
+    bool clearTaskId = false,
     PhotoKind? kind,
     String? filePath,
     DateTime? takenAt,
@@ -63,6 +70,7 @@ class CarePhoto {
       phototherapyRecordId: clearPhototherapyRecordId
           ? null
           : (phototherapyRecordId ?? this.phototherapyRecordId),
+      taskId: clearTaskId ? null : (taskId ?? this.taskId),
       kind: kind ?? this.kind,
       filePath: filePath ?? this.filePath,
       takenAt: takenAt ?? this.takenAt,

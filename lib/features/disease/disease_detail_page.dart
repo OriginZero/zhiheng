@@ -7,6 +7,7 @@ import '../../app/providers/task_providers.dart';
 import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../features/task/disease_templates.dart';
+import '../phototherapy/phototherapy_task_flow.dart';
 import '../../shared/domain/domain.dart';
 import '../../shared/forms/task_form_sheet.dart';
 import '../../shared/widgets/task_sheet.dart';
@@ -216,8 +217,8 @@ class _TemplateCard extends ConsumerWidget {
           ],
           SizedBox(height: SpacingTokens.x2),
           Text(
-            '按此模板创建 → 首次任务将出现在首页今日管理，'
-            '完成后自动生成下一次',
+            '按此模板创建 → 今天立即开始第一次治疗（出现在首页今日管理），'
+            '之后按实际治疗日自动排程下一次',
             style: context.captionStyle.copyWith(color: colors.brand),
           ),
         ],
@@ -229,18 +230,10 @@ class _TemplateCard extends ConsumerWidget {
     final repo = ref.read(repositoryProvider);
     final now = DateTime.now();
 
-    // 首次到期：从明天起按规则取最近的允许日期（保留当前时刻）。
-    final startDate = firstOccurrence(
-      template.defaultRecurrence,
-      now.add(const Duration(days: 1)),
-    );
-    final dueAt = DateTime(
-      startDate.year,
-      startDate.month,
-      startDate.day,
-      now.hour,
-      now.minute,
-    );
+    // 模板创建后立即开始：首次任务就是现在（今天出现在首页「今日管理」）。
+    // 光疗链随后按实际完成时刻排程下一次（见 recurrence.nextPhototherapyOccurrence），
+    // 因此从任何一天开始都保持每周 2～3 次、间隔 ≥2 天的模板节奏。
+    final dueAt = now;
 
     // 1. 模板实例化为管理计划（PlanDefinition → CarePlan）。
     final plan = template.buildCarePlan(
@@ -513,7 +506,9 @@ class _TaskTile extends ConsumerWidget {
           ),
           InkWell(
             borderRadius: RadiusTokens.pillShape,
-            onTap: () => ref.read(completeTaskProvider.notifier).complete(task),
+            onTap: () => task.templateId == 'vitiligo.phototherapy'
+                ? completePhototherapyTaskFlow(context, ref, task)
+                : ref.read(completeTaskProvider.notifier).complete(task),
             child: Padding(
               padding: EdgeInsets.all(SpacingTokens.x2),
               child: Icon(

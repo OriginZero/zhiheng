@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
@@ -75,6 +76,7 @@ Task taskFromRow(TaskRow d) => Task(
   templateId: d.templateId,
   notes: d.notes,
   remindBeforeMinutes: d.remindBeforeMinutes,
+  supplement: TaskSupplement.tryParse(d.supplementJson),
   createdAt: d.createdAt,
   updatedAt: d.updatedAt,
 );
@@ -107,6 +109,7 @@ CarePhoto carePhotoFromRow(CarePhotoRow d) => CarePhoto(
       patientId: d.patientId,
       diseaseId: d.diseaseId,
       phototherapyRecordId: d.phototherapyRecordId,
+      taskId: d.taskId,
       kind: PhotoKind.values.byName(d.kind),
       filePath: d.filePath,
       takenAt: d.takenAt,
@@ -368,6 +371,7 @@ class LocalRepository {
             templateId: Value(task.templateId),
             notes: Value(task.notes),
             remindBeforeMinutes: Value(task.remindBeforeMinutes),
+            supplementJson: Value(task.supplement?.toJson()),
             createdAt: task.createdAt ?? now,
             updatedAt: now,
           ),
@@ -386,13 +390,15 @@ class LocalRepository {
     );
   }
 
-  /// 撤销完成：任务恢复待办，清除完成时间与备注。
+  /// 撤销完成：任务恢复待办，清除完成时间。
+  ///
+  /// 执行备注与补充记录（supplement）**保留**：误勾选撤销不应丢失执行数据，
+  /// 丢弃只能由用户主动删除（§44 更正语义，见 deleteTaskSupplement）。
   Future<void> revertTaskCompletion(String taskId) async {
     await (_db.update(_db.tasks)..where((t) => t.id.equals(taskId))).write(
       TasksCompanion(
         status: Value(TaskStatus.pending.name),
         completedAt: const Value(null),
-        notes: const Value(null),
         updatedAt: Value(_now()),
       ),
     );
@@ -601,6 +607,7 @@ class LocalRepository {
             patientId: photo.patientId,
             diseaseId: photo.diseaseId,
             phototherapyRecordId: Value(photo.phototherapyRecordId),
+            taskId: Value(photo.taskId),
             kind: photo.kind.name,
             filePath: photo.filePath,
             takenAt: photo.takenAt,
@@ -614,6 +621,52 @@ class LocalRepository {
   Future<void> deleteCarePhoto(String id) async {
     await (_db.delete(_db.carePhotos)..where((t) => t.id.equals(id))).go();
   }
+
+  /// 保存任务执行补充记录（覆盖式 upsert；null 清除）。
+  Future<void> saveTaskSupplement(String taskId, TaskSupplement? supplement) async {
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(taskId))).write(
+      TasksCompanion(
+        supplementJson: Value(supplement?.toJson()),
+        updatedAt: Value(_now()),
+      ),
+    );
+  }
+
+  /// 某任务的补充照片（勾选完成时按部位上传，v8 起）。
+  Future<List<CarePhoto>> photosForTask(String taskId) async {
+    final rows = await (_db.select(_db.carePhotos)
+          ..where((t) => t.taskId.equals(taskId)))
+        .get();
+    return rows.map(carePhotoFromRow).toList();
+  }
+
+  /// 主动删除任务执行补充：清空任务的 supplementJson，并删除其关联照片
+  /// （数据库行 + 应用私有目录下的文件）。撤销完成**不会**调用本方法
+  /// （§44：撤销保留补充，仅用户主动删除时丢弃）。
+  Future<void> deleteTaskSupplement(String taskId) async {
+    final rows = await (_db.select(_db.carePhotos)
+          ..where((t) => t.taskId.equals(taskId)))
+        .get();
+    await (_db.delete(_db.carePhotos)..where((t) => t.taskId.equals(taskId)))
+        .go();
+    for (final row in rows) {
+      try {
+        final file = File(row.filePath);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (_) {
+        // 文件删除失败不阻塞记录清理（隐私：不记录照片路径日志）。
+      }
+    }
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(taskId))).write(
+      TasksCompanion(
+        supplementJson: const Value(null),
+        updatedAt: Value(_now()),
+      ),
+    );
+  }
+
 
   // ---- Phototherapy ----
 

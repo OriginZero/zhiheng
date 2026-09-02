@@ -158,3 +158,62 @@ DateTime firstOccurrence(
   }
   return start;
 }
+
+/// 光疗链的「按实际完成日重排」函数。
+///
+/// 依据（见 docs/医学知识库.md，2024 版《白癜风诊疗共识》：
+/// 308nm 光疗每周治疗 2～3 次）：模板按每周一三五排程，即两次治疗
+/// 至少隔 2 个自然日。若任务在计划日期之外完成（提前/补做），后续任务
+/// 不能继续从名义日期推算——那会把两次实际治疗压得过近（如周一任务
+/// 周三补做，却仍生成周三的下一次）。因此从**实际完成日**起算：
+/// 下次治疗不早于实际完成日后 2 个自然日（保持每周不超过 3 次的模板节奏），
+/// 在允许星期集合中取最近日期；时刻沿用任务链的名义时刻
+/// （[nominalDueAt] 的时分，模板链约定的治疗时刻）。
+///
+/// 与 [nextOccurrence] 一样做跨周/间隔（每 N 周）与疗程终点校验。
+/// 纯函数，不依赖时钟（可测试）。仅用于每周型光疗模板链。
+DateTime nextPhototherapyOccurrence(
+  TaskRecurrence recurrence,
+  DateTime completedAt,
+  DateTime nominalDueAt,
+) {
+  if (recurrence.frequency != RecurrenceFrequency.weekly ||
+      recurrence.weekdays.isEmpty) {
+    throw StateError('phototherapy reschedule requires weekly recurrence');
+  }
+  final anchor = recurrence.anchor ?? nominalDueAt;
+  final anchorWeekStart = anchor.subtract(Duration(days: anchor.weekday - 1));
+  final allowed = recurrence.weekdays.toSet();
+  final hour = nominalDueAt.hour;
+  final minute = nominalDueAt.minute;
+
+  // 实际完成日后第 2 个自然日起寻找（保证每次间隔 >= 2 天）。
+  var cursor = DateTime(
+    completedAt.year,
+    completedAt.month,
+    completedAt.day,
+  ).add(const Duration(days: 2));
+
+  DateTime? candidate;
+  for (var i = 0; i < 8; i++) {
+    final weeksSinceAnchor = cursor.difference(anchorWeekStart).inDays ~/ 7;
+    if (allowed.contains(cursor.weekday) &&
+        weeksSinceAnchor % recurrence.interval == 0) {
+      candidate =
+          DateTime(cursor.year, cursor.month, cursor.day, hour, minute);
+      break;
+    }
+    cursor = cursor.add(const Duration(days: 1));
+  }
+  if (candidate == null) {
+    throw StateError('no next phototherapy occurrence within search window');
+  }
+
+  final end = recurrence.endAt;
+  if (end != null &&
+      DateTime(candidate.year, candidate.month, candidate.day)
+          .isAfter(DateTime(end.year, end.month, end.day))) {
+    throw StateError('recurrence ended');
+  }
+  return candidate;
+}

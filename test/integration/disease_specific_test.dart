@@ -83,14 +83,18 @@ void main() {
       DateTime(2026, 9, 7, 19, 0),
     ); // 周一
 
-    await container.read(completeTaskProvider.notifier).complete(first);
+    await container
+        .read(completeTaskProvider.notifier)
+        .complete(first, completedAt: first.dueAt);
     var tasks = await repo.watchDiseaseTasks(localPatientId, 'd1').first;
     final wednesday = tasks.firstWhere(
       (t) => t.dueAt == DateTime(2026, 9, 9, 19, 0),
     ); // 周三
     expect(wednesday.carePlanId, plan.id);
 
-    await container.read(completeTaskProvider.notifier).complete(wednesday);
+    await container
+        .read(completeTaskProvider.notifier)
+        .complete(wednesday, completedAt: wednesday.dueAt);
     tasks = await repo.watchDiseaseTasks(localPatientId, 'd1').first;
     expect(tasks.any((t) => t.dueAt == DateTime(2026, 9, 11, 19, 0)), isTrue);
 
@@ -114,7 +118,9 @@ void main() {
 
     await repo.updateCarePlanStatus(plan.id, CarePlanStatus.paused);
 
-    await container.read(completeTaskProvider.notifier).complete(first);
+    await container
+        .read(completeTaskProvider.notifier)
+        .complete(first, completedAt: first.dueAt);
 
     final tasks = await repo.watchDiseaseTasks(localPatientId, 'd1').first;
     expect(
@@ -129,14 +135,16 @@ void main() {
     );
     final (plan, first) = await activate(template, DateTime(2026, 9, 7, 19, 0));
 
-    await container.read(completeTaskProvider.notifier).complete(first);
+    await container
+        .read(completeTaskProvider.notifier)
+        .complete(first, completedAt: first.dueAt);
 
     final tasks = await repo.watchDiseaseTasks(localPatientId, 'd1').first;
     final reaction = tasks.firstWhere(
       (t) => t.templateId == 'vitiligo.phototherapy.reaction',
     );
     expect(reaction.title, contains('皮肤反应'));
-    expect(reaction.dueAt, DateTime(2026, 9, 8, 19, 0)); // 24h 后
+    expect(reaction.dueAt, DateTime(2026, 9, 8, 19, 0)); // 完成时刻 +24h
     expect(reaction.priority, TaskPriority.suggested);
     expect(reaction.source, TaskSource.clinicalRule);
     expect(reaction.carePlanId, plan.id);

@@ -143,4 +143,79 @@ void main() {
       expect(TaskRecurrence.weekdaysFromJson(null), isEmpty);
     });
   });
+
+  group('nextPhototherapyOccurrence（按实际完成日重排，光疗模板一三五）', () {
+    // 2026-09-07 周一 19:00 为链上名义到期时刻。
+    final weekly = TaskRecurrence(
+      frequency: RecurrenceFrequency.weekly,
+      interval: 1,
+      weekdays: [1, 3, 5],
+      anchor: DateTime(2026, 9, 7, 19, 0),
+    );
+    final nominal = DateTime(2026, 9, 7, 19, 0); // 周一 19:00
+
+    test('计划日当天完成（周一）→ 周三，与旧逻辑一致', () {
+      final actual = DateTime(2026, 9, 7, 20, 30); // 周一晚完成
+      expect(
+        nextPhototherapyOccurrence(weekly, actual, nominal),
+        DateTime(2026, 9, 9, 19, 0),
+      );
+    });
+
+    test('周五名义任务周五完成 → 下周一（跨周）', () {
+      final due = DateTime(2026, 9, 11, 19, 0); // 周五
+      expect(
+        nextPhototherapyOccurrence(weekly, due, due),
+        DateTime(2026, 9, 14, 19, 0),
+      );
+    });
+
+    test('逾期补做：周一任务周三才完成 → 周五（不把两次治疗压近）', () {
+      // 旧逻辑从名义日期(周一)推算 → 会生成周三任务（距实际治疗 <2 天）。
+      final actual = DateTime(2026, 9, 9, 21, 0); // 周三晚补做周一任务
+      expect(
+        nextPhototherapyOccurrence(weekly, actual, nominal),
+        DateTime(2026, 9, 11, 19, 0), // 实际 +2 天后的最近允许日
+      );
+    });
+
+    test('提前完成：周五任务周三做 → 顺延后的最近允许日仍为周五', () {
+      final due = DateTime(2026, 9, 11, 19, 0); // 周五
+      final actual = DateTime(2026, 9, 9, 10, 0); // 周三提前做
+      expect(
+        nextPhototherapyOccurrence(weekly, actual, due),
+        DateTime(2026, 9, 11, 19, 0), // 周三 +2 = 周五（允许日）
+      );
+    });
+
+    test('非模板日启动（周日）→ 顺延至周三（间隔 >= 2 天）', () {
+      // 2026-09-06 周日创建并完成首次治疗。
+      final actual = DateTime(2026, 9, 6, 10, 0);
+      expect(
+        nextPhototherapyOccurrence(weekly, actual, actual),
+        DateTime(2026, 9, 9, 10, 0), // 周日 +2 = 周二非允许日 → 周三（保留名义时刻）
+      );
+    });
+
+    test('疗程终点：超过 endAt 后抛错（链结束）', () {
+      final withEnd = TaskRecurrence(
+        frequency: RecurrenceFrequency.weekly,
+        interval: 1,
+        weekdays: [1, 3, 5],
+        endAt: DateTime(2026, 9, 11),
+        anchor: DateTime(2026, 9, 7, 19, 0),
+      );
+      final actual = DateTime(2026, 9, 11, 20, 0); // 周五完成（最后一次）
+      expect(() => nextPhototherapyOccurrence(withEnd, actual, nominal),
+          throwsStateError);
+    });
+
+    test('异常：非每周型重复不接受', () {
+      const daily = TaskRecurrence(frequency: RecurrenceFrequency.daily);
+      expect(
+        () => nextPhototherapyOccurrence(daily, DateTime(2026, 9, 7), nominal),
+        throwsStateError,
+      );
+    });
+  });
 }

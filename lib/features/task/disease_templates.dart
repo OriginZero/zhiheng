@@ -100,11 +100,13 @@ abstract final class DiseaseTemplates {
       id: 'vitiligo.phototherapy',
       diseaseCode: DiseaseCodes.vitiligo,
       title: '308nm 光疗',
-      description: '按医生方案执行光疗。指南建议初始每周 2–3 次，'
-          '疗程通常 6–12 个月；具体剂量以主治医生为准。',
+      description: '按医生方案执行 308nm 光疗（设备、剂量与时长以医生/'
+          '设备说明书为准）。共识（2024 版）建议每周 2～3 次，疗程通常 '
+          '6–12 个月；模板按每周一三五排程，两次治疗至少间隔 2 天。'
+          '创建后立即从今天开始第一次治疗，之后按实际完成日期自动排程。',
       type: TaskType.treatment,
       source: TaskSource.clinicalRule,
-      knowledgeId: 'vitiligo.phototherapy.frequency',
+      knowledgeId: 'vitiligo.phototherapy.cn2024',
       defaultRecurrence: TaskRecurrence(
         frequency: RecurrenceFrequency.weekly,
         interval: 1,
