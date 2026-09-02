@@ -95,6 +95,9 @@ class Tasks extends Table {
   /// 执行备注（完成时填写，如剂量、感受；可事后补充）。
   TextColumn get notes => text().nullable()();
 
+  /// 提前提醒分钟数（null=不提醒）。
+  IntColumn get remindBeforeMinutes => integer().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -185,6 +188,33 @@ class PhototherapyRecords extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// 医疗照片表（§34：治疗前后 / 患处变化）。
+@DataClassName('CarePhotoRow')
+class CarePhotos extends Table {
+  TextColumn get id => text()();
+  TextColumn get patientId => text()();
+  TextColumn get diseaseId => text()();
+
+  /// 关联的光疗记录（可选）。
+  TextColumn get phototherapyRecordId => text().nullable()();
+
+  /// before=治疗前 after=治疗后 lesion=患处。
+  TextColumn get kind => text()();
+
+  /// 应用私有目录下的文件路径。
+  TextColumn get filePath => text()();
+
+  DateTimeColumn get takenAt => dateTime()();
+
+  /// JSON 数组：已通过的拍摄引导项（§34）。
+  TextColumn get guidePassed => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// 应用偏好（主题模式等本地设置的键值存储）。
 @DataClassName('PreferenceRow')
 class Preferences extends Table {
@@ -210,13 +240,14 @@ class Preferences extends Table {
     Events,
     Preferences,
     PhototherapyRecords,
+    CarePhotos,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -247,6 +278,11 @@ class AppDatabase extends _$AppDatabase {
           // v6：光疗记录表。
           if (from < 6) {
             await m.createTable(phototherapyRecords);
+          }
+          // v7：任务提醒分钟 + 医疗照片表。
+          if (from < 7) {
+            await m.addColumn(tasks, tasks.remindBeforeMinutes);
+            await m.createTable(carePhotos);
           }
         },
       );

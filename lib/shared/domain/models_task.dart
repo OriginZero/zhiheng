@@ -25,6 +25,7 @@ class Task {
     this.recurrence = TaskRecurrence.none,
     this.templateId,
     this.notes,
+    this.remindBeforeMinutes,
     this.createdAt,
     this.updatedAt,
   });
@@ -52,6 +53,9 @@ class Task {
 
   /// 执行备注（完成时填写，可事后补充）。
   final String? notes;
+
+  /// 提前提醒分钟数（null=不提醒）。
+  final int? remindBeforeMinutes;
 
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -82,6 +86,8 @@ class Task {
     bool clearTemplateId = false,
     String? notes,
     bool clearNotes = false,
+    int? remindBeforeMinutes,
+    bool clearRemindBeforeMinutes = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -102,6 +108,9 @@ class Task {
       recurrence: recurrence ?? this.recurrence,
       templateId: clearTemplateId ? null : (templateId ?? this.templateId),
       notes: clearNotes ? null : (notes ?? this.notes),
+      remindBeforeMinutes: clearRemindBeforeMinutes
+          ? null
+          : (remindBeforeMinutes ?? this.remindBeforeMinutes),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

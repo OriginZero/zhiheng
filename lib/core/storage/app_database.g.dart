@@ -1834,6 +1834,16 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _remindBeforeMinutesMeta =
+      const VerificationMeta('remindBeforeMinutes');
+  @override
+  late final GeneratedColumn<int> remindBeforeMinutes = GeneratedColumn<int>(
+    'remind_before_minutes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1877,6 +1887,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     recurrenceAnchor,
     templateId,
     notes,
+    remindBeforeMinutes,
     createdAt,
     updatedAt,
   ];
@@ -2043,6 +2054,15 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('remind_before_minutes')) {
+      context.handle(
+        _remindBeforeMinutesMeta,
+        remindBeforeMinutes.isAcceptableOrUnknown(
+          data['remind_before_minutes']!,
+          _remindBeforeMinutesMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -2144,6 +2164,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       ),
+      remindBeforeMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}remind_before_minutes'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -2195,6 +2219,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
 
   /// 执行备注（完成时填写，如剂量、感受；可事后补充）。
   final String? notes;
+
+  /// 提前提醒分钟数（null=不提醒）。
+  final int? remindBeforeMinutes;
   final DateTime createdAt;
   final DateTime updatedAt;
   const TaskRow({
@@ -2217,6 +2244,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     this.recurrenceAnchor,
     this.templateId,
     this.notes,
+    this.remindBeforeMinutes,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -2263,6 +2291,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     }
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || remindBeforeMinutes != null) {
+      map['remind_before_minutes'] = Variable<int>(remindBeforeMinutes);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -2312,6 +2343,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
+      remindBeforeMinutes: remindBeforeMinutes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remindBeforeMinutes),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -2348,6 +2382,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       ),
       templateId: serializer.fromJson<String?>(json['templateId']),
       notes: serializer.fromJson<String?>(json['notes']),
+      remindBeforeMinutes: serializer.fromJson<int?>(
+        json['remindBeforeMinutes'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -2375,6 +2412,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       'recurrenceAnchor': serializer.toJson<DateTime?>(recurrenceAnchor),
       'templateId': serializer.toJson<String?>(templateId),
       'notes': serializer.toJson<String?>(notes),
+      'remindBeforeMinutes': serializer.toJson<int?>(remindBeforeMinutes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -2400,6 +2438,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     Value<DateTime?> recurrenceAnchor = const Value.absent(),
     Value<String?> templateId = const Value.absent(),
     Value<String?> notes = const Value.absent(),
+    Value<int?> remindBeforeMinutes = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => TaskRow(
@@ -2432,6 +2471,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
         : this.recurrenceAnchor,
     templateId: templateId.present ? templateId.value : this.templateId,
     notes: notes.present ? notes.value : this.notes,
+    remindBeforeMinutes: remindBeforeMinutes.present
+        ? remindBeforeMinutes.value
+        : this.remindBeforeMinutes,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -2474,6 +2516,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           ? data.templateId.value
           : this.templateId,
       notes: data.notes.present ? data.notes.value : this.notes,
+      remindBeforeMinutes: data.remindBeforeMinutes.present
+          ? data.remindBeforeMinutes.value
+          : this.remindBeforeMinutes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -2501,6 +2546,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           ..write('recurrenceAnchor: $recurrenceAnchor, ')
           ..write('templateId: $templateId, ')
           ..write('notes: $notes, ')
+          ..write('remindBeforeMinutes: $remindBeforeMinutes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2528,6 +2574,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     recurrenceAnchor,
     templateId,
     notes,
+    remindBeforeMinutes,
     createdAt,
     updatedAt,
   ]);
@@ -2554,6 +2601,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           other.recurrenceAnchor == this.recurrenceAnchor &&
           other.templateId == this.templateId &&
           other.notes == this.notes &&
+          other.remindBeforeMinutes == this.remindBeforeMinutes &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -2578,6 +2626,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   final Value<DateTime?> recurrenceAnchor;
   final Value<String?> templateId;
   final Value<String?> notes;
+  final Value<int?> remindBeforeMinutes;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -2601,6 +2650,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.recurrenceAnchor = const Value.absent(),
     this.templateId = const Value.absent(),
     this.notes = const Value.absent(),
+    this.remindBeforeMinutes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2625,6 +2675,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.recurrenceAnchor = const Value.absent(),
     this.templateId = const Value.absent(),
     this.notes = const Value.absent(),
+    this.remindBeforeMinutes = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -2658,6 +2709,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Expression<DateTime>? recurrenceAnchor,
     Expression<String>? templateId,
     Expression<String>? notes,
+    Expression<int>? remindBeforeMinutes,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -2683,6 +2735,8 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       if (recurrenceAnchor != null) 'recurrence_anchor': recurrenceAnchor,
       if (templateId != null) 'template_id': templateId,
       if (notes != null) 'notes': notes,
+      if (remindBeforeMinutes != null)
+        'remind_before_minutes': remindBeforeMinutes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -2709,6 +2763,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Value<DateTime?>? recurrenceAnchor,
     Value<String?>? templateId,
     Value<String?>? notes,
+    Value<int?>? remindBeforeMinutes,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -2733,6 +2788,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       recurrenceAnchor: recurrenceAnchor ?? this.recurrenceAnchor,
       templateId: templateId ?? this.templateId,
       notes: notes ?? this.notes,
+      remindBeforeMinutes: remindBeforeMinutes ?? this.remindBeforeMinutes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -2799,6 +2855,9 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (remindBeforeMinutes.present) {
+      map['remind_before_minutes'] = Variable<int>(remindBeforeMinutes.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2833,6 +2892,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
           ..write('recurrenceAnchor: $recurrenceAnchor, ')
           ..write('templateId: $templateId, ')
           ..write('notes: $notes, ')
+          ..write('remindBeforeMinutes: $remindBeforeMinutes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -5328,6 +5388,591 @@ class PhototherapyRecordsCompanion
   }
 }
 
+class $CarePhotosTable extends CarePhotos
+    with TableInfo<$CarePhotosTable, CarePhotoRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CarePhotosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _patientIdMeta = const VerificationMeta(
+    'patientId',
+  );
+  @override
+  late final GeneratedColumn<String> patientId = GeneratedColumn<String>(
+    'patient_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _diseaseIdMeta = const VerificationMeta(
+    'diseaseId',
+  );
+  @override
+  late final GeneratedColumn<String> diseaseId = GeneratedColumn<String>(
+    'disease_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _phototherapyRecordIdMeta =
+      const VerificationMeta('phototherapyRecordId');
+  @override
+  late final GeneratedColumn<String> phototherapyRecordId =
+      GeneratedColumn<String>(
+        'phototherapy_record_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _filePathMeta = const VerificationMeta(
+    'filePath',
+  );
+  @override
+  late final GeneratedColumn<String> filePath = GeneratedColumn<String>(
+    'file_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _takenAtMeta = const VerificationMeta(
+    'takenAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> takenAt = GeneratedColumn<DateTime>(
+    'taken_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _guidePassedMeta = const VerificationMeta(
+    'guidePassed',
+  );
+  @override
+  late final GeneratedColumn<String> guidePassed = GeneratedColumn<String>(
+    'guide_passed',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    patientId,
+    diseaseId,
+    phototherapyRecordId,
+    kind,
+    filePath,
+    takenAt,
+    guidePassed,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'care_photos';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CarePhotoRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('patient_id')) {
+      context.handle(
+        _patientIdMeta,
+        patientId.isAcceptableOrUnknown(data['patient_id']!, _patientIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_patientIdMeta);
+    }
+    if (data.containsKey('disease_id')) {
+      context.handle(
+        _diseaseIdMeta,
+        diseaseId.isAcceptableOrUnknown(data['disease_id']!, _diseaseIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_diseaseIdMeta);
+    }
+    if (data.containsKey('phototherapy_record_id')) {
+      context.handle(
+        _phototherapyRecordIdMeta,
+        phototherapyRecordId.isAcceptableOrUnknown(
+          data['phototherapy_record_id']!,
+          _phototherapyRecordIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('file_path')) {
+      context.handle(
+        _filePathMeta,
+        filePath.isAcceptableOrUnknown(data['file_path']!, _filePathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_filePathMeta);
+    }
+    if (data.containsKey('taken_at')) {
+      context.handle(
+        _takenAtMeta,
+        takenAt.isAcceptableOrUnknown(data['taken_at']!, _takenAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_takenAtMeta);
+    }
+    if (data.containsKey('guide_passed')) {
+      context.handle(
+        _guidePassedMeta,
+        guidePassed.isAcceptableOrUnknown(
+          data['guide_passed']!,
+          _guidePassedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CarePhotoRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CarePhotoRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      patientId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}patient_id'],
+      )!,
+      diseaseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}disease_id'],
+      )!,
+      phototherapyRecordId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phototherapy_record_id'],
+      ),
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      filePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_path'],
+      )!,
+      takenAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}taken_at'],
+      )!,
+      guidePassed: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}guide_passed'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CarePhotosTable createAlias(String alias) {
+    return $CarePhotosTable(attachedDatabase, alias);
+  }
+}
+
+class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
+  final String id;
+  final String patientId;
+  final String diseaseId;
+
+  /// 关联的光疗记录（可选）。
+  final String? phototherapyRecordId;
+
+  /// before=治疗前 after=治疗后 lesion=患处。
+  final String kind;
+
+  /// 应用私有目录下的文件路径。
+  final String filePath;
+  final DateTime takenAt;
+
+  /// JSON 数组：已通过的拍摄引导项（§34）。
+  final String? guidePassed;
+  final DateTime createdAt;
+  const CarePhotoRow({
+    required this.id,
+    required this.patientId,
+    required this.diseaseId,
+    this.phototherapyRecordId,
+    required this.kind,
+    required this.filePath,
+    required this.takenAt,
+    this.guidePassed,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['patient_id'] = Variable<String>(patientId);
+    map['disease_id'] = Variable<String>(diseaseId);
+    if (!nullToAbsent || phototherapyRecordId != null) {
+      map['phototherapy_record_id'] = Variable<String>(phototherapyRecordId);
+    }
+    map['kind'] = Variable<String>(kind);
+    map['file_path'] = Variable<String>(filePath);
+    map['taken_at'] = Variable<DateTime>(takenAt);
+    if (!nullToAbsent || guidePassed != null) {
+      map['guide_passed'] = Variable<String>(guidePassed);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  CarePhotosCompanion toCompanion(bool nullToAbsent) {
+    return CarePhotosCompanion(
+      id: Value(id),
+      patientId: Value(patientId),
+      diseaseId: Value(diseaseId),
+      phototherapyRecordId: phototherapyRecordId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phototherapyRecordId),
+      kind: Value(kind),
+      filePath: Value(filePath),
+      takenAt: Value(takenAt),
+      guidePassed: guidePassed == null && nullToAbsent
+          ? const Value.absent()
+          : Value(guidePassed),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory CarePhotoRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CarePhotoRow(
+      id: serializer.fromJson<String>(json['id']),
+      patientId: serializer.fromJson<String>(json['patientId']),
+      diseaseId: serializer.fromJson<String>(json['diseaseId']),
+      phototherapyRecordId: serializer.fromJson<String?>(
+        json['phototherapyRecordId'],
+      ),
+      kind: serializer.fromJson<String>(json['kind']),
+      filePath: serializer.fromJson<String>(json['filePath']),
+      takenAt: serializer.fromJson<DateTime>(json['takenAt']),
+      guidePassed: serializer.fromJson<String?>(json['guidePassed']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'patientId': serializer.toJson<String>(patientId),
+      'diseaseId': serializer.toJson<String>(diseaseId),
+      'phototherapyRecordId': serializer.toJson<String?>(phototherapyRecordId),
+      'kind': serializer.toJson<String>(kind),
+      'filePath': serializer.toJson<String>(filePath),
+      'takenAt': serializer.toJson<DateTime>(takenAt),
+      'guidePassed': serializer.toJson<String?>(guidePassed),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  CarePhotoRow copyWith({
+    String? id,
+    String? patientId,
+    String? diseaseId,
+    Value<String?> phototherapyRecordId = const Value.absent(),
+    String? kind,
+    String? filePath,
+    DateTime? takenAt,
+    Value<String?> guidePassed = const Value.absent(),
+    DateTime? createdAt,
+  }) => CarePhotoRow(
+    id: id ?? this.id,
+    patientId: patientId ?? this.patientId,
+    diseaseId: diseaseId ?? this.diseaseId,
+    phototherapyRecordId: phototherapyRecordId.present
+        ? phototherapyRecordId.value
+        : this.phototherapyRecordId,
+    kind: kind ?? this.kind,
+    filePath: filePath ?? this.filePath,
+    takenAt: takenAt ?? this.takenAt,
+    guidePassed: guidePassed.present ? guidePassed.value : this.guidePassed,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  CarePhotoRow copyWithCompanion(CarePhotosCompanion data) {
+    return CarePhotoRow(
+      id: data.id.present ? data.id.value : this.id,
+      patientId: data.patientId.present ? data.patientId.value : this.patientId,
+      diseaseId: data.diseaseId.present ? data.diseaseId.value : this.diseaseId,
+      phototherapyRecordId: data.phototherapyRecordId.present
+          ? data.phototherapyRecordId.value
+          : this.phototherapyRecordId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      filePath: data.filePath.present ? data.filePath.value : this.filePath,
+      takenAt: data.takenAt.present ? data.takenAt.value : this.takenAt,
+      guidePassed: data.guidePassed.present
+          ? data.guidePassed.value
+          : this.guidePassed,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CarePhotoRow(')
+          ..write('id: $id, ')
+          ..write('patientId: $patientId, ')
+          ..write('diseaseId: $diseaseId, ')
+          ..write('phototherapyRecordId: $phototherapyRecordId, ')
+          ..write('kind: $kind, ')
+          ..write('filePath: $filePath, ')
+          ..write('takenAt: $takenAt, ')
+          ..write('guidePassed: $guidePassed, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    patientId,
+    diseaseId,
+    phototherapyRecordId,
+    kind,
+    filePath,
+    takenAt,
+    guidePassed,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CarePhotoRow &&
+          other.id == this.id &&
+          other.patientId == this.patientId &&
+          other.diseaseId == this.diseaseId &&
+          other.phototherapyRecordId == this.phototherapyRecordId &&
+          other.kind == this.kind &&
+          other.filePath == this.filePath &&
+          other.takenAt == this.takenAt &&
+          other.guidePassed == this.guidePassed &&
+          other.createdAt == this.createdAt);
+}
+
+class CarePhotosCompanion extends UpdateCompanion<CarePhotoRow> {
+  final Value<String> id;
+  final Value<String> patientId;
+  final Value<String> diseaseId;
+  final Value<String?> phototherapyRecordId;
+  final Value<String> kind;
+  final Value<String> filePath;
+  final Value<DateTime> takenAt;
+  final Value<String?> guidePassed;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const CarePhotosCompanion({
+    this.id = const Value.absent(),
+    this.patientId = const Value.absent(),
+    this.diseaseId = const Value.absent(),
+    this.phototherapyRecordId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.filePath = const Value.absent(),
+    this.takenAt = const Value.absent(),
+    this.guidePassed = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CarePhotosCompanion.insert({
+    required String id,
+    required String patientId,
+    required String diseaseId,
+    this.phototherapyRecordId = const Value.absent(),
+    required String kind,
+    required String filePath,
+    required DateTime takenAt,
+    this.guidePassed = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       patientId = Value(patientId),
+       diseaseId = Value(diseaseId),
+       kind = Value(kind),
+       filePath = Value(filePath),
+       takenAt = Value(takenAt),
+       createdAt = Value(createdAt);
+  static Insertable<CarePhotoRow> custom({
+    Expression<String>? id,
+    Expression<String>? patientId,
+    Expression<String>? diseaseId,
+    Expression<String>? phototherapyRecordId,
+    Expression<String>? kind,
+    Expression<String>? filePath,
+    Expression<DateTime>? takenAt,
+    Expression<String>? guidePassed,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (patientId != null) 'patient_id': patientId,
+      if (diseaseId != null) 'disease_id': diseaseId,
+      if (phototherapyRecordId != null)
+        'phototherapy_record_id': phototherapyRecordId,
+      if (kind != null) 'kind': kind,
+      if (filePath != null) 'file_path': filePath,
+      if (takenAt != null) 'taken_at': takenAt,
+      if (guidePassed != null) 'guide_passed': guidePassed,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CarePhotosCompanion copyWith({
+    Value<String>? id,
+    Value<String>? patientId,
+    Value<String>? diseaseId,
+    Value<String?>? phototherapyRecordId,
+    Value<String>? kind,
+    Value<String>? filePath,
+    Value<DateTime>? takenAt,
+    Value<String?>? guidePassed,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return CarePhotosCompanion(
+      id: id ?? this.id,
+      patientId: patientId ?? this.patientId,
+      diseaseId: diseaseId ?? this.diseaseId,
+      phototherapyRecordId: phototherapyRecordId ?? this.phototherapyRecordId,
+      kind: kind ?? this.kind,
+      filePath: filePath ?? this.filePath,
+      takenAt: takenAt ?? this.takenAt,
+      guidePassed: guidePassed ?? this.guidePassed,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (patientId.present) {
+      map['patient_id'] = Variable<String>(patientId.value);
+    }
+    if (diseaseId.present) {
+      map['disease_id'] = Variable<String>(diseaseId.value);
+    }
+    if (phototherapyRecordId.present) {
+      map['phototherapy_record_id'] = Variable<String>(
+        phototherapyRecordId.value,
+      );
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (filePath.present) {
+      map['file_path'] = Variable<String>(filePath.value);
+    }
+    if (takenAt.present) {
+      map['taken_at'] = Variable<DateTime>(takenAt.value);
+    }
+    if (guidePassed.present) {
+      map['guide_passed'] = Variable<String>(guidePassed.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CarePhotosCompanion(')
+          ..write('id: $id, ')
+          ..write('patientId: $patientId, ')
+          ..write('diseaseId: $diseaseId, ')
+          ..write('phototherapyRecordId: $phototherapyRecordId, ')
+          ..write('kind: $kind, ')
+          ..write('filePath: $filePath, ')
+          ..write('takenAt: $takenAt, ')
+          ..write('guidePassed: $guidePassed, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5340,6 +5985,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PreferencesTable preferences = $PreferencesTable(this);
   late final $PhototherapyRecordsTable phototherapyRecords =
       $PhototherapyRecordsTable(this);
+  late final $CarePhotosTable carePhotos = $CarePhotosTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5353,6 +5999,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     events,
     preferences,
     phototherapyRecords,
+    carePhotos,
   ];
 }
 
@@ -6179,6 +6826,7 @@ typedef $$TasksTableCreateCompanionBuilder = TasksCompanion Function({
   Value<DateTime?> recurrenceAnchor,
   Value<String?> templateId,
   Value<String?> notes,
+  Value<int?> remindBeforeMinutes,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -6203,6 +6851,7 @@ typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
   Value<DateTime?> recurrenceAnchor,
   Value<String?> templateId,
   Value<String?> notes,
+  Value<int?> remindBeforeMinutes,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -6308,6 +6957,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get remindBeforeMinutes => $composableBuilder(
+    column: $table.remindBeforeMinutes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6426,6 +7080,11 @@ class $$TasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get remindBeforeMinutes => $composableBuilder(
+    column: $table.remindBeforeMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -6521,6 +7180,11 @@ class $$TasksTableAnnotationComposer
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
 
+  GeneratedColumn<int> get remindBeforeMinutes => $composableBuilder(
+    column: $table.remindBeforeMinutes,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -6575,6 +7239,7 @@ class $$TasksTableTableManager
                 Value<DateTime?> recurrenceAnchor = const Value.absent(),
                 Value<String?> templateId = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<int?> remindBeforeMinutes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -6598,6 +7263,7 @@ class $$TasksTableTableManager
                 recurrenceAnchor: recurrenceAnchor,
                 templateId: templateId,
                 notes: notes,
+                remindBeforeMinutes: remindBeforeMinutes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -6623,6 +7289,7 @@ class $$TasksTableTableManager
                 Value<DateTime?> recurrenceAnchor = const Value.absent(),
                 Value<String?> templateId = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<int?> remindBeforeMinutes = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -6646,6 +7313,7 @@ class $$TasksTableTableManager
                 recurrenceAnchor: recurrenceAnchor,
                 templateId: templateId,
                 notes: notes,
+                remindBeforeMinutes: remindBeforeMinutes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -7878,6 +8546,284 @@ typedef $$PhototherapyRecordsTableProcessedTableManager =
       PhototherapyRecordRow,
       PrefetchHooks Function()
     >;
+typedef $$CarePhotosTableCreateCompanionBuilder = CarePhotosCompanion Function({
+  required String id,
+  required String patientId,
+  required String diseaseId,
+  Value<String?> phototherapyRecordId,
+  required String kind,
+  required String filePath,
+  required DateTime takenAt,
+  Value<String?> guidePassed,
+  required DateTime createdAt,
+  Value<int> rowid,
+});
+typedef $$CarePhotosTableUpdateCompanionBuilder = CarePhotosCompanion Function({
+  Value<String> id,
+  Value<String> patientId,
+  Value<String> diseaseId,
+  Value<String?> phototherapyRecordId,
+  Value<String> kind,
+  Value<String> filePath,
+  Value<DateTime> takenAt,
+  Value<String?> guidePassed,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+class $$CarePhotosTableFilterComposer
+    extends Composer<_$AppDatabase, $CarePhotosTable> {
+  $$CarePhotosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get patientId => $composableBuilder(
+    column: $table.patientId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get diseaseId => $composableBuilder(
+    column: $table.diseaseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phototherapyRecordId => $composableBuilder(
+    column: $table.phototherapyRecordId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get takenAt => $composableBuilder(
+    column: $table.takenAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get guidePassed => $composableBuilder(
+    column: $table.guidePassed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CarePhotosTableOrderingComposer
+    extends Composer<_$AppDatabase, $CarePhotosTable> {
+  $$CarePhotosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get patientId => $composableBuilder(
+    column: $table.patientId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get diseaseId => $composableBuilder(
+    column: $table.diseaseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get phototherapyRecordId => $composableBuilder(
+    column: $table.phototherapyRecordId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get takenAt => $composableBuilder(
+    column: $table.takenAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get guidePassed => $composableBuilder(
+    column: $table.guidePassed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CarePhotosTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CarePhotosTable> {
+  $$CarePhotosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get patientId =>
+      $composableBuilder(column: $table.patientId, builder: (column) => column);
+
+  GeneratedColumn<String> get diseaseId =>
+      $composableBuilder(column: $table.diseaseId, builder: (column) => column);
+
+  GeneratedColumn<String> get phototherapyRecordId => $composableBuilder(
+    column: $table.phototherapyRecordId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get filePath =>
+      $composableBuilder(column: $table.filePath, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get takenAt =>
+      $composableBuilder(column: $table.takenAt, builder: (column) => column);
+
+  GeneratedColumn<String> get guidePassed => $composableBuilder(
+    column: $table.guidePassed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$CarePhotosTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CarePhotosTable,
+          CarePhotoRow,
+          $$CarePhotosTableFilterComposer,
+          $$CarePhotosTableOrderingComposer,
+          $$CarePhotosTableAnnotationComposer,
+          $$CarePhotosTableCreateCompanionBuilder,
+          $$CarePhotosTableUpdateCompanionBuilder,
+          (
+            CarePhotoRow,
+            BaseReferences<_$AppDatabase, $CarePhotosTable, CarePhotoRow>,
+          ),
+          CarePhotoRow,
+          PrefetchHooks Function()
+        > {
+  $$CarePhotosTableTableManager(_$AppDatabase db, $CarePhotosTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CarePhotosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CarePhotosTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CarePhotosTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> patientId = const Value.absent(),
+                Value<String> diseaseId = const Value.absent(),
+                Value<String?> phototherapyRecordId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> filePath = const Value.absent(),
+                Value<DateTime> takenAt = const Value.absent(),
+                Value<String?> guidePassed = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CarePhotosCompanion(
+                id: id,
+                patientId: patientId,
+                diseaseId: diseaseId,
+                phototherapyRecordId: phototherapyRecordId,
+                kind: kind,
+                filePath: filePath,
+                takenAt: takenAt,
+                guidePassed: guidePassed,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String patientId,
+                required String diseaseId,
+                Value<String?> phototherapyRecordId = const Value.absent(),
+                required String kind,
+                required String filePath,
+                required DateTime takenAt,
+                Value<String?> guidePassed = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CarePhotosCompanion.insert(
+                id: id,
+                patientId: patientId,
+                diseaseId: diseaseId,
+                phototherapyRecordId: phototherapyRecordId,
+                kind: kind,
+                filePath: filePath,
+                takenAt: takenAt,
+                guidePassed: guidePassed,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CarePhotosTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CarePhotosTable,
+      CarePhotoRow,
+      $$CarePhotosTableFilterComposer,
+      $$CarePhotosTableOrderingComposer,
+      $$CarePhotosTableAnnotationComposer,
+      $$CarePhotosTableCreateCompanionBuilder,
+      $$CarePhotosTableUpdateCompanionBuilder,
+      (
+        CarePhotoRow,
+        BaseReferences<_$AppDatabase, $CarePhotosTable, CarePhotoRow>,
+      ),
+      CarePhotoRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7898,4 +8844,6 @@ class $AppDatabaseManager {
       $$PreferencesTableTableManager(_db, _db.preferences);
   $$PhototherapyRecordsTableTableManager get phototherapyRecords =>
       $$PhototherapyRecordsTableTableManager(_db, _db.phototherapyRecords);
+  $$CarePhotosTableTableManager get carePhotos =>
+      $$CarePhotosTableTableManager(_db, _db.carePhotos);
 }

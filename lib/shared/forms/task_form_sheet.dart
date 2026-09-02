@@ -17,6 +17,7 @@ class TaskDraft {
     required this.dueAt,
     this.diseaseId,
     this.description,
+    this.remindBeforeMinutes,
   });
 
   final String title;
@@ -25,6 +26,9 @@ class TaskDraft {
   final DateTime dueAt;
   final String? diseaseId;
   final String? description;
+
+  /// 提前提醒分钟数（null=不提醒）。
+  final int? remindBeforeMinutes;
 }
 
 /// 任务创建表单（玻璃弹层，§11 链路中的 UserCreated 任务入口）。
@@ -69,6 +73,13 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
   late DateTime _dueDate;
   late TimeOfDay _dueTime;
 
+  /// 提前提醒分钟数（null=不提醒）。
+  int? _remindBeforeMinutes;
+
+  /// 是否选择「自定义」提醒分钟数。
+  bool _customRemind = false;
+  final _customRemindController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -80,6 +91,7 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
   @override
   void dispose() {
     _titleController.dispose();
+    _customRemindController.dispose();
     super.dispose();
   }
 
@@ -164,6 +176,63 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
                 ],
               ),
               SizedBox(height: SpacingTokens.x4),
+              Text('提醒', style: context.labelBoldStyle),
+              SizedBox(height: SpacingTokens.x2),
+              Wrap(
+                spacing: SpacingTokens.x2,
+                runSpacing: SpacingTokens.x2,
+                children: [
+                  _ChoiceChip(
+                    label: '不提醒',
+                    selected: !_customRemind && _remindBeforeMinutes == null,
+                    onTap: () => setState(() {
+                      _customRemind = false;
+                      _remindBeforeMinutes = null;
+                    }),
+                  ),
+                  _ChoiceChip(
+                    label: '提前 5 分钟',
+                    selected: !_customRemind && _remindBeforeMinutes == 5,
+                    onTap: () => setState(() {
+                      _customRemind = false;
+                      _remindBeforeMinutes = 5;
+                    }),
+                  ),
+                  _ChoiceChip(
+                    label: '提前 30 分钟',
+                    selected: !_customRemind && _remindBeforeMinutes == 30,
+                    onTap: () => setState(() {
+                      _customRemind = false;
+                      _remindBeforeMinutes = 30;
+                    }),
+                  ),
+                  _ChoiceChip(
+                    label: '提前 1 小时',
+                    selected: !_customRemind && _remindBeforeMinutes == 60,
+                    onTap: () => setState(() {
+                      _customRemind = false;
+                      _remindBeforeMinutes = 60;
+                    }),
+                  ),
+                  _ChoiceChip(
+                    label: '自定义',
+                    selected: _customRemind,
+                    onTap: () => setState(() => _customRemind = true),
+                  ),
+                ],
+              ),
+              if (_customRemind) ...[
+                SizedBox(height: SpacingTokens.x3),
+                TextField(
+                  controller: _customRemindController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: '提前分钟数',
+                    hintText: '如 15',
+                  ),
+                ),
+              ],
+              SizedBox(height: SpacingTokens.x4),
               GlassButton(
                 expanded: true,
                 onPressed: _submit,
@@ -203,6 +272,12 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
       );
       return;
     }
+    // 自定义分钟数：合法正整数才生效，否则视为不提醒。
+    int? remindBeforeMinutes = _remindBeforeMinutes;
+    if (_customRemind) {
+      final parsed = int.tryParse(_customRemindController.text.trim());
+      remindBeforeMinutes = (parsed != null && parsed > 0) ? parsed : null;
+    }
     Navigator.of(context).pop(
       TaskDraft(
         title: title,
@@ -216,6 +291,7 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
           _dueTime.minute,
         ),
         diseaseId: widget.diseaseId,
+        remindBeforeMinutes: remindBeforeMinutes,
       ),
     );
   }
@@ -234,8 +310,11 @@ Future<void> saveTaskDraft(WidgetRef ref, TaskDraft draft) async {
     source: TaskSource.userCreated,
     priority: draft.priority,
     dueAt: draft.dueAt,
+    remindBeforeMinutes: draft.remindBeforeMinutes,
   );
   await repo.saveTask(task);
+  // §11：Reminder 建立在 Task 之上，保存任务后同步提醒定义。
+  await repo.syncTaskReminder(task);
 }
 
 class _ChoiceChip extends StatelessWidget {

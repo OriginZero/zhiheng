@@ -30,14 +30,16 @@ void main() {
       ),
     );
     await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 500)));
+      () => Future<void>.delayed(const Duration(milliseconds: 500)),
+    );
     await tester.pump();
 
     // ---- 1. 切换到深色主题 ----
     await tester.tap(find.text('我的'));
     await tester.pump();
     await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 400)));
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
     await tester.pump();
 
     expect(find.text('外观'), findsOneWidget);
@@ -57,7 +59,8 @@ void main() {
     await tester.tap(find.text('今日'));
     await tester.pump();
     await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 400)));
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
     await tester.pump();
 
     await tester.tap(find.text('添加任务'));
@@ -70,7 +73,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 400)));
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
     await tester.pump();
 
     // 任务出现在今日管理列表，来源为「自建」。
@@ -81,7 +85,8 @@ void main() {
     await tester.tap(find.textContaining('添加你在管理的疾病'));
     await tester.pump();
     await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 400)));
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
     await tester.pump();
 
     expect(find.text('我的疾病'), findsOneWidget);
@@ -94,7 +99,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 400)));
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
     await tester.pump();
 
     // 疾病列表出现新疾病。
@@ -104,7 +110,8 @@ void main() {
     await tester.tap(find.text('白癜风'));
     await tester.pump();
     await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 400)));
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
     await tester.pump();
 
     expect(find.text('管理计划'), findsOneWidget);
@@ -122,11 +129,17 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 400)));
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
     await tester.pump();
 
-    // 模板卡标题 + 新创建的任务各出现一次（此断言验证任务已出现在列表中）。
-    expect(find.text('308nm 光疗'), findsNWidgets(2));
+    // 保存后流刷新重建列表，视口停留在页面底部（趋势区）。
+    // 任务在「待办任务」区，向上滚动到可见后断言。
+    await tester.scrollUntilVisible(find.text('待办任务'), -120);
+    await tester.pump();
+    await tester.scrollUntilVisible(find.text('308nm 光疗'), 120);
+    await tester.pump();
+    expect(find.text('308nm 光疗'), findsWidgets);
 
     await tester.runAsync(() => repo.close());
   });

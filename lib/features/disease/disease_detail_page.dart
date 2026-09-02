@@ -10,6 +10,8 @@ import '../../features/task/disease_templates.dart';
 import '../../shared/domain/domain.dart';
 import '../../shared/forms/task_form_sheet.dart';
 import '../../shared/widgets/task_sheet.dart';
+import 'phototherapy_trend_section.dart';
+import '../photo/photo_timeline_section.dart';
 import '../../shared/widgets/async_status_view.dart';
 import '../../shared/widgets/glass/glass.dart';
 import '../phototherapy/phototherapy_form_sheet.dart';
@@ -121,6 +123,12 @@ class DiseaseDetailPage extends ConsumerWidget {
                 ],
               ),
             ),
+            SizedBox(height: SpacingTokens.x5),
+            PhototherapyTrendSection(diseaseId: disease.id),
+            SizedBox(height: SpacingTokens.x5),
+            MeasurementTrendSection(diseaseId: disease.id),
+            SizedBox(height: SpacingTokens.x5),
+            PhotoTimelineSection(diseaseId: disease.id),
           ],
         ],
       ),

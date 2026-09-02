@@ -74,6 +74,7 @@ Task taskFromRow(TaskRow d) => Task(
         ),
   templateId: d.templateId,
   notes: d.notes,
+  remindBeforeMinutes: d.remindBeforeMinutes,
   createdAt: d.createdAt,
   updatedAt: d.updatedAt,
 );
@@ -100,6 +101,18 @@ HealthEvent eventFromRow(EventRow d) => HealthEvent(
   notes: d.notes,
   taskId: d.taskId,
 );
+
+CarePhoto carePhotoFromRow(CarePhotoRow d) => CarePhoto(
+      id: d.id,
+      patientId: d.patientId,
+      diseaseId: d.diseaseId,
+      phototherapyRecordId: d.phototherapyRecordId,
+      kind: PhotoKind.values.byName(d.kind),
+      filePath: d.filePath,
+      takenAt: d.takenAt,
+      guidePassed: CarePhoto.guideFromJson(d.guidePassed),
+      createdAt: d.createdAt,
+    );
 
 PhototherapyRecord phototherapyFromRow(PhototherapyRecordRow d) =>
     PhototherapyRecord(
@@ -354,6 +367,7 @@ class LocalRepository {
             recurrenceAnchor: Value(task.recurrence.anchor),
             templateId: Value(task.templateId),
             notes: Value(task.notes),
+            remindBeforeMinutes: Value(task.remindBeforeMinutes),
             createdAt: task.createdAt ?? now,
             updatedAt: now,
           ),
@@ -442,6 +456,73 @@ class LocalRepository {
         );
   }
 
+  // ---- Reminder ----
+
+  /// 同步任务提醒：remindBeforeMinutes 非空且未来 → upsert；否则删除。
+  Future<void> syncTaskReminder(Task task) async {
+    final minutes = task.remindBeforeMinutes;
+    final fireAt = minutes == null
+        ? null
+        : task.dueAt.subtract(Duration(minutes: minutes));
+    final future = fireAt != null && fireAt.isAfter(_now());
+    final existing = await (_db.select(_db.reminders)
+          ..where((t) => t.taskId.equals(task.id)))
+        .getSingleOrNull();
+    if (!future) {
+      if (existing != null) {
+        await (_db.delete(_db.reminders)
+              ..where((t) => t.taskId.equals(task.id)))
+            .go();
+      }
+      return;
+    }
+    await _db.into(_db.reminders).insertOnConflictUpdate(
+          RemindersCompanion.insert(
+            id: existing?.id ?? newId(),
+            taskId: task.id,
+            fireAt: fireAt,
+            status: ReminderStatus.pending.name,
+            createdAt: existing?.createdAt ?? _now(),
+            updatedAt: _now(),
+          ),
+        );
+  }
+
+  /// 到点待触发的提醒。
+  Stream<List<Reminder>> dueReminders(DateTime now) {
+    return (_db.select(_db.reminders)
+          ..where(
+            (t) =>
+                t.status.equals(ReminderStatus.pending.name) &
+                t.fireAt.isSmallerThanValue(now.add(const Duration(seconds: 1))),
+          )
+          ..orderBy([(t) => OrderingTerm.asc(t.fireAt)]))
+        .watch()
+        .map((rows) => rows.map(reminderFromRow).toList());
+  }
+
+  /// 标记提醒已触发。
+  Future<void> markReminderFired(String taskId) async {
+    await (_db.update(_db.reminders)..where((t) => t.taskId.equals(taskId)))
+        .write(
+      RemindersCompanion(
+        status: Value(ReminderStatus.fired.name),
+        updatedAt: Value(_now()),
+      ),
+    );
+  }
+
+  /// 取消任务提醒。
+  Future<void> cancelTaskReminder(String taskId) async {
+    await (_db.update(_db.reminders)..where((t) => t.taskId.equals(taskId)))
+        .write(
+      RemindersCompanion(
+        status: Value(ReminderStatus.cancelled.name),
+        updatedAt: Value(_now()),
+      ),
+    );
+  }
+
   // ---- Event（时间线） ----
 
   /// 时间线查询（§9）：支持按疾病、事件类型、时间范围过滤。
@@ -494,6 +575,44 @@ class LocalRepository {
             taskId: Value(event.taskId),
           ),
         );
+  }
+
+  // ---- CarePhoto ----
+
+  /// 医疗照片（按疾病过滤，时间倒序）。
+  Stream<List<CarePhoto>> watchPhotos(String patientId, {String? diseaseId}) {
+    final query = _db.select(_db.carePhotos)
+      ..where((t) {
+        var expr = t.patientId.equals(patientId);
+        if (diseaseId != null) {
+          expr = expr & t.diseaseId.equals(diseaseId);
+        }
+        return expr;
+      })
+      ..orderBy([(t) => OrderingTerm.desc(t.takenAt)]);
+    return query.watch().map((rows) => rows.map(carePhotoFromRow).toList());
+  }
+
+  /// 新增照片记录。
+  Future<void> addCarePhoto(CarePhoto photo) {
+    return _db.into(_db.carePhotos).insert(
+          CarePhotosCompanion.insert(
+            id: photo.id,
+            patientId: photo.patientId,
+            diseaseId: photo.diseaseId,
+            phototherapyRecordId: Value(photo.phototherapyRecordId),
+            kind: photo.kind.name,
+            filePath: photo.filePath,
+            takenAt: photo.takenAt,
+            guidePassed: Value(photo.guidePassedJson),
+            createdAt: photo.createdAt ?? _now(),
+          ),
+        );
+  }
+
+  /// 删除照片记录。
+  Future<void> deleteCarePhoto(String id) async {
+    await (_db.delete(_db.carePhotos)..where((t) => t.id.equals(id))).go();
   }
 
   // ---- Phototherapy ----

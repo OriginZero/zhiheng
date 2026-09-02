@@ -31,6 +31,9 @@ class CompleteTaskNotifier extends Notifier<void> {
     final repo = ref.read(repositoryProvider);
     await repo.completeTask(task.id, status);
 
+    // 任务完成后取消未触发的提醒。
+    await repo.cancelTaskReminder(task.id);
+
     // 任务完成沉淀为事件，进入时间线（§7、§10 闭环）。
     if (status == TaskStatus.completed) {
       final now = DateTime.now();
@@ -135,6 +138,14 @@ final overdueTasksProvider = StreamProvider<List<Task>>((ref) {
   return repo.watchOverdueTasks(localPatientId);
 });
 
+/// 某疾病的医疗照片（时间倒序）。
+final photosProvider = StreamProvider.family<List<CarePhoto>, String>(
+  (ref, diseaseId) {
+    final repo = ref.watch(repositoryProvider);
+    return repo.watchPhotos(localPatientId, diseaseId: diseaseId);
+  },
+);
+
 /// 某疾病的光疗记录（时间倒序）。
 final phototherapyRecordsProvider =
     StreamProvider.family<List<PhototherapyRecord>, String>(
@@ -184,8 +195,17 @@ class RevertTaskNotifier extends Notifier<void> {
     // 2. 删除本次完成的时间线事件。
     await repo.deleteEventsByTaskId(task.id);
 
-    // 3. 任务恢复待办。
+    // 3. 任务恢复待办，重建提醒（如设置了提醒）。
     await repo.revertTaskCompletion(task.id);
+    final restored = await repo.watchTasksForDay(
+      task.patientId,
+      task.dueAt,
+    ).first;
+    for (final t in restored) {
+      if (t.id == task.id) {
+        await repo.syncTaskReminder(t);
+      }
+    }
   }
 }
 
