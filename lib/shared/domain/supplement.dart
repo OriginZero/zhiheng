@@ -33,7 +33,7 @@ class TaskSupplement {
       if (schema is! String) return null;
       return TaskSupplement(
         schema: schema,
-        content: content is Map ? (content as Map).cast<String, Object?>() : {},
+        content: content is Map ? content.cast<String, Object?>() : {},
       );
     } catch (_) {
       return null;
@@ -141,7 +141,7 @@ String? supplementSummaryZh(TaskSupplement? supplement) {
     final photoCount =
         part.photoIds.isEmpty ? '' : '（${part.photoIds.length} 张照片）';
     final details = [
-      if (duration != null) duration,
+      ?duration,
       if (photoCount.isNotEmpty) photoCount,
     ].join(' ');
     lines.add(details.isEmpty ? part.name : '$part.name $details');

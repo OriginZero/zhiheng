@@ -1844,6 +1844,17 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _supplementJsonMeta = const VerificationMeta(
+    'supplementJson',
+  );
+  @override
+  late final GeneratedColumn<String> supplementJson = GeneratedColumn<String>(
+    'supplement_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1888,6 +1899,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     templateId,
     notes,
     remindBeforeMinutes,
+    supplementJson,
     createdAt,
     updatedAt,
   ];
@@ -2063,6 +2075,15 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
         ),
       );
     }
+    if (data.containsKey('supplement_json')) {
+      context.handle(
+        _supplementJsonMeta,
+        supplementJson.isAcceptableOrUnknown(
+          data['supplement_json']!,
+          _supplementJsonMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -2168,6 +2189,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
         DriftSqlType.int,
         data['${effectivePrefix}remind_before_minutes'],
       ),
+      supplementJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}supplement_json'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -2222,6 +2247,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
 
   /// 提前提醒分钟数（null=不提醒）。
   final int? remindBeforeMinutes;
+
+  /// 执行补充记录 JSON（v8，schema 可扩展；撤销不清空，仅用户主动删除）。
+  final String? supplementJson;
   final DateTime createdAt;
   final DateTime updatedAt;
   const TaskRow({
@@ -2245,6 +2273,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     this.templateId,
     this.notes,
     this.remindBeforeMinutes,
+    this.supplementJson,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -2294,6 +2323,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     }
     if (!nullToAbsent || remindBeforeMinutes != null) {
       map['remind_before_minutes'] = Variable<int>(remindBeforeMinutes);
+    }
+    if (!nullToAbsent || supplementJson != null) {
+      map['supplement_json'] = Variable<String>(supplementJson);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -2346,6 +2378,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       remindBeforeMinutes: remindBeforeMinutes == null && nullToAbsent
           ? const Value.absent()
           : Value(remindBeforeMinutes),
+      supplementJson: supplementJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supplementJson),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -2385,6 +2420,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       remindBeforeMinutes: serializer.fromJson<int?>(
         json['remindBeforeMinutes'],
       ),
+      supplementJson: serializer.fromJson<String?>(json['supplementJson']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -2413,6 +2449,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       'templateId': serializer.toJson<String?>(templateId),
       'notes': serializer.toJson<String?>(notes),
       'remindBeforeMinutes': serializer.toJson<int?>(remindBeforeMinutes),
+      'supplementJson': serializer.toJson<String?>(supplementJson),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -2439,6 +2476,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     Value<String?> templateId = const Value.absent(),
     Value<String?> notes = const Value.absent(),
     Value<int?> remindBeforeMinutes = const Value.absent(),
+    Value<String?> supplementJson = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => TaskRow(
@@ -2474,6 +2512,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     remindBeforeMinutes: remindBeforeMinutes.present
         ? remindBeforeMinutes.value
         : this.remindBeforeMinutes,
+    supplementJson: supplementJson.present
+        ? supplementJson.value
+        : this.supplementJson,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -2519,6 +2560,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       remindBeforeMinutes: data.remindBeforeMinutes.present
           ? data.remindBeforeMinutes.value
           : this.remindBeforeMinutes,
+      supplementJson: data.supplementJson.present
+          ? data.supplementJson.value
+          : this.supplementJson,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -2547,6 +2591,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           ..write('templateId: $templateId, ')
           ..write('notes: $notes, ')
           ..write('remindBeforeMinutes: $remindBeforeMinutes, ')
+          ..write('supplementJson: $supplementJson, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2575,6 +2620,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     templateId,
     notes,
     remindBeforeMinutes,
+    supplementJson,
     createdAt,
     updatedAt,
   ]);
@@ -2602,6 +2648,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           other.templateId == this.templateId &&
           other.notes == this.notes &&
           other.remindBeforeMinutes == this.remindBeforeMinutes &&
+          other.supplementJson == this.supplementJson &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -2627,6 +2674,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   final Value<String?> templateId;
   final Value<String?> notes;
   final Value<int?> remindBeforeMinutes;
+  final Value<String?> supplementJson;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -2651,6 +2699,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.templateId = const Value.absent(),
     this.notes = const Value.absent(),
     this.remindBeforeMinutes = const Value.absent(),
+    this.supplementJson = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2676,6 +2725,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.templateId = const Value.absent(),
     this.notes = const Value.absent(),
     this.remindBeforeMinutes = const Value.absent(),
+    this.supplementJson = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -2710,6 +2760,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Expression<String>? templateId,
     Expression<String>? notes,
     Expression<int>? remindBeforeMinutes,
+    Expression<String>? supplementJson,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -2737,6 +2788,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       if (notes != null) 'notes': notes,
       if (remindBeforeMinutes != null)
         'remind_before_minutes': remindBeforeMinutes,
+      if (supplementJson != null) 'supplement_json': supplementJson,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -2764,6 +2816,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Value<String?>? templateId,
     Value<String?>? notes,
     Value<int?>? remindBeforeMinutes,
+    Value<String?>? supplementJson,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -2789,6 +2842,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       templateId: templateId ?? this.templateId,
       notes: notes ?? this.notes,
       remindBeforeMinutes: remindBeforeMinutes ?? this.remindBeforeMinutes,
+      supplementJson: supplementJson ?? this.supplementJson,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -2858,6 +2912,9 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     if (remindBeforeMinutes.present) {
       map['remind_before_minutes'] = Variable<int>(remindBeforeMinutes.value);
     }
+    if (supplementJson.present) {
+      map['supplement_json'] = Variable<String>(supplementJson.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2893,6 +2950,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
           ..write('templateId: $templateId, ')
           ..write('notes: $notes, ')
           ..write('remindBeforeMinutes: $remindBeforeMinutes, ')
+          ..write('supplementJson: $supplementJson, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -5436,6 +5494,15 @@ class $CarePhotosTable extends CarePhotos
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
+  @override
+  late final GeneratedColumn<String> taskId = GeneratedColumn<String>(
+    'task_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _kindMeta = const VerificationMeta('kind');
   @override
   late final GeneratedColumn<String> kind = GeneratedColumn<String>(
@@ -5495,6 +5562,7 @@ class $CarePhotosTable extends CarePhotos
     patientId,
     diseaseId,
     phototherapyRecordId,
+    taskId,
     kind,
     filePath,
     takenAt,
@@ -5541,6 +5609,12 @@ class $CarePhotosTable extends CarePhotos
           data['phototherapy_record_id']!,
           _phototherapyRecordIdMeta,
         ),
+      );
+    }
+    if (data.containsKey('task_id')) {
+      context.handle(
+        _taskIdMeta,
+        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
       );
     }
     if (data.containsKey('kind')) {
@@ -5609,6 +5683,10 @@ class $CarePhotosTable extends CarePhotos
         DriftSqlType.string,
         data['${effectivePrefix}phototherapy_record_id'],
       ),
+      taskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}task_id'],
+      ),
       kind: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}kind'],
@@ -5645,6 +5723,7 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
 
   /// 关联的光疗记录（可选）。
   final String? phototherapyRecordId;
+  final String? taskId;
 
   /// before=治疗前 after=治疗后 lesion=患处。
   final String kind;
@@ -5661,6 +5740,7 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
     required this.patientId,
     required this.diseaseId,
     this.phototherapyRecordId,
+    this.taskId,
     required this.kind,
     required this.filePath,
     required this.takenAt,
@@ -5675,6 +5755,9 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
     map['disease_id'] = Variable<String>(diseaseId);
     if (!nullToAbsent || phototherapyRecordId != null) {
       map['phototherapy_record_id'] = Variable<String>(phototherapyRecordId);
+    }
+    if (!nullToAbsent || taskId != null) {
+      map['task_id'] = Variable<String>(taskId);
     }
     map['kind'] = Variable<String>(kind);
     map['file_path'] = Variable<String>(filePath);
@@ -5694,6 +5777,9 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
       phototherapyRecordId: phototherapyRecordId == null && nullToAbsent
           ? const Value.absent()
           : Value(phototherapyRecordId),
+      taskId: taskId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(taskId),
       kind: Value(kind),
       filePath: Value(filePath),
       takenAt: Value(takenAt),
@@ -5716,6 +5802,7 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
       phototherapyRecordId: serializer.fromJson<String?>(
         json['phototherapyRecordId'],
       ),
+      taskId: serializer.fromJson<String?>(json['taskId']),
       kind: serializer.fromJson<String>(json['kind']),
       filePath: serializer.fromJson<String>(json['filePath']),
       takenAt: serializer.fromJson<DateTime>(json['takenAt']),
@@ -5731,6 +5818,7 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
       'patientId': serializer.toJson<String>(patientId),
       'diseaseId': serializer.toJson<String>(diseaseId),
       'phototherapyRecordId': serializer.toJson<String?>(phototherapyRecordId),
+      'taskId': serializer.toJson<String?>(taskId),
       'kind': serializer.toJson<String>(kind),
       'filePath': serializer.toJson<String>(filePath),
       'takenAt': serializer.toJson<DateTime>(takenAt),
@@ -5744,6 +5832,7 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
     String? patientId,
     String? diseaseId,
     Value<String?> phototherapyRecordId = const Value.absent(),
+    Value<String?> taskId = const Value.absent(),
     String? kind,
     String? filePath,
     DateTime? takenAt,
@@ -5756,6 +5845,7 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
     phototherapyRecordId: phototherapyRecordId.present
         ? phototherapyRecordId.value
         : this.phototherapyRecordId,
+    taskId: taskId.present ? taskId.value : this.taskId,
     kind: kind ?? this.kind,
     filePath: filePath ?? this.filePath,
     takenAt: takenAt ?? this.takenAt,
@@ -5770,6 +5860,7 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
       phototherapyRecordId: data.phototherapyRecordId.present
           ? data.phototherapyRecordId.value
           : this.phototherapyRecordId,
+      taskId: data.taskId.present ? data.taskId.value : this.taskId,
       kind: data.kind.present ? data.kind.value : this.kind,
       filePath: data.filePath.present ? data.filePath.value : this.filePath,
       takenAt: data.takenAt.present ? data.takenAt.value : this.takenAt,
@@ -5787,6 +5878,7 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
           ..write('patientId: $patientId, ')
           ..write('diseaseId: $diseaseId, ')
           ..write('phototherapyRecordId: $phototherapyRecordId, ')
+          ..write('taskId: $taskId, ')
           ..write('kind: $kind, ')
           ..write('filePath: $filePath, ')
           ..write('takenAt: $takenAt, ')
@@ -5802,6 +5894,7 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
     patientId,
     diseaseId,
     phototherapyRecordId,
+    taskId,
     kind,
     filePath,
     takenAt,
@@ -5816,6 +5909,7 @@ class CarePhotoRow extends DataClass implements Insertable<CarePhotoRow> {
           other.patientId == this.patientId &&
           other.diseaseId == this.diseaseId &&
           other.phototherapyRecordId == this.phototherapyRecordId &&
+          other.taskId == this.taskId &&
           other.kind == this.kind &&
           other.filePath == this.filePath &&
           other.takenAt == this.takenAt &&
@@ -5828,6 +5922,7 @@ class CarePhotosCompanion extends UpdateCompanion<CarePhotoRow> {
   final Value<String> patientId;
   final Value<String> diseaseId;
   final Value<String?> phototherapyRecordId;
+  final Value<String?> taskId;
   final Value<String> kind;
   final Value<String> filePath;
   final Value<DateTime> takenAt;
@@ -5839,6 +5934,7 @@ class CarePhotosCompanion extends UpdateCompanion<CarePhotoRow> {
     this.patientId = const Value.absent(),
     this.diseaseId = const Value.absent(),
     this.phototherapyRecordId = const Value.absent(),
+    this.taskId = const Value.absent(),
     this.kind = const Value.absent(),
     this.filePath = const Value.absent(),
     this.takenAt = const Value.absent(),
@@ -5851,6 +5947,7 @@ class CarePhotosCompanion extends UpdateCompanion<CarePhotoRow> {
     required String patientId,
     required String diseaseId,
     this.phototherapyRecordId = const Value.absent(),
+    this.taskId = const Value.absent(),
     required String kind,
     required String filePath,
     required DateTime takenAt,
@@ -5869,6 +5966,7 @@ class CarePhotosCompanion extends UpdateCompanion<CarePhotoRow> {
     Expression<String>? patientId,
     Expression<String>? diseaseId,
     Expression<String>? phototherapyRecordId,
+    Expression<String>? taskId,
     Expression<String>? kind,
     Expression<String>? filePath,
     Expression<DateTime>? takenAt,
@@ -5882,6 +5980,7 @@ class CarePhotosCompanion extends UpdateCompanion<CarePhotoRow> {
       if (diseaseId != null) 'disease_id': diseaseId,
       if (phototherapyRecordId != null)
         'phototherapy_record_id': phototherapyRecordId,
+      if (taskId != null) 'task_id': taskId,
       if (kind != null) 'kind': kind,
       if (filePath != null) 'file_path': filePath,
       if (takenAt != null) 'taken_at': takenAt,
@@ -5896,6 +5995,7 @@ class CarePhotosCompanion extends UpdateCompanion<CarePhotoRow> {
     Value<String>? patientId,
     Value<String>? diseaseId,
     Value<String?>? phototherapyRecordId,
+    Value<String?>? taskId,
     Value<String>? kind,
     Value<String>? filePath,
     Value<DateTime>? takenAt,
@@ -5908,6 +6008,7 @@ class CarePhotosCompanion extends UpdateCompanion<CarePhotoRow> {
       patientId: patientId ?? this.patientId,
       diseaseId: diseaseId ?? this.diseaseId,
       phototherapyRecordId: phototherapyRecordId ?? this.phototherapyRecordId,
+      taskId: taskId ?? this.taskId,
       kind: kind ?? this.kind,
       filePath: filePath ?? this.filePath,
       takenAt: takenAt ?? this.takenAt,
@@ -5933,6 +6034,9 @@ class CarePhotosCompanion extends UpdateCompanion<CarePhotoRow> {
       map['phototherapy_record_id'] = Variable<String>(
         phototherapyRecordId.value,
       );
+    }
+    if (taskId.present) {
+      map['task_id'] = Variable<String>(taskId.value);
     }
     if (kind.present) {
       map['kind'] = Variable<String>(kind.value);
@@ -5962,6 +6066,7 @@ class CarePhotosCompanion extends UpdateCompanion<CarePhotoRow> {
           ..write('patientId: $patientId, ')
           ..write('diseaseId: $diseaseId, ')
           ..write('phototherapyRecordId: $phototherapyRecordId, ')
+          ..write('taskId: $taskId, ')
           ..write('kind: $kind, ')
           ..write('filePath: $filePath, ')
           ..write('takenAt: $takenAt, ')
@@ -6827,6 +6932,7 @@ typedef $$TasksTableCreateCompanionBuilder = TasksCompanion Function({
   Value<String?> templateId,
   Value<String?> notes,
   Value<int?> remindBeforeMinutes,
+  Value<String?> supplementJson,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -6852,6 +6958,7 @@ typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
   Value<String?> templateId,
   Value<String?> notes,
   Value<int?> remindBeforeMinutes,
+  Value<String?> supplementJson,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -6962,6 +7069,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
 
   ColumnFilters<int> get remindBeforeMinutes => $composableBuilder(
     column: $table.remindBeforeMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get supplementJson => $composableBuilder(
+    column: $table.supplementJson,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7085,6 +7197,11 @@ class $$TasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get supplementJson => $composableBuilder(
+    column: $table.supplementJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -7185,6 +7302,11 @@ class $$TasksTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get supplementJson => $composableBuilder(
+    column: $table.supplementJson,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -7240,6 +7362,7 @@ class $$TasksTableTableManager
                 Value<String?> templateId = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<int?> remindBeforeMinutes = const Value.absent(),
+                Value<String?> supplementJson = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -7264,6 +7387,7 @@ class $$TasksTableTableManager
                 templateId: templateId,
                 notes: notes,
                 remindBeforeMinutes: remindBeforeMinutes,
+                supplementJson: supplementJson,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -7290,6 +7414,7 @@ class $$TasksTableTableManager
                 Value<String?> templateId = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<int?> remindBeforeMinutes = const Value.absent(),
+                Value<String?> supplementJson = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -7314,6 +7439,7 @@ class $$TasksTableTableManager
                 templateId: templateId,
                 notes: notes,
                 remindBeforeMinutes: remindBeforeMinutes,
+                supplementJson: supplementJson,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -8551,6 +8677,7 @@ typedef $$CarePhotosTableCreateCompanionBuilder = CarePhotosCompanion Function({
   required String patientId,
   required String diseaseId,
   Value<String?> phototherapyRecordId,
+  Value<String?> taskId,
   required String kind,
   required String filePath,
   required DateTime takenAt,
@@ -8563,6 +8690,7 @@ typedef $$CarePhotosTableUpdateCompanionBuilder = CarePhotosCompanion Function({
   Value<String> patientId,
   Value<String> diseaseId,
   Value<String?> phototherapyRecordId,
+  Value<String?> taskId,
   Value<String> kind,
   Value<String> filePath,
   Value<DateTime> takenAt,
@@ -8597,6 +8725,11 @@ class $$CarePhotosTableFilterComposer
 
   ColumnFilters<String> get phototherapyRecordId => $composableBuilder(
     column: $table.phototherapyRecordId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taskId => $composableBuilder(
+    column: $table.taskId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8655,6 +8788,11 @@ class $$CarePhotosTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get kind => $composableBuilder(
     column: $table.kind,
     builder: (column) => ColumnOrderings(column),
@@ -8703,6 +8841,9 @@ class $$CarePhotosTableAnnotationComposer
     column: $table.phototherapyRecordId,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get taskId =>
+      $composableBuilder(column: $table.taskId, builder: (column) => column);
 
   GeneratedColumn<String> get kind =>
       $composableBuilder(column: $table.kind, builder: (column) => column);
@@ -8757,6 +8898,7 @@ class $$CarePhotosTableTableManager
                 Value<String> patientId = const Value.absent(),
                 Value<String> diseaseId = const Value.absent(),
                 Value<String?> phototherapyRecordId = const Value.absent(),
+                Value<String?> taskId = const Value.absent(),
                 Value<String> kind = const Value.absent(),
                 Value<String> filePath = const Value.absent(),
                 Value<DateTime> takenAt = const Value.absent(),
@@ -8768,6 +8910,7 @@ class $$CarePhotosTableTableManager
                 patientId: patientId,
                 diseaseId: diseaseId,
                 phototherapyRecordId: phototherapyRecordId,
+                taskId: taskId,
                 kind: kind,
                 filePath: filePath,
                 takenAt: takenAt,
@@ -8781,6 +8924,7 @@ class $$CarePhotosTableTableManager
                 required String patientId,
                 required String diseaseId,
                 Value<String?> phototherapyRecordId = const Value.absent(),
+                Value<String?> taskId = const Value.absent(),
                 required String kind,
                 required String filePath,
                 required DateTime takenAt,
@@ -8792,6 +8936,7 @@ class $$CarePhotosTableTableManager
                 patientId: patientId,
                 diseaseId: diseaseId,
                 phototherapyRecordId: phototherapyRecordId,
+                taskId: taskId,
                 kind: kind,
                 filePath: filePath,
                 takenAt: takenAt,

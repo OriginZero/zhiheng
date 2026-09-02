@@ -216,6 +216,10 @@ class _DiseaseCard extends StatelessWidget {
       width: 180,
       child: GlassCard(
         onTap: () => context.push('/disease/${disease.id}'),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingTokens.x4,
+          vertical: SpacingTokens.x3,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,

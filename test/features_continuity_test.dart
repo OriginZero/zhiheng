@@ -7,6 +7,7 @@ import 'package:zhiheng/app/app.dart';
 import 'package:zhiheng/app/providers/core_providers.dart';
 import 'package:zhiheng/core/storage/app_database.dart';
 import 'package:zhiheng/core/storage/local_repository.dart';
+import 'package:zhiheng/shared/domain/models_core.dart';
 
 /// UI 连续性测试（用户场景级）：
 ///

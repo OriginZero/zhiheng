@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/providers/core_providers.dart';
 import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
@@ -176,7 +177,7 @@ class _PhototherapyCompletionSheetState
             .extension<ColorTokens>()!
             .divider
             .withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(RadiusTokens.largeShape),
+        borderRadius: RadiusTokens.largeShape,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
