@@ -189,8 +189,9 @@ class _DiseaseSection extends ConsumerWidget {
     }
 
     return SizedBox(
-      height: 96,
+      height: 108,
       child: ListView.separated(
+        clipBehavior: Clip.none,
         scrollDirection: Axis.horizontal,
         itemCount: diseases.length + 1,
         separatorBuilder: (context, _) => SizedBox(width: SpacingTokens.x3),
