@@ -86,6 +86,28 @@ void main() {
       // 正常文本原样返回。
       expect(sanitizeDisplayNotes('有点红'), '有点红');
       expect(sanitizeDisplayNotes(null), isNull);
+      // 多段全脏 → 只剩裸标签 → null（不留「治疗记录：；」残尾）。
+      expect(
+        sanitizeDisplayNotes(
+          "治疗记录：Instance of 'PhototherapyExposurePart'.name；"
+          "Instance of 'PhototherapyExposurePart'.name",
+        ),
+        isNull,
+      );
+      // 无引号变体（部分 Dart 版本 toString 不带引号）也要清洗。
+      expect(
+        sanitizeDisplayNotes(
+          '治疗记录：Instance of PhototherapyExposurePart 1 分钟',
+        ),
+        '治疗记录：1 分钟',
+      );
+      // 非备注类脏数据（其它对象名）同样移除。
+      expect(
+        sanitizeDisplayNotes(
+          "随访：Instance of 'Diagnosis'.name 已确认",
+        ),
+        '随访：已确认',
+      );
     });
   });
 

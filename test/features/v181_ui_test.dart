@@ -178,6 +178,12 @@ void main() {
     // 全脏 → 整条备注不显示（只剩标题与时间）。
     expect(find.text('308nm 光疗（全脏）'), findsOneWidget);
 
+    // 失败模式：关联任务已删除的事件 → 详情入口静默无操作，不崩溃。
+    await tester.tap(find.text('308nm 光疗（全脏）'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('本次治疗补充'), findsNothing);
+
     await tearDownRepo(tester);
   });
 
@@ -245,6 +251,136 @@ void main() {
     expect(find.text('1'), findsWidgets); // 分钟位
     expect(find.text('30'), findsOneWidget); // 秒位
     expect(find.text('拍/选该部位照片'), findsNWidgets(2));
+
+    await tearDownRepo(tester);
+  });
+
+  testWidgets('完成弹层：已有输入时应用上一次先确认，取消不覆盖', (tester) async {
+    final container = await pumpApp(tester);
+    final last = await savePhototherapyTask(
+      id: 't-old2',
+      dueAt: DateTime.now().subtract(const Duration(days: 3)),
+    );
+    await container.read(completeTaskProvider.notifier).complete(
+      last,
+      supplement: twoPartSupplement(),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+
+    final task = await savePhototherapyTask(id: 't-mine');
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => Center(
+                child: TextButton(
+                  onPressed: () =>
+                      PhototherapyCompletionSheet.show(context, task: task),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
+    await tester.pump();
+
+    // 用户先手填一个部位名，制造「已有输入」。
+    await tester.enterText(find.widgetWithText(TextField, '部位名称'), '肚皮');
+    await tester.pump();
+
+    await tester.tap(find.textContaining('应用上一次记录'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // 弹出替换确认，而不是直接覆盖。
+    expect(find.textContaining('将用上一次治疗的部位与时长替换'), findsOneWidget);
+    expect(find.text('取消'), findsOneWidget);
+    expect(find.text('替换'), findsOneWidget);
+
+    // 取消 → 保留用户输入，未带入上一次记录。
+    await tester.tap(find.text('取消'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('肚皮'), findsOneWidget);
+    expect(find.text('左前臂'), findsNothing);
+    expect(find.text('颈部'), findsNothing);
+
+    await tearDownRepo(tester);
+  });
+
+  testWidgets('完成弹层：确认替换后覆盖已有输入', (tester) async {
+    final container = await pumpApp(tester);
+    final last = await savePhototherapyTask(
+      id: 't-old3',
+      dueAt: DateTime.now().subtract(const Duration(days: 3)),
+    );
+    await container.read(completeTaskProvider.notifier).complete(
+      last,
+      supplement: twoPartSupplement(),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+
+    final task = await savePhototherapyTask(id: 't-mine2');
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => Center(
+                child: TextButton(
+                  onPressed: () =>
+                      PhototherapyCompletionSheet.show(context, task: task),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
+    await tester.pump();
+
+    await tester.enterText(find.widgetWithText(TextField, '部位名称'), '肚皮');
+    await tester.pump();
+    await tester.tap(find.textContaining('应用上一次记录'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.textContaining('将用上一次治疗的部位与时长替换'), findsOneWidget);
+
+    // 确认替换 → 覆盖为用户输入消失，带入上一次两个部位。
+    await tester.tap(find.text('替换'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('肚皮'), findsNothing);
+    expect(find.text('左前臂'), findsOneWidget);
+    expect(find.text('颈部'), findsOneWidget);
 
     await tearDownRepo(tester);
   });
