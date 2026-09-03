@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
-import '../../shared/widgets/glass/glass.dart';
+import '../../shared/widgets/record_completion_sheet.dart';
 
 /// 血糖任务勾选完成时填写的「本次血糖测量」表单（任务驱动血糖监测）。
 ///
@@ -14,7 +14,7 @@ import '../../shared/widgets/glass/glass.dart';
 /// 数据以 [TaskSupplement]（schema 可扩展）保存，不属于医学建议。
 /// 表单只做记录，不给出剂量/治疗建议（§4：以医生方案为准）。
 ///
-/// 返回：保存 → [GlucoseCompletionResult]；用户取消（下滑/返回）→ null，
+/// 返回：保存 → [RecordCompletionResult]；用户取消（下滑/返回）→ null，
 /// 任务保持待办状态，不产生任何写入。
 class GlucoseCompletionSheet extends ConsumerStatefulWidget {
   const GlucoseCompletionSheet({super.key, required this.task});
@@ -23,15 +23,12 @@ class GlucoseCompletionSheet extends ConsumerStatefulWidget {
   /// diabetes.glucose.postMeal / diabetes.glucose.bedtime）。
   final Task task;
 
-  static Future<GlucoseCompletionResult?> show(
+  static Future<RecordCompletionResult?> show(
     BuildContext context, {
     required Task task,
   }) {
-    return showModalBottomSheet<GlucoseCompletionResult>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.25),
+    return showRecordCompletionSheet(
+      context,
       builder: (_) => GlucoseCompletionSheet(task: task),
     );
   }
@@ -41,19 +38,9 @@ class GlucoseCompletionSheet extends ConsumerStatefulWidget {
       _GlucoseCompletionSheetState();
 }
 
-/// 保存结果：可为空补充（用户选择「直接完成」）。
-class GlucoseCompletionResult {
-  const GlucoseCompletionResult({this.supplement, this.notes});
-
-  final TaskSupplement? supplement;
-  final String? notes;
-}
-
 class _GlucoseCompletionSheetState
     extends ConsumerState<GlucoseCompletionSheet> {
   final _valueController = TextEditingController();
-  final _notesController = TextEditingController();
-  bool _busy = false;
 
   /// 测量时点由任务模板决定（不可更改，保证数据一致性）。
   late final GlucoseContext _context;
@@ -82,27 +69,36 @@ class _GlucoseCompletionSheetState
 
   /// 从任务模板 id 反推测量时点。
   GlucoseContext _contextFromTask(Task task) => switch (task.templateId) {
-        'diabetes.glucose.fasting' => GlucoseContext.fasting,
-        'diabetes.glucose.postMeal' => GlucoseContext.postMeal,
-        'diabetes.glucose.bedtime' => GlucoseContext.bedtime,
-        _ => GlucoseContext.other,
-      };
+    'diabetes.glucose.fasting' => GlucoseContext.fasting,
+    'diabetes.glucose.postMeal' => GlucoseContext.postMeal,
+    'diabetes.glucose.bedtime' => GlucoseContext.bedtime,
+    _ => GlucoseContext.other,
+  };
 
   @override
   void dispose() {
     _valueController.dispose();
-    _notesController.dispose();
     super.dispose();
   }
 
-  Future<void> _save() async {
+  /// 外壳回调：生成补充并返回结果；校验失败返回 null（外壳保持弹层）。
+  Future<RecordCompletionResult?> _submit({
+    required bool skip,
+    required String notes,
+  }) async {
+    final notesValue = notes.isEmpty ? null : notes;
+
+    // 「仅完成，不记录本次细节」：不校验血糖值，也不生成补充。
+    if (skip) {
+      return RecordCompletionResult(supplement: null, notes: notesValue);
+    }
+
     final valueText = _valueController.text.trim();
     final value = double.tryParse(valueText);
     if (value == null || value <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入有效的血糖值')),
-      );
-      return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('请输入有效的血糖值')));
+      return null;
     }
 
     final reading = GlucoseReading(
@@ -111,120 +107,66 @@ class _GlucoseCompletionSheetState
       method: _method,
       symptoms: _symptoms.toList(),
       exercise: _exercise,
-      notes: _notesController.text.trim().isEmpty
-          ? null
-          : _notesController.text.trim(),
+      notes: notesValue,
     );
 
-    final supplement = TaskSupplement(
-      schema: kGlucoseReadingSchema,
-      content: reading.toJson(),
-    );
-
-    setState(() => _busy = true);
-    if (!mounted) return;
-    Navigator.of(context).pop(
-      GlucoseCompletionResult(
-        supplement: supplement,
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
+    return RecordCompletionResult(
+      supplement: TaskSupplement(
+        schema: kGlucoseReadingSchema,
+        content: reading.toJson(),
       ),
+      notes: notesValue,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: GlassSurface(
-        level: GlassLevel.overlay,
-        child: Padding(
-          padding: EdgeInsets.all(SpacingTokens.x4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 标题
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '记录${_context.labelZh}',
-                      style: textTheme.titleLarge,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              SizedBox(height: SpacingTokens.x3),
-
-              // 血糖值输入
-              _ValueInput(
-                controller: _valueController,
-                isHypo: _isHypo,
-                isSevereHypo: _isSevereHypo,
-                onChanged: (_) => setState(() {}),
-              ),
-              SizedBox(height: SpacingTokens.x3),
-
-              // 低血糖自动警告
-              if (_isHypo) ...[
-                _HypoWarning(isSevere: _isSevereHypo),
-                SizedBox(height: SpacingTokens.x3),
-              ],
-
-              // 测量方式
-              _MethodSelector(
-                method: _method,
-                onChanged: (m) => setState(() => _method = m),
-              ),
-              SizedBox(height: SpacingTokens.x3),
-
-              // 症状多选（低血糖时高亮提示）
-              _SymptomSelector(
-                symptoms: _symptoms,
-                isHypo: _isHypo,
-                onChanged: (s) => setState(() => _symptoms.addAll(s)),
-                onRemoved: (s) => setState(() => _symptoms.remove(s)),
-              ),
-              SizedBox(height: SpacingTokens.x3),
-
-              // 运动前后
-              _ExerciseToggle(
-                value: _exercise,
-                onChanged: (v) => setState(() => _exercise = v),
-              ),
-              SizedBox(height: SpacingTokens.x3),
-
-              // 备注
-              TextField(
-                controller: _notesController,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  hintText: '备注（可选）',
-                  border: OutlineInputBorder(
-                    borderRadius: RadiusTokens.pillShape,
-                  ),
-                ),
-              ),
-              SizedBox(height: SpacingTokens.x4),
-
-              // 保存按钮
-              GlassButton(
-                onPressed: _busy ? null : _save,
-                child: Text(_isHypo ? '保存（低血糖）' : '保存'),
-              ),
-            ],
+    return RecordCompletionSheet(
+      title: '记录${_context.labelZh}血糖',
+      description: '血糖 <3.9 mmol/L 会自动标记低血糖并提示补充症状，这里只做记录。',
+      saveLabelSuffix: _isHypo ? '（低血糖）' : null,
+      onSubmit: _submit,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 血糖值输入
+          _ValueInput(
+            controller: _valueController,
+            isHypo: _isHypo,
+            isSevereHypo: _isSevereHypo,
+            onChanged: (_) => setState(() {}),
           ),
-        ),
+          SizedBox(height: SpacingTokens.x3),
+
+          // 低血糖自动警告
+          if (_isHypo) ...[
+            _HypoWarning(isSevere: _isSevereHypo),
+            SizedBox(height: SpacingTokens.x3),
+          ],
+
+          // 测量方式
+          _MethodSelector(
+            method: _method,
+            onChanged: (m) => setState(() => _method = m),
+          ),
+          SizedBox(height: SpacingTokens.x3),
+
+          // 症状多选（低血糖时高亮提示）
+          _SymptomSelector(
+            symptoms: _symptoms,
+            isHypo: _isHypo,
+            onChanged: (s) => setState(() => _symptoms.addAll(s)),
+            onRemoved: (s) => setState(() => _symptoms.remove(s)),
+          ),
+          SizedBox(height: SpacingTokens.x3),
+
+          // 运动前后
+          _ExerciseToggle(
+            value: _exercise,
+            onChanged: (v) => setState(() => _exercise = v),
+          ),
+        ],
       ),
     );
   }
@@ -249,46 +191,41 @@ class _ValueInput extends StatelessWidget {
     final colors = Theme.of(context).extension<ColorTokens>()!;
     final textTheme = Theme.of(context).textTheme;
 
-    final borderColor = isSevereHypo
+    // 输入文字颜色：仅低血糖状态做颜色提示，其余跟随正文色（与其它表单字段一致）。
+    final inputColor = isSevereHypo
         ? colors.critical
         : isHypo
-            ? colors.warning
-            : colors.divider;
+        ? colors.warning
+        : colors.textPrimary;
+    final alertBorder = isSevereHypo
+        ? colors.critical
+        : isHypo
+        ? colors.warning
+        : null;
 
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: textTheme.headlineSmall?.copyWith(
-              color: isSevereHypo
-                  ? colors.critical
-                  : isHypo
-                      ? colors.warning
-                      : colors.textPrimary,
-            ),
-            decoration: InputDecoration(
-              hintText: '0.0',
-              border: OutlineInputBorder(
-                borderRadius: RadiusTokens.pillShape,
-                borderSide: BorderSide(color: borderColor),
+    return TextField(
+      controller: controller,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      style: textTheme.bodyLarge?.copyWith(color: inputColor),
+      decoration: InputDecoration(
+        labelText: '血糖值',
+        hintText: '如 5.6',
+        suffixText: 'mmol/L',
+        // 非低血糖沿用主题默认描边；低血糖时用语义色描边提示。
+        enabledBorder: alertBorder == null
+            ? null
+            : OutlineInputBorder(
+                borderRadius: RadiusTokens.mediumShape,
+                borderSide: BorderSide(color: alertBorder),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: RadiusTokens.pillShape,
-                borderSide: BorderSide(color: borderColor),
+        focusedBorder: alertBorder == null
+            ? null
+            : OutlineInputBorder(
+                borderRadius: RadiusTokens.mediumShape,
+                borderSide: BorderSide(color: alertBorder, width: 2),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: RadiusTokens.pillShape,
-                borderSide: BorderSide(color: borderColor, width: 2),
-              ),
-            ),
-            onChanged: onChanged,
-          ),
-        ),
-        SizedBox(width: SpacingTokens.x2),
-        Text('mmol/L', style: textTheme.bodyLarge),
-      ],
+      ),
+      onChanged: onChanged,
     );
   }
 }
@@ -464,10 +401,7 @@ class _ExerciseToggle extends StatelessWidget {
       children: [
         Text('运动前后', style: textTheme.bodyMedium),
         const Spacer(),
-        Switch(
-          value: value,
-          onChanged: onChanged,
-        ),
+        Switch(value: value, onChanged: onChanged),
       ],
     );
   }
