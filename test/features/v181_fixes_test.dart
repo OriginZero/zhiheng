@@ -49,6 +49,16 @@ void main() {
       );
     });
 
+    test('formatDurationZh 边界：null/负数/整分/整秒/混合', () {
+      expect(formatDurationZh(null), isNull);
+      expect(formatDurationZh(0), '0 秒');
+      expect(formatDurationZh(-5), isNull);
+      expect(formatDurationZh(45), '45 秒');
+      expect(formatDurationZh(60), '1 分钟');
+      expect(formatDurationZh(90), '1 分 30 秒');
+      expect(formatDurationZh(600), '10 分钟');
+    });
+
     test('无时长部位只输出名称；空补充返回 null', () {
       expect(
         supplementSummaryZh(
