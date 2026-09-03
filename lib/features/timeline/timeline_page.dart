@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../app/providers/core_providers.dart';
 import '../../app/providers/task_providers.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
 import '../../shared/widgets/async_status_view.dart';
 import '../../shared/widgets/glass/glass.dart';
+import '../../shared/widgets/task_sheet.dart';
 
 /// 医疗时间线（开发文档 §9）。
 ///
@@ -67,7 +69,7 @@ class _TimelinePageState extends ConsumerState<TimelinePage> {
             message: '完成一次任务、记录一次治疗或测量后，\n'
                 '这里会按时间展示你的完整健康轨迹。',
           ),
-          builder: (list) => _TimelineList(events: list),
+          builder: (list) => _TimelineList(events: list, ref: ref),
         ),
       ],
     );
@@ -139,7 +141,7 @@ class _FilterChip extends StatelessWidget {
           vertical: SpacingTokens.x2,
         ),
         decoration: BoxDecoration(
-          color: selected ? colors.brand : colors.divider,
+          color: selected ? colors.brand : colors.fill,
           borderRadius: RadiusTokens.pillShape,
         ),
         child: Text(
@@ -155,9 +157,10 @@ class _FilterChip extends StatelessWidget {
 
 /// 时间线列表：按日期分组。
 class _TimelineList extends StatelessWidget {
-  const _TimelineList({required this.events});
+  const _TimelineList({required this.events, required this.ref});
 
   final List<HealthEvent> events;
+  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) {
@@ -185,24 +188,31 @@ class _TimelineList extends StatelessWidget {
               style: context.secondaryLabelStyle,
             ),
           ),
-          for (final event in entry.value) _EventTile(event: event),
+          for (final event in entry.value) _EventTile(event: event, ref: ref),
         ],
       ],
     );
   }
 }
 
+/// 时间线事件行：只展示概述（标题/时间/备注摘要，照片仅计数），
+/// 点击后打开任务详情弹层查看部位/时长/照片等细节（v1.8.1）。
 class _EventTile extends StatelessWidget {
-  const _EventTile({required this.event});
+  const _EventTile({required this.event, required this.ref});
 
   final HealthEvent event;
+  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ColorTokens>()!;
+    // 历史事件备注可能含 v1.8.0 插值 bug 写入的「Instance of …」，展示层清洗。
+    final notes = sanitizeDisplayNotes(event.notes);
+    final hasDetail = event.taskId != null;
 
     return GlassCard(
       margin: EdgeInsets.only(bottom: SpacingTokens.x2),
+      onTap: hasDetail ? () => _openDetail(context) : null,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -230,21 +240,42 @@ class _EventTile extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (event.notes != null && event.notes!.isNotEmpty) ...[
+                if (notes != null && notes.isNotEmpty) ...[
                   SizedBox(height: SpacingTokens.x2),
                   Container(
+                    width: double.infinity,
                     padding: EdgeInsets.symmetric(
                       horizontal: SpacingTokens.x3,
                       vertical: SpacingTokens.x2,
                     ),
                     decoration: BoxDecoration(
-                      color: colors.divider.withValues(alpha: 0.5),
+                      color: colors.fill,
                       borderRadius: RadiusTokens.mediumShape,
                     ),
                     child: Text(
-                      event.notes!,
+                      notes,
                       style: context.secondaryLabelStyle,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                ],
+                if (hasDetail) ...[
+                  SizedBox(height: SpacingTokens.x2),
+                  Row(
+                    children: [
+                      Text(
+                        '查看详情',
+                        style: context.captionStyle.copyWith(
+                          color: colors.brand,
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 14,
+                        color: colors.brand,
+                      ),
+                    ],
                   ),
                 ],
               ],
@@ -253,6 +284,13 @@ class _EventTile extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// 点击事件 → 打开关联任务详情（部位/时长/照片等完整细节）。
+  Future<void> _openDetail(BuildContext context) async {
+    final task = await ref.read(repositoryProvider).getTaskById(event.taskId!);
+    if (task == null || !context.mounted) return;
+    await showTaskSheet(context, ref, task);
   }
 }
 

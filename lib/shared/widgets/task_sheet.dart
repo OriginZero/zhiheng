@@ -199,7 +199,7 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
     return Container(
       padding: EdgeInsets.all(SpacingTokens.x3),
       decoration: BoxDecoration(
-        color: colors.divider.withValues(alpha: 0.4),
+        color: colors.fill,
         borderRadius: RadiusTokens.largeShape,
       ),
       child: Column(

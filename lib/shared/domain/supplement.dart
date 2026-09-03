@@ -132,6 +132,9 @@ String? formatDurationZh(int? seconds) {
 }
 
 /// 补充记录的中文摘要（供时间线事件展示；用户备注优先于摘要）。
+///
+/// 照片只以数量概述（如「2 张照片」），不展开细节；细节由用户点击
+/// 事件后在任务详情弹层查看。
 String? supplementSummaryZh(TaskSupplement? supplement) {
   final parts = phototherapyExposureParts(supplement);
   if (parts.isEmpty) return null;
@@ -140,11 +143,33 @@ String? supplementSummaryZh(TaskSupplement? supplement) {
     final duration = formatDurationZh(part.durationSeconds);
     final photoCount =
         part.photoIds.isEmpty ? '' : '（${part.photoIds.length} 张照片）';
-    final details = [
-      ?duration,
-      if (photoCount.isNotEmpty) photoCount,
-    ].join(' ');
-    lines.add(details.isEmpty ? part.name : '$part.name $details');
+    final details = '${duration ?? ''}$photoCount';
+    // 注意插值范围：'$part.name' 会把 part 对象整个 toString（输出
+    // 「Instance of PhototherapyExposurePart」），必须用 ${part.name}。
+    lines.add(details.isEmpty ? part.name : '${part.name} $details');
   }
   return '治疗记录：${lines.join('；')}';
+}
+
+/// 清洗历史脏数据中的 Dart 对象 toString 痕迹。
+///
+/// v1.8.0 的时间线事件备注曾因 `'$part.name'` 插值 bug 写入
+/// 「治疗记录：Instance of PhototherapyExposurePart …」这类文本；
+/// 历史事件不可变（§44），在展示层过滤，不做数据库改写。
+String? sanitizeDisplayNotes(String? notes) {
+  if (notes == null) return null;
+  if (!notes.contains('Instance of ')) return notes;
+  // 逐个移除「Instance of 'Xxx'」片段（Dart 默认 toString 带引号）及其
+  // 后续属性访问残留（如 `.name`）。
+  var cleaned =
+      notes.replaceAll(RegExp(r"Instance of '?[\w<>]+'?(\.\w+)*"), '');
+  cleaned = cleaned
+      .replaceAll(RegExp(r'：\s+'), '：')
+      .replaceAll(RegExp(r'；{2,}'), '；')
+      .replaceAll(RegExp(r'[：；]+\s*$'), '')
+      .replaceAll(RegExp(r'^[；\s]+'), '')
+      .trim();
+  // 只剩裸标签（「治疗记录：」被清空后残留前缀）→ 视为无内容。
+  if (cleaned == '治疗记录') cleaned = '';
+  return cleaned.isEmpty ? null : cleaned;
 }

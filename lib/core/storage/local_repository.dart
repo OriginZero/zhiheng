@@ -444,6 +444,41 @@ class LocalRepository {
     return rows.map(taskFromRow).toList();
   }
 
+  /// 读取单个任务（时间线事件点击 → 任务详情弹层）。
+  Future<Task?> getTaskById(String taskId) async {
+    final row = await (_db.select(_db.tasks)
+          ..where((t) => t.id.equals(taskId)))
+        .getSingleOrNull();
+    return row == null ? null : taskFromRow(row);
+  }
+
+  /// 同模板最近一次带执行补充的**已完成**任务（「应用上一次记录」的数据源）。
+  ///
+  /// 光疗等周期任务的治疗部位与时长在短周期内通常相同；按 completedAt
+  /// 倒序取最近一条补充记录（含撤销后保留的补充），排除 [excludeTaskId]
+  /// （重新记录自身场景）。
+  Future<Task?> lastSupplementedTaskForTemplate(
+    String patientId,
+    String templateId, {
+    String? excludeTaskId,
+  }) async {
+    final query = _db.select(_db.tasks)
+      ..where((t) {
+        var expr = t.patientId.equals(patientId) &
+            t.templateId.equals(templateId) &
+            t.supplementJson.isNotNull() &
+            t.status.equals(TaskStatus.completed.name);
+        if (excludeTaskId != null) {
+          expr = expr & t.id.equals(excludeTaskId).not();
+        }
+        return expr;
+      })
+      ..orderBy([(t) => OrderingTerm.desc(t.completedAt)])
+      ..limit(1);
+    final row = await query.getSingleOrNull();
+    return row == null ? null : taskFromRow(row);
+  }
+
   // ---- Reminder ----
 
   Future<void> saveReminder(Reminder reminder) {

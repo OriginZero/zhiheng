@@ -256,7 +256,7 @@ class _GenderChip extends StatelessWidget {
           vertical: SpacingTokens.x2,
         ),
         decoration: BoxDecoration(
-          color: selected ? colors.brand : colors.divider,
+          color: selected ? colors.brand : colors.fill,
           borderRadius: RadiusTokens.pillShape,
         ),
         child: Text(
@@ -295,7 +295,7 @@ class _BirthDateField extends StatelessWidget {
           vertical: SpacingTokens.x3,
         ),
         decoration: BoxDecoration(
-          color: colors.divider.withValues(alpha: 0.5),
+          color: colors.fill,
           borderRadius: RadiusTokens.mediumShape,
           border: Border.all(color: colors.divider),
         ),
@@ -517,7 +517,7 @@ class _ThemeOption extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected
                 ? colors.brand.withValues(alpha: 0.14)
-                : colors.divider.withValues(alpha: 0.4),
+                : colors.fill,
             borderRadius: RadiusTokens.mediumShape,
             border: Border.all(
               color: selected ? colors.brand : Colors.transparent,

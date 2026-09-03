@@ -302,10 +302,10 @@ class _DiseaseOption extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected
               ? colors.brand.withValues(alpha: 0.12)
-              : colors.divider.withValues(alpha: 0.4),
+              : colors.fill,
           borderRadius: RadiusTokens.mediumShape,
           border: Border.all(
-            color: selected ? colors.brand : colors.divider,
+            color: selected ? colors.brand : colors.fill,
             width: selected ? 1.5 : 0.75,
           ),
         ),

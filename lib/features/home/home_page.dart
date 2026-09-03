@@ -520,7 +520,7 @@ class _SourceBadge extends StatelessWidget {
         vertical: SpacingTokens.x1,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).extension<ColorTokens>()!.divider,
+        color: Theme.of(context).extension<ColorTokens>()!.fill,
         borderRadius: RadiusTokens.pillShape,
       ),
       child: Text(source.labelZh, style: context.captionStyle),

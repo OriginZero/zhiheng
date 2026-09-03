@@ -85,6 +85,10 @@ abstract final class AppTheme {
     );
   }
   /// 表单输入框统一样式（创建功能使用）。
+  ///
+  /// 填充色必须用 [ColorTokens.fill]：旧实现用 `divider.withValues(alpha: 0.5)`
+  /// 会把半透明描边色的透明度覆盖成 50% 实色，导致浅色模式黑底、深色模式白底，
+  /// 文字完全看不清。输入文字 / 光标 / 占位符也显式指定，避免继承 M3 默认值。
   static InputDecorationTheme _inputDecoration(ColorTokens tokens) {
     final border = OutlineInputBorder(
       borderRadius: RadiusTokens.mediumShape,
@@ -92,15 +96,32 @@ abstract final class AppTheme {
     );
     return InputDecorationTheme(
       filled: true,
-      fillColor: tokens.divider.withValues(alpha: 0.5),
+      fillColor: tokens.fill,
+      focusColor: tokens.brand,
+      hoverColor: tokens.brand.withValues(alpha: 0.08),
       border: border,
       enabledBorder: border,
+      errorBorder: OutlineInputBorder(
+        borderRadius: RadiusTokens.mediumShape,
+        borderSide: BorderSide(color: tokens.critical),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: RadiusTokens.mediumShape,
+        borderSide: BorderSide(color: tokens.critical, width: 1.5),
+      ),
       focusedBorder: OutlineInputBorder(
         borderRadius: RadiusTokens.mediumShape,
         borderSide: BorderSide(color: tokens.brand, width: 1.5),
       ),
       labelStyle: TextStyle(color: tokens.textSecondary),
       floatingLabelStyle: TextStyle(color: tokens.brand),
+      hintStyle: TextStyle(color: tokens.textTertiary),
+      helperStyle: TextStyle(color: tokens.textSecondary),
+      errorStyle: TextStyle(color: tokens.critical),
+      // 输入正文继承 textTheme.bodyLarge（= textPrimary），明暗模式下均为最高对比度。
+      iconColor: tokens.textSecondary,
+      prefixIconColor: tokens.textSecondary,
+      suffixIconColor: tokens.textSecondary,
       contentPadding: EdgeInsets.symmetric(
         horizontal: SpacingTokens.x4,
         vertical: SpacingTokens.x3,

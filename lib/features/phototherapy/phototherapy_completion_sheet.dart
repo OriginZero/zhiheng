@@ -2,12 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../app/providers/core_providers.dart';
 import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
 import '../../shared/widgets/glass/glass.dart';
+import '../../shared/widgets/task_sheet.dart';
 import '../photo/photo_capture_sheet.dart';
 
 /// 308nm 光疗任务勾选完成时填写的「本次治疗补充」表单（开发文档 §10）。
@@ -84,6 +86,38 @@ class _PhototherapyCompletionSheetState
   final _notesController = TextEditingController();
   bool _busy = false;
 
+  /// 同模板上一次已保存的部位记录（「应用上一次」数据源；null = 没有可复用记录）。
+  List<PhototherapyExposurePart>? _lastParts;
+
+  /// 上一次记录的完成时间（展示在按钮文案里，帮用户确认复用哪一次）。
+  DateTime? _lastCompletedAt;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastRecord();
+  }
+
+  /// 读取同模板最近一次带补充的已完成任务（周期光疗短周期内部位/时长通常相同）。
+  Future<void> _loadLastRecord() async {
+    final templateId = widget.task.templateId;
+    if (templateId == null) return;
+    final last = await ref
+        .read(repositoryProvider)
+        .lastSupplementedTaskForTemplate(
+          widget.task.patientId,
+          templateId,
+          excludeTaskId: widget.task.id,
+        );
+    if (last == null || !mounted) return;
+    final parts = phototherapyExposureParts(last.supplement);
+    if (parts.isEmpty) return;
+    setState(() {
+      _lastParts = parts;
+      _lastCompletedAt = last.completedAt;
+    });
+  }
+
   @override
   void dispose() {
     for (final part in _parts) {
@@ -122,6 +156,10 @@ class _PhototherapyCompletionSheetState
                 '时长按你的设备与医生方案执行，这里只做记录。',
                 style: context.secondaryLabelStyle,
               ),
+              if (_lastParts != null) ...[
+                SizedBox(height: SpacingTokens.x3),
+                _buildApplyLastButton(),
+              ],
               SizedBox(height: SpacingTokens.x4),
               for (var i = 0; i < _parts.length; i++) _buildPartCard(i),
               SizedBox(height: SpacingTokens.x2),
@@ -167,16 +205,75 @@ class _PhototherapyCompletionSheetState
     );
   }
 
+  /// 「应用上一次记录」按钮：一键带入同部位同短周期内通常不变的部位与时长。
+  /// 照片不复用（每次治疗需重新拍摄才反映当前皮肤状态）。
+  Widget _buildApplyLastButton() {
+    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final summary = _lastParts!
+        .map((p) {
+          final d = formatDurationZh(p.durationSeconds);
+          return d == null ? p.name : '${p.name} $d';
+        })
+        .join('；');
+    final when = _lastCompletedAt == null
+        ? ''
+        : '（${DateFormat('M月d日').format(_lastCompletedAt!)}）';
+
+    return GlassButton(
+      expanded: true,
+      type: GlassButtonType.glass,
+      icon: Icons.replay,
+      onPressed: _busy ? null : _applyLastRecord,
+      child: Text(
+        '应用上一次记录$when：$summary',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: context.labelStyle.copyWith(color: colors.brand),
+      ),
+    );
+  }
+
+  /// 用上一次记录重建部位草稿（新 partId，不带照片）；已有输入时先确认。
+  Future<void> _applyLastRecord() async {
+    final hasInput = _parts.any((p) => !p.isEmpty);
+    if (hasInput) {
+      final ok = await showGlassConfirm(
+        context,
+        title: '应用上一次记录',
+        message: '将用上一次治疗的部位与时长替换当前已填写的内容（照片不受影响）。',
+        confirmLabel: '替换',
+      );
+      if (ok != true || !mounted) return;
+    }
+    setState(() {
+      for (final p in _parts) {
+        p.dispose();
+      }
+      _parts
+        ..clear()
+        ..addAll(
+          _lastParts!.map((last) {
+            final draft = _PartDraft()
+              ..nameController.text = last.name;
+            final d = last.durationSeconds;
+            if (d != null) {
+              draft.minutesController.text = '${d ~/ 60}';
+              final s = d % 60;
+              if (s > 0) draft.secondsController.text = '$s';
+            }
+            return draft;
+          }),
+        );
+    });
+  }
+
   Widget _buildPartCard(int index) {
     final part = _parts[index];
     return Container(
       margin: EdgeInsets.only(bottom: SpacingTokens.x3),
       padding: EdgeInsets.all(SpacingTokens.x3),
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .extension<ColorTokens>()!
-            .divider
-            .withValues(alpha: 0.4),
+        color: Theme.of(context).extension<ColorTokens>()!.fillStrong,
         borderRadius: RadiusTokens.largeShape,
       ),
       child: Column(
