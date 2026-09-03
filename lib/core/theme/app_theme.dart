@@ -27,7 +27,7 @@ abstract final class AppTheme {
         onPrimary: tokens.onBrand,
         secondary: tokens.brand,
         onSecondary: tokens.onBrand,
-        surface: tokens.backgroundBase,
+        surface: Colors.transparent,
         onSurface: tokens.textPrimary,
         error: tokens.critical,
         onError: tokens.onBrand,
