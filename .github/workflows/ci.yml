@@ -5,16 +5,19 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
   pull_request:
 
 jobs:
   analyze-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5.1.0
 
       # Flutter 版本由 mise.toml 锁定（本地与 CI 同一来源）。
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@v4.3.0
         with:
           cache: true
 
