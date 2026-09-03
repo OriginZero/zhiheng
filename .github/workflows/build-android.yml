@@ -105,6 +105,9 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3.0.3
         with:
+# 发布形态约束（docs/约束性文档.md §9.4）：默认 Pre-release。
+          # 正式发布：验证通过后在 GitHub UI / `gh release edit` 取消 prerelease 标记，不重打 tag。
+          prerelease: true
           generate_release_notes: true
           files: |
             build/app/outputs/flutter-apk/zhiheng-${{ steps.version.outputs.version }}-universal.apk

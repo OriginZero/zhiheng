@@ -83,6 +83,14 @@ fi
 echo ""
 echo "档位判定：$TIER"
 echo "发版命令：git tag v$MAJOR_MINOR_PATCH && git push origin v$MAJOR_MINOR_PATCH"
+# 发布形态（docs/约束性文档.md §9.4）：默认 pre；仅当「最新版本」条目显式标注「正式」才按正式发布。
+MODE="pre（默认）"
+LATEST_ENTRY=$(awk '''/^## 最新版本/{f=1;next} /^## / && f && !/最新版本/{f=0} f && /^### v/{print;exit}''' docs/更新文档.md)
+case "$LATEST_ENTRY" in
+  *正式*) MODE="正式（需显式声明）" ;;
+esac
+echo "发布形态：$MODE（默认 pre；正式化 = 验证通过后取消 GitHub Release 的 prerelease 标记）"
+
 
 if [[ "${1:-}" == "--dry" ]]; then
   exit 0
