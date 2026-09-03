@@ -89,6 +89,7 @@ class GlassSurface extends StatelessWidget {
     final glassColor =
         tint ?? (isDark ? const Color(0xFF2A2C30) : Colors.white);
 
+    // 内容层：背景 + 边框 + 高光（无阴影）
     Widget content = Container(
       padding: padding,
       margin: margin,
@@ -99,7 +100,6 @@ class GlassSurface extends StatelessWidget {
           color: Colors.white.withValues(alpha: _borderOpacity),
           width: 0.75,
         ),
-        boxShadow: level == GlassLevel.surface ? GlassTokens.surfaceShadow : null,
       ),
       // 顶部高光，保持玻璃的立体感。
       foregroundDecoration: BoxDecoration(
@@ -109,6 +109,7 @@ class GlassSurface extends StatelessWidget {
       child: child,
     );
 
+    // 模糊层：ClipRRect 只裁剪内容，不裁剪阴影
     if (blur) {
       content = ClipRRect(
         borderRadius: borderRadius,
@@ -119,6 +120,17 @@ class GlassSurface extends StatelessWidget {
           ),
           child: content,
         ),
+      );
+    }
+
+    // 阴影层：放在 ClipRRect 外部，避免被裁剪成直角
+    if (level == GlassLevel.surface) {
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: borderRadius,
+          boxShadow: GlassTokens.surfaceShadow,
+        ),
+        child: content,
       );
     }
 

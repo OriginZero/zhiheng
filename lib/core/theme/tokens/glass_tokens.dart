@@ -22,7 +22,7 @@ abstract final class GlassTokens {
 
   // 导航栏
   static const double navigationBlur = 32;
-  static const double navigationOpacity = 0.72;
+  static const double navigationOpacity = 0.5;
 
   // 弹层（Sheet / Dialog）
   static const double overlayBlur = 30;
