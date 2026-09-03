@@ -1,5 +1,8 @@
+import 'dart:ui' as ui;
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -282,6 +285,92 @@ void main() {
 
     expect(find.textContaining('应用上一次记录'), findsNothing);
     expect(find.text('记录本次光疗'), findsOneWidget);
+
+    await tearDownRepo(tester);
+  });
+
+  // —— v1.8.1 输入框对比度：真实表单像素级回归 ——
+  //
+  // 渲染真实的 PhototherapyCompletionSheet（亮/暗两套主题），对「分」输入框
+  // 内部取点采样渲染像素：亮色模式必须是浅填充面、暗色模式必须是深填充面。
+  // 这是对 divider-as-fill 反色 bug（亮色 50% 实黑 / 暗色 50% 实白）的最终
+  // 观测证据，而不是只断言 token 值。
+  testWidgets('真实光疗表单输入框像素：亮色浅底、暗色深底（反色 bug 回归）', (tester) async {
+    final container = await pumpApp(tester);
+    final task = await savePhototherapyTask(id: 't-pixel');
+    final boundaryKey = GlobalKey();
+
+    Future<void> pumpForm(ThemeData theme) async {
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: theme,
+            home: RepaintBoundary(
+              key: boundaryKey,
+              child: Scaffold(
+                body: SingleChildScrollView(
+                  child: PhototherapyCompletionSheet(task: task),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    /// 对「分」输入框右侧内缘取样（避开边框/文字/圆角）。
+    Future<Color> sampleInputPixel() async {
+      final rect = tester.getRect(find.widgetWithText(TextField, '分'));
+      final boundary = boundaryKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
+      final image = (await tester.runAsync(
+        () => boundary.toImage(pixelRatio: 1),
+      ))!;
+      addTearDown(image.dispose);
+      final bytes = (await tester.runAsync(
+        () => image.toByteData(format: ui.ImageByteFormat.rawRgba),
+      ))!
+          .buffer
+          .asUint8List();
+      final x = (rect.right - 8).round().clamp(0, image.width - 1);
+      final y = rect.center.dy.round().clamp(0, image.height - 1);
+      final i = (y * image.width + x) * 4;
+      return Color.fromARGB(bytes[i + 3], bytes[i], bytes[i + 1], bytes[i + 2]);
+    }
+
+    ColorTokens tokensFor(Brightness b) =>
+        (b == Brightness.light ? AppTheme.light() : AppTheme.dark())
+            .extension<ColorTokens>()!;
+    final lightTokens = tokensFor(Brightness.light);
+    final darkTokens = tokensFor(Brightness.dark);
+
+    await pumpForm(AppTheme.light());
+    final lightPixel = await sampleInputPixel();
+    await pumpForm(AppTheme.dark());
+    final darkPixel = await sampleInputPixel();
+
+    // 填充面不透明：采样像素应等于 fill token（容差 4，抗锯齿/合成误差）。
+    Color near(Color actual, Color expected) {
+      bool close(double a, double b) => ((a - b) * 255).abs() <= 4;
+      expect(
+        close(actual.r, expected.r) &&
+            close(actual.g, expected.g) &&
+            close(actual.b, expected.b),
+        isTrue,
+        reason: 'actual=$actual expected≈$expected',
+      );
+      return actual;
+    }
+
+    near(lightPixel, lightTokens.fill);
+    near(darkPixel, darkTokens.fill);
+
+    // 反色 bug 的直接观测断言：方向必须正确（旧 bug 为亮色深底/暗色浅底）。
+    expect(lightPixel.computeLuminance(), greaterThan(0.5));
+    expect(darkPixel.computeLuminance(), lessThan(0.25));
 
     await tearDownRepo(tester);
   });
