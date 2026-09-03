@@ -10,6 +10,7 @@ import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
 import '../../shared/widgets/async_status_view.dart';
 import '../../shared/widgets/glass/glass.dart';
+import '../../shared/widgets/photo_viewer_page.dart';
 import 'photo_capture_sheet.dart';
 
 /// 光疗照片时间线（开发文档 §34）。
@@ -147,79 +148,6 @@ class _PhotoTile extends StatelessWidget {
   }
 
   void _openViewer(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _PhotoViewerPage(photo: photo),
-      ),
-    );
-  }
-}
-
-/// 全屏查看原图 + 拍摄引导通过项列表。
-class _PhotoViewerPage extends StatelessWidget {
-  const _PhotoViewerPage({required this.photo});
-
-  final CarePhoto photo;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(
-          '${photo.kind.labelZh} · '
-          '${DateFormat('yyyy/M/d HH:mm').format(photo.takenAt)}',
-        ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: InteractiveViewer(
-                maxScale: 4,
-                child: Image.file(File(photo.filePath), fit: BoxFit.contain),
-              ),
-            ),
-          ),
-          if (photo.guidePassed.isNotEmpty)
-            Container(
-              width: double.infinity,
-              color: Colors.black,
-              padding: EdgeInsets.all(SpacingTokens.x4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '拍摄引导通过项',
-                    style: context.labelBoldStyle.copyWith(color: Colors.white),
-                  ),
-                  SizedBox(height: SpacingTokens.x2),
-                  for (final key in photo.guidePassed)
-                    Padding(
-                      padding: EdgeInsets.only(bottom: SpacingTokens.x1),
-                      child: Row(
-                        children: [
-                          Icon(Icons.check_circle, size: 16,
-                              color: colors.success),
-                          SizedBox(width: SpacingTokens.x2),
-                          Text(
-                            photoGuideLabel(key),
-                            style: context.bodyStyle.copyWith(
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
+    openPhotoViewer(context, photo);
   }
 }

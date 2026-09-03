@@ -242,7 +242,7 @@ class RevertTaskNotifier extends Notifier<void> {
 final revertTaskProvider =
     NotifierProvider<RevertTaskNotifier, void>(RevertTaskNotifier.new);
 
-/// 未来 7 天待办（首页「即将到期」）。
+/// 未来 7 天待办（首页「近期待办」）。
 final upcomingTasksProvider = StreamProvider<List<Task>>((ref) {
   final repo = ref.watch(repositoryProvider);
   return repo.watchUpcomingTasks(localPatientId);

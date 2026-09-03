@@ -9,6 +9,7 @@ import '../../app/providers/task_providers.dart';
 import '../../core/theme/theme.dart';
 import '../domain/domain.dart';
 import '../widgets/glass/glass.dart';
+import '../widgets/photo_viewer_page.dart';
 
 /// 任务操作弹层：查看任务、补写备注、查看/删除执行补充、撤销完成。
 ///
@@ -267,14 +268,17 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
                 separatorBuilder: (_, _) => SizedBox(width: SpacingTokens.x2),
                 itemBuilder: (context, index) {
                   final photo = _photos[index];
-                  return ClipRRect(
-                    borderRadius: RadiusTokens.smallShape,
-                    child: Image.file(
-                      File(photo.filePath),
-                      width: 64,
-                      height: 64,
-                      fit: BoxFit.cover,
-                      cacheWidth: 200,
+                  return GestureDetector(
+                    onTap: () => openPhotoViewer(context, photo),
+                    child: ClipRRect(
+                      borderRadius: RadiusTokens.smallShape,
+                      child: Image.file(
+                        File(photo.filePath),
+                        width: 64,
+                        height: 64,
+                        fit: BoxFit.cover,
+                        cacheWidth: 200,
+                      ),
                     ),
                   );
                 },

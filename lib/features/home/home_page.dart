@@ -64,7 +64,7 @@ class HomePage extends ConsumerWidget {
           builder: (tasks) => _TaskGroups(tasks: tasks),
         ),
         SizedBox(height: SpacingTokens.x6),
-        Text('未来任务', style: context.headlineStyle),
+        Text('近期待办', style: context.headlineStyle),
         SizedBox(height: SpacingTokens.x3),
         AsyncStatusView(
           value: upcomingTasks,

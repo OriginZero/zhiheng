@@ -9,6 +9,7 @@ import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
 import '../../shared/widgets/glass/glass.dart';
+import '../../shared/widgets/photo_viewer_page.dart';
 import '../../shared/widgets/task_sheet.dart';
 import '../photo/photo_capture_sheet.dart';
 
@@ -346,14 +347,17 @@ class _PhototherapyCompletionSheetState
                   final photo = part.photos[photoIndex];
                   return Stack(
                     children: [
-                      ClipRRect(
-                        borderRadius: RadiusTokens.smallShape,
-                        child: Image.file(
-                          File(photo.filePath),
-                          width: 72,
-                          height: 72,
-                          fit: BoxFit.cover,
-                          cacheWidth: 200,
+                      GestureDetector(
+                        onTap: () => openPhotoViewer(context, photo),
+                        child: ClipRRect(
+                          borderRadius: RadiusTokens.smallShape,
+                          child: Image.file(
+                            File(photo.filePath),
+                            width: 72,
+                            height: 72,
+                            fit: BoxFit.cover,
+                            cacheWidth: 200,
+                          ),
                         ),
                       ),
                       Positioned(

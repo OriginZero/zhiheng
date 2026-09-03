@@ -90,3 +90,22 @@ enum PhotoKind {
 
   final String labelZh;
 }
+
+/// 拍摄引导项（§34）：key 入库，labelZh 展示。
+typedef PhotoGuideItem = ({String key, String labelZh});
+
+/// 拍摄引导 checklist（§34）：与上次同角度 / 同距离 / 光线一致 / 患处可见。
+const List<PhotoGuideItem> kPhotoGuideItems = [
+  (key: 'sameAngle', labelZh: '与上次相同角度'),
+  (key: 'sameDistance', labelZh: '与上次相同距离'),
+  (key: 'consistentLighting', labelZh: '光线充足一致'),
+  (key: 'lesionVisible', labelZh: '患处完整可见'),
+];
+
+/// 拍摄引导项中文文案（供全屏查看等展示场景使用）。
+String photoGuideLabel(String key) {
+  for (final item in kPhotoGuideItems) {
+    if (item.key == key) return item.labelZh;
+  }
+  return key;
+}
