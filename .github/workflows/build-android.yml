@@ -65,18 +65,30 @@ jobs:
       - name: Build App Bundle
         run: flutter build appbundle --release
 
+      # 附件命名：zhiheng-<version>-universal.apk（universal = 含 arm64-v8a /
+      # armeabi-v7a / x86_64 全部 ABI 的整包，兼容所有 64/32 位设备）与
+      # zhiheng-<version>.aab；版本号带 build（+N），同一版本补发不重名。
+      # 规范见 docs/约束性文档.md §10。
       - name: Read version
         id: version
         run: |
           echo "version=$(grep '^version:' pubspec.yaml | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - name: Rename artifacts
+        run: |
+          cd build/app/outputs
+          mv flutter-apk/app-release.apk \
+            "flutter-apk/zhiheng-${{ steps.version.outputs.version }}-universal.apk"
+          mv bundle/release/app-release.aab \
+            "bundle/release/zhiheng-${{ steps.version.outputs.version }}.aab"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6.0.0
         with:
           name: zhiheng-android-${{ steps.version.outputs.version }}
           path: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/flutter-apk/zhiheng-${{ steps.version.outputs.version }}-universal.apk
+            build/app/outputs/bundle/release/zhiheng-${{ steps.version.outputs.version }}.aab
 
       - name: Create release
         if: startsWith(github.ref, 'refs/tags/')
@@ -84,5 +96,5 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/flutter-apk/zhiheng-${{ steps.version.outputs.version }}-universal.apk
+            build/app/outputs/bundle/release/zhiheng-${{ steps.version.outputs.version }}.aab
