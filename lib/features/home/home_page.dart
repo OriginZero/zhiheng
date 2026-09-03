@@ -13,6 +13,8 @@ import '../../shared/widgets/async_status_view.dart';
 import '../../shared/widgets/glass/glass.dart';
 import '../../shared/widgets/event_record_sheet.dart';
 import '../phototherapy/phototherapy_task_flow.dart';
+import '../diabetes/glucose_task_flow.dart';
+
 
 /// 首页：Today（开发文档 §31）。
 ///
@@ -432,9 +434,15 @@ class _TaskTile extends ConsumerWidget {
             borderRadius: RadiusTokens.pillShape,
             onTap: done
                 ? null
-                : () => task.templateId == 'vitiligo.phototherapy'
-                    ? completePhototherapyTaskFlow(context, ref, task)
-                    : ref.read(completeTaskProvider.notifier).complete(task),
+                    : () {
+                        if (task.templateId == 'vitiligo.phototherapy') {
+                          completePhototherapyTaskFlow(context, ref, task);
+                        } else if (isGlucoseTask(task)) {
+                          completeGlucoseTaskFlow(context, ref, task);
+                        } else {
+                          ref.read(completeTaskProvider.notifier).complete(task);
+                       }
+                      },
             child: Padding(
               padding: EdgeInsets.all(SpacingTokens.x2),
               child: Icon(

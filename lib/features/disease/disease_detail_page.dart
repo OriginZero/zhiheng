@@ -8,6 +8,8 @@ import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../features/task/disease_templates.dart';
 import '../phototherapy/phototherapy_task_flow.dart';
+import '../diabetes/glucose_task_flow.dart';
+
 import '../../shared/domain/domain.dart';
 import '../../shared/forms/task_form_sheet.dart';
 import '../../shared/widgets/task_sheet.dart';
@@ -506,9 +508,15 @@ class _TaskTile extends ConsumerWidget {
           ),
           InkWell(
             borderRadius: RadiusTokens.pillShape,
-            onTap: () => task.templateId == 'vitiligo.phototherapy'
-                ? completePhototherapyTaskFlow(context, ref, task)
-                : ref.read(completeTaskProvider.notifier).complete(task),
+            onTap: () {
+              if (task.templateId == 'vitiligo.phototherapy') {
+                completePhototherapyTaskFlow(context, ref, task);
+              } else if (isGlucoseTask(task)) {
+                completeGlucoseTaskFlow(context, ref, task);
+              } else {
+                ref.read(completeTaskProvider.notifier).complete(task);
+              }
+            },
             child: Padding(
               padding: EdgeInsets.all(SpacingTokens.x2),
               child: Icon(

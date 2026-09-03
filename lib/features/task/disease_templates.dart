@@ -146,6 +146,58 @@ abstract final class DiseaseTemplates {
       ),
       defaultEndAtMonths: 0,
     ),
+    // ---- 2 型糖尿病：空腹血糖（《中国糖尿病防治指南（2024版）》SMBG） ----
+    DiseaseTaskTemplate(
+      id: 'diabetes.glucose.fasting',
+      diseaseCode: DiseaseCodes.type2Diabetes,
+      title: '空腹血糖',
+      description: '早餐前、未进食状态下的血糖。空腹血糖是糖尿病管理的核心指标，'
+          '反映基础胰岛素分泌能力。指南建议胰岛素治疗者每日监测空腹血糖；'
+          '非胰岛素治疗者按医生方案进行阶段性监测。',
+      type: TaskType.measurement,
+      source: TaskSource.clinicalRule,
+      knowledgeId: 'diabetes.glucose.monitoring',
+      defaultRecurrence: TaskRecurrence(
+        frequency: RecurrenceFrequency.daily,
+        interval: 1,
+      ),
+      defaultEndAtMonths: 0,
+    ),
+    // ---- 2 型糖尿病：餐后2小时血糖（《中国糖尿病防治指南（2024版）》SMBG） ----
+    DiseaseTaskTemplate(
+      id: 'diabetes.glucose.postMeal',
+      diseaseCode: DiseaseCodes.type2Diabetes,
+      title: '餐后2小时血糖',
+      description: '从吃第一口饭开始计时 2 小时测量的血糖。'
+          '指南明确把餐后 2 h 血糖作为重要的 SMBG 时间点，'
+          '建议在空腹血糖已经控制良好、但 HbA1c 仍未达标，'
+          '或者希望了解饮食、运动对血糖影响时进行餐后监测。',
+      type: TaskType.measurement,
+      source: TaskSource.clinicalRule,
+      knowledgeId: 'diabetes.glucose.monitoring',
+      defaultRecurrence: TaskRecurrence(
+        frequency: RecurrenceFrequency.daily,
+        interval: 1,
+      ),
+      defaultEndAtMonths: 0,
+    ),
+    // ---- 2 型糖尿病：睡前血糖（《中国糖尿病防治指南（2024版）》SMBG） ----
+    DiseaseTaskTemplate(
+      id: 'diabetes.glucose.bedtime',
+      diseaseCode: DiseaseCodes.type2Diabetes,
+      title: '睡前血糖',
+      description: '就寝前测量的血糖。尤其适用于使用胰岛素、'
+          '有低血糖风险、晚餐前使用胰岛素或夜间血糖异常的患者。'
+          '指南将睡前血糖作为特定情况下的监测时间点。',
+      type: TaskType.measurement,
+      source: TaskSource.clinicalRule,
+      knowledgeId: 'diabetes.glucose.monitoring',
+      defaultRecurrence: TaskRecurrence(
+        frequency: RecurrenceFrequency.daily,
+        interval: 1,
+      ),
+      defaultEndAtMonths: 0,
+    ),
   ];
 
   /// 某疾病的模板。

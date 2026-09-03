@@ -7,6 +7,8 @@ import '../../features/disease/diseases_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/settings/settings_page.dart';
 import '../../features/timeline/timeline_page.dart';
+import '../../features/diabetes/diabetes_page.dart';
+
 import '../../shared/widgets/glass/glass.dart';
 
 /// 路由路径常量（禁止散落的魔法字符串）。
@@ -15,6 +17,8 @@ abstract final class AppRoutes {
   static const String timeline = '/timeline';
   static const String settings = '/settings';
   static const String diseases = '/diseases';
+  static const String diabetes = '/disease/:id/diabetes';
+
   static const String diseaseDetail = '/disease/:id';
 }
 
@@ -56,6 +60,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => NoTransitionPage(
           child: GlassBackground(
             child: DiseaseDetailPage(
+              diseaseId: state.pathParameters['id']!,
+            ),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.diabetes,
+        pageBuilder: (context, state) => NoTransitionPage(
+          child: GlassBackground(
+            child: DiabetesPage(
               diseaseId: state.pathParameters['id']!,
             ),
           ),

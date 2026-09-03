@@ -149,6 +149,47 @@ enum EventType {
       };
 }
 
+/// 血糖测量时点（《中国糖尿病防治指南（2024版）》SMBG 时间点）。
+enum GlucoseContext {
+  /// 空腹（早餐前、未进食状态）。
+  fasting,
+  /// 餐前（午餐前 / 晚餐前）。
+  preMeal,
+  /// 餐后 2 小时（绑定具体餐次）。
+  postMeal,
+  /// 睡前。
+  bedtime,
+  /// 夜间（02:00 / 03:00）。
+  night,
+  /// 其他（运动前后 / 症状时 / 疾病期间等）。
+  other;
+
+  String get labelZh => switch (this) {
+        GlucoseContext.fasting => '空腹',
+        GlucoseContext.preMeal => '餐前',
+        GlucoseContext.postMeal => '餐后2小时',
+        GlucoseContext.bedtime => '睡前',
+        GlucoseContext.night => '夜间',
+        GlucoseContext.other => '其他',
+      };
+}
+
+/// 血糖测量方式。
+enum GlucoseMethod {
+  /// 指尖血糖。
+  fingerstick,
+  /// 连续血糖监测（CGM）。
+  cgm,
+  /// 医院检测。
+  hospital;
+
+  String get labelZh => switch (this) {
+        GlucoseMethod.fingerstick => '指尖血糖',
+        GlucoseMethod.cgm => 'CGM',
+        GlucoseMethod.hospital => '医院检测',
+      };
+}
+
 /// 提醒状态。
 enum ReminderStatus {
   pending,

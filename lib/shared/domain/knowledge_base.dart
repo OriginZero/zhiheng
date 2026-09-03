@@ -87,6 +87,35 @@ abstract final class KnowledgeBase {
           '以及并发症筛查。',
       reference: 'Diabetes Care 2025;48(Suppl 1) Chapter 4 (ADA Standards of Care)',
     ),
+    // ---- 2 型糖尿病：SMBG 监测（《中国糖尿病防治指南（2024版）》） ----
+    KnowledgeEntry(
+      id: 'diabetes.glucose.monitoring',
+      source: 'guideline',
+      title: '中国糖尿病防治指南（2024版）——血糖自我监测',
+      organization: '中华医学会糖尿病学分会',
+      publicationDate: '2024-12',
+      disease: 'type2_diabetes',
+      recommendation: 'SMBG 频率应根据患者实际病情决定：胰岛素治疗者需常规监测空腹、'
+          '餐前、餐后、睡前血糖；非胰岛素治疗者按医生方案进行阶段性监测。'
+          '测量时点包括空腹、餐前、餐后2小时、睡前、夜间等。'
+          '出现低血糖症状或剧烈运动前后应及时监测。',
+      reference: '中华糖尿病杂志 2025;17(1)（中国糖尿病防治指南 2024 版）',
+    ),
+    // ---- 2 型糖尿病：低血糖识别与处理（《中国糖尿病防治指南（2024版）》） ----
+    KnowledgeEntry(
+      id: 'diabetes.hypoglycemia',
+      source: 'guideline',
+      title: '中国糖尿病防治指南（2024版）——低血糖',
+      organization: '中华医学会糖尿病学分会',
+      publicationDate: '2024-12',
+      disease: 'type2_diabetes',
+      recommendation: '低血糖分级：1 级 3.0 ≤ 血糖 < 3.9 mmol/L；'
+          '2 级血糖 < 3.0 mmol/L；3 级需要他人帮助的严重事件。'
+          '发生低血糖后应寻找原因并及时调整治疗方案；'
+          '出现未察觉低血糖、严重 3 级低血糖或不明原因 2 级低血糖，'
+          '应重新评估血糖目标和治疗方案。',
+      reference: '中华糖尿病杂志 2025;17(1)（中国糖尿病防治指南 2024 版）',
+    ),
   ];
 
   /// 某疾病的所有知识条目。
