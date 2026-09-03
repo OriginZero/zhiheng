@@ -42,7 +42,7 @@
 
 | Token | 内容 | 位置 |
 |---|---|---|
-| ColorTokens | 中性背景 + 语义状态色（normal/attention/warning/critical/success 固定含义） | `core/theme/tokens/color_tokens.dart` |
+| ColorTokens | 中性背景 + 次级填充面（fill/fillStrong）+ 语义状态色（normal/attention/warning/critical/success 固定含义） | `core/theme/tokens/color_tokens.dart` |
 | AccentPalette | 5 套强调色（海盐蓝/薰衣草紫/薄荷青/珊瑚暖橙/鼠尾草绿），亮暗各一档 | `accent_palette.dart` |
 | SpacingTokens | 4 的倍数额度：x1=4 … x16=64 | `spacing_tokens.dart` |
 | RadiusTokens | small/medium/large/xlarge/pill | `radius_tokens.dart` |
@@ -51,6 +51,8 @@
 | MotionTokens | 时长（fast 140ms/base 240ms/slow 420ms）+ 曲线 | `motion_tokens.dart` |
 
 **禁止在业务代码**：`Color(...)`、`TextStyle(...)`、`BorderRadius.circular(...)`、`BoxShadow(...)`。颜色经 `Theme.of(context).extension<ColorTokens>()!`（`colors.brand` 等）；文字经 `context.bodyStyle` 等扩展；间距/圆角经 Tokens。
+
+**填充面 vs 描边色（v1.8.1 硬规则）**：`divider` 是半透明**描边/分隔线**色（亮色黑低透、暗色白低透），对它 `withValues(alpha:)` 会覆盖原透明度得到 50% 实黑/实白，导致浅色模式黑底、深色模式白底的明暗反转。需要**填充面**（输入框底色、未选中 Chip、内嵌卡片、日期按钮）一律用 `colors.fill`（需要分层时 `colors.fillStrong`）；`divider` 只用于 Border/分隔线。
 
 ## 5. 色彩规范（§24）
 
