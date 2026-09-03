@@ -477,11 +477,13 @@ void main() {
       return Color.fromARGB(bytes[i + 3], bytes[i], bytes[i + 1], bytes[i + 2]);
     }
 
-    ColorTokens tokensFor(Brightness b) =>
-        (b == Brightness.light ? AppTheme.light() : AppTheme.dark())
-            .extension<ColorTokens>()!;
-    final lightTokens = tokensFor(Brightness.light);
-    final darkTokens = tokensFor(Brightness.dark);
+    // M3：filled 输入底 = colorScheme.surfaceContainerHighest。
+    ColorScheme schemeFor(Brightness b) => (b == Brightness.light
+            ? AppTheme.light()
+            : AppTheme.dark())
+        .colorScheme;
+    final lightScheme = schemeFor(Brightness.light);
+    final darkScheme = schemeFor(Brightness.dark);
 
     await pumpForm(AppTheme.light());
     final lightPixel = await sampleInputPixel();
@@ -501,8 +503,8 @@ void main() {
       return actual;
     }
 
-    near(lightPixel, lightTokens.fill);
-    near(darkPixel, darkTokens.fill);
+    near(lightPixel, lightScheme.surfaceContainerHighest);
+    near(darkPixel, darkScheme.surfaceContainerHighest);
 
     // 反色 bug 的直接观测断言：方向必须正确（旧 bug 为亮色深底/暗色浅底）。
     expect(lightPixel.computeLuminance(), greaterThan(0.5));

@@ -32,7 +32,7 @@ Future<void> completePhototherapyTaskFlow(
   // 1. 非计划日勾选提示（提前完成 / 逾期补做）。
   if (!isToday) {
     final dateLabel = due.isAfter(now) ? '将于' : '原计划';
-    final ok = await showGlassConfirm(
+    final ok = await showConfirmDialog(
       context,
       title: '不是今天的任务',
       message: '本任务$dateLabel ${DateFormat('M月d日 HH:mm').format(due)} 执行，'

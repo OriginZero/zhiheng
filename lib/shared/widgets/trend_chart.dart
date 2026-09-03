@@ -62,13 +62,13 @@ class _TrendChartState extends State<TrendChart> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    // 颜色在 build 处从主题取色后以值传入 painter（异常点 critical 为医疗语义色）。
+    final scheme = Theme.of(context).colorScheme;
+    final critical = Theme.of(context).extension<ColorTokens>()!.critical;
     if (widget.points.isEmpty) {
       return SizedBox(
         height: widget.height,
-        child: Center(
-          child: Text('暂无趋势数据', style: context.captionStyle),
-        ),
+        child: Center(child: Text('暂无趋势数据', style: context.captionStyle)),
       );
     }
     return SizedBox(
@@ -87,7 +87,10 @@ class _TrendChartState extends State<TrendChart> {
                       points: widget.points,
                       targetMin: widget.targetMin,
                       targetMax: widget.targetMax,
-                      colors: colors,
+                      lineColor: scheme.primary,
+                      abnormalColor: critical,
+                      gridColor: scheme.outlineVariant,
+                      baselineColor: scheme.outline,
                       axisStyle: context.captionStyle,
                       selectedIndex: _selectedIndex,
                     ),
@@ -95,8 +98,7 @@ class _TrendChartState extends State<TrendChart> {
                   ),
                 ),
               ),
-              if (_selectedIndex != null)
-                _buildTooltip(context, colors, size),
+              if (_selectedIndex != null) _buildTooltip(context, scheme, size),
             ],
           );
         },
@@ -122,11 +124,7 @@ class _TrendChartState extends State<TrendChart> {
     setState(() => _selectedIndex = best);
   }
 
-  Widget _buildTooltip(
-    BuildContext context,
-    ColorTokens colors,
-    Size size,
-  ) {
+  Widget _buildTooltip(BuildContext context, ColorScheme scheme, Size size) {
     final index = _selectedIndex;
     if (index == null || index >= widget.points.length) {
       return const SizedBox.shrink();
@@ -141,10 +139,12 @@ class _TrendChartState extends State<TrendChart> {
     final plot = _ChartLayout.plot(size);
     final x = _ChartLayout.xFor(index, widget.points.length, plot);
     final width = textPainter.width + SpacingTokens.x4;
-    final left = (x - width / 2).clamp(
-      SpacingTokens.x1,
-      math.max(SpacingTokens.x1, size.width - width - SpacingTokens.x1),
-    ).toDouble();
+    final left = (x - width / 2)
+        .clamp(
+          SpacingTokens.x1,
+          math.max(SpacingTokens.x1, size.width - width - SpacingTokens.x1),
+        )
+        .toDouble();
     return Positioned(
       top: SpacingTokens.x1,
       left: left,
@@ -154,12 +154,12 @@ class _TrendChartState extends State<TrendChart> {
           vertical: SpacingTokens.x1,
         ),
         decoration: BoxDecoration(
-          color: colors.backgroundBase,
+          color: scheme.surface,
           borderRadius: RadiusTokens.mediumShape,
-          border: Border.all(color: colors.divider),
+          border: Border.all(color: scheme.outlineVariant),
           boxShadow: [
             BoxShadow(
-              color: colors.textPrimary.withValues(alpha: 0.12),
+              color: scheme.onSurface.withValues(alpha: 0.12),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -179,11 +179,11 @@ class _ChartLayout {
   static const double bottomGap = 20;
 
   static Rect plot(Size size) => Rect.fromLTRB(
-        leftGap,
-        topGap,
-        math.max(leftGap + 1, size.width - rightGap),
-        math.max(topGap + 1, size.height - bottomGap),
-      );
+    leftGap,
+    topGap,
+    math.max(leftGap + 1, size.width - rightGap),
+    math.max(topGap + 1, size.height - bottomGap),
+  );
 
   /// 第 [index] 个点的 x 坐标；单点水平居中。
   static double xFor(int index, int length, Rect plot) {
@@ -197,7 +197,10 @@ class _TrendChartPainter extends CustomPainter {
     required this.points,
     required this.targetMin,
     required this.targetMax,
-    required this.colors,
+    required this.lineColor,
+    required this.abnormalColor,
+    required this.gridColor,
+    required this.baselineColor,
     required this.axisStyle,
     required this.selectedIndex,
   });
@@ -205,7 +208,19 @@ class _TrendChartPainter extends CustomPainter {
   final List<TrendPoint> points;
   final double? targetMin;
   final double? targetMax;
-  final ColorTokens colors;
+
+  /// 折线 / 普通点颜色（scheme.primary）。
+  final Color lineColor;
+
+  /// 异常点颜色（医疗语义色 critical）。
+  final Color abnormalColor;
+
+  /// 网格线颜色（scheme.outlineVariant）。
+  final Color gridColor;
+
+  /// 0 基线颜色（scheme.outline）。
+  final Color baselineColor;
+
   final TextStyle axisStyle;
   final int? selectedIndex;
 
@@ -243,16 +258,16 @@ class _TrendChartPainter extends CustomPainter {
         Offset(plot.right, y),
         Paint()
           ..color = isBaseline
-              ? colors.textTertiary.withValues(alpha: 0.6)
-              : colors.divider
+              ? baselineColor.withValues(alpha: 0.6)
+              : gridColor
           ..strokeWidth = 1,
       );
-      final label = _formatTick(tick, ticks.length > 1 ? ticks[1] - ticks[0] : 1);
-      final tp = _textPainter(label);
-      tp.paint(
-        canvas,
-        Offset(plot.left - tp.width - 6, y - tp.height / 2),
+      final label = _formatTick(
+        tick,
+        ticks.length > 1 ? ticks[1] - ticks[0] : 1,
       );
+      final tp = _textPainter(label);
+      tp.paint(canvas, Offset(plot.left - tp.width - 6, y - tp.height / 2));
     }
 
     // 2. 目标范围淡色带。
@@ -270,20 +285,16 @@ class _TrendChartPainter extends CustomPainter {
         );
         canvas.drawRect(
           bandRect,
-          Paint()..color = colors.brand.withValues(alpha: 0.08),
+          Paint()..color = lineColor.withValues(alpha: 0.08),
         );
         final edgePaint = Paint()
-          ..color = colors.brand.withValues(alpha: 0.3)
+          ..color = lineColor.withValues(alpha: 0.3)
           ..strokeWidth = 1;
         if (topRaw > plot.top && topRaw < plot.bottom) {
           canvas.drawLine(bandRect.topLeft, bandRect.topRight, edgePaint);
         }
         if (bottomRaw > plot.top && bottomRaw < plot.bottom) {
-          canvas.drawLine(
-            bandRect.bottomLeft,
-            bandRect.bottomRight,
-            edgePaint,
-          );
+          canvas.drawLine(bandRect.bottomLeft, bandRect.bottomRight, edgePaint);
         }
       }
     }
@@ -302,7 +313,7 @@ class _TrendChartPainter extends CustomPainter {
     canvas.drawPath(
       linePath,
       Paint()
-        ..color = colors.brand
+        ..color = lineColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..strokeCap = StrokeCap.round
@@ -311,9 +322,11 @@ class _TrendChartPainter extends CustomPainter {
     );
 
     // 4. x 轴标签：首 / 中 / 尾。
-    final labelIndices = <int>{0, points.length ~/ 2, points.length - 1}
-        .toList()
-      ..sort();
+    final labelIndices = <int>{
+      0,
+      points.length ~/ 2,
+      points.length - 1,
+    }.toList()..sort();
     for (final i in labelIndices) {
       final x = _ChartLayout.xFor(i, points.length, plot);
       final tp = _textPainter(points[i].label);
@@ -332,38 +345,33 @@ class _TrendChartPainter extends CustomPainter {
           Offset(x, y),
           6,
           Paint()
-            ..color = colors.brand
+            ..color = lineColor
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.5,
         );
       }
       if (points[i].isAbnormal) {
-        canvas.drawCircle(
-          Offset(x, y),
-          4.5,
-          Paint()..color = colors.critical,
-        );
+        canvas.drawCircle(Offset(x, y), 4.5, Paint()..color = abnormalColor);
       } else {
-        canvas.drawCircle(
-          Offset(x, y),
-          2.5,
-          Paint()..color = colors.brand,
-        );
+        canvas.drawCircle(Offset(x, y), 2.5, Paint()..color = lineColor);
       }
     }
   }
 
   TextPainter _textPainter(String text) => TextPainter(
-        text: TextSpan(text: text, style: axisStyle),
-        textDirection: TextDirection.ltr,
-      )..layout();
+    text: TextSpan(text: text, style: axisStyle),
+    textDirection: TextDirection.ltr,
+  )..layout();
 
   @override
   bool shouldRepaint(covariant _TrendChartPainter oldDelegate) {
     return oldDelegate.points != points ||
         oldDelegate.targetMin != targetMin ||
         oldDelegate.targetMax != targetMax ||
-        oldDelegate.colors != colors ||
+        oldDelegate.lineColor != lineColor ||
+        oldDelegate.abnormalColor != abnormalColor ||
+        oldDelegate.gridColor != gridColor ||
+        oldDelegate.baselineColor != baselineColor ||
         oldDelegate.axisStyle != axisStyle ||
         oldDelegate.selectedIndex != selectedIndex;
   }
@@ -373,16 +381,18 @@ class _TrendChartPainter extends CustomPainter {
 List<double> _niceTicks(double yMin, double yMax, {int targetCount = 4}) {
   final rawStep = (yMax - yMin) / targetCount;
   if (rawStep <= 0) return [yMin];
-  final magnitude =
-      math.pow(10, (math.log(rawStep) / math.ln10).floor()).toDouble();
+  final magnitude = math
+      .pow(10, (math.log(rawStep) / math.ln10).floor())
+      .toDouble();
   final normalized = rawStep / magnitude;
-  final step = (normalized < 1.5
+  final step =
+      (normalized < 1.5
           ? 1.0
           : normalized < 3
-              ? 2.0
-              : normalized < 7
-                  ? 5.0
-                  : 10.0) *
+          ? 2.0
+          : normalized < 7
+          ? 5.0
+          : 10.0) *
       magnitude;
   final first = (yMin / step).ceil() * step;
   final count = ((yMax - first) / step).ceil() + 1;

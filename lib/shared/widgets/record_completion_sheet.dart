@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/tokens/radius_tokens.dart';
 import '../../core/theme/tokens/spacing_tokens.dart';
 import '../../core/theme/tokens/typography_tokens.dart';
 import '../domain/domain.dart';
-import 'glass/glass_button.dart';
-import 'glass/glass_surface.dart';
 
 /// 任务完成补充记录的通用返回结果。
 ///
@@ -19,8 +16,8 @@ class RecordCompletionResult {
 
 /// 打开「任务完成补充记录」弹层（通用外壳的唯一入口）。
 ///
-/// 业务弹层不再自行 `showModalBottomSheet`：透明背景、遮罩、键盘避让
-/// （viewInsets）都在这里统一处理。
+/// 官方 M3 bottom sheet：表面色 / 顶圆角 / 遮罩由主题 bottomSheetTheme
+/// 统一提供；这里只保留键盘避让（viewInsets）。
 Future<RecordCompletionResult?> showRecordCompletionSheet(
   BuildContext context, {
   required WidgetBuilder builder,
@@ -28,8 +25,6 @@ Future<RecordCompletionResult?> showRecordCompletionSheet(
   return showModalBottomSheet<RecordCompletionResult>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withValues(alpha: 0.25),
     builder: (sheetContext) => Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
@@ -41,8 +36,8 @@ Future<RecordCompletionResult?> showRecordCompletionSheet(
 
 /// 任务完成补充记录弹层通用外壳（开发文档 §10、§11）。
 ///
-/// 外壳统一承载：玻璃容器、标题与说明、备注输入、主按钮「保存并完成」
-/// 与次要按钮「仅完成，不记录本次细节」、底部提示、busy 状态与结果返回。
+/// 外壳统一承载：标题与说明、备注输入、主按钮「保存并完成」与次要按钮
+/// 「仅完成，不记录本次细节」、底部提示、busy 状态与结果返回。
 /// 各任务类型（光疗部位/血糖读数/未来的新模块）只需把中间字段区作为
 /// [child] 传入，并实现 [onSubmit]——字段内容不同，外壳一致。
 ///
@@ -113,55 +108,78 @@ class _RecordCompletionSheetState extends State<RecordCompletionSheet> {
   Widget build(BuildContext context) {
     final suffix = widget.saveLabelSuffix;
 
-    return GlassSurface(
-      level: GlassLevel.overlay,
-      borderRadius: const BorderRadius.vertical(
-        top: Radius.circular(RadiusTokens.xlarge),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        SpacingTokens.x5,
-        SpacingTokens.x4,
-        SpacingTokens.x5,
-        SpacingTokens.x6,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(widget.title, style: context.headlineStyle),
-            if (widget.description != null) ...[
-              SizedBox(height: SpacingTokens.x1),
-              Text(widget.description!, style: context.secondaryLabelStyle),
-            ],
-            SizedBox(height: SpacingTokens.x4),
-            widget.child,
-            SizedBox(height: SpacingTokens.x3),
-            TextField(
-              controller: _notesController,
-              maxLines: 2,
-              decoration: InputDecoration(labelText: widget.notesLabel),
+    return SafeArea(
+      top: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                SpacingTokens.x5,
+                SpacingTokens.x4,
+                SpacingTokens.x5,
+                0,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(widget.title, style: context.headlineStyle),
+                  if (widget.description != null) ...[
+                    SizedBox(height: SpacingTokens.x1),
+                    Text(
+                      widget.description!,
+                      style: context.secondaryLabelStyle,
+                    ),
+                  ],
+                  SizedBox(height: SpacingTokens.x4),
+                  widget.child,
+                  SizedBox(height: SpacingTokens.x3),
+                  TextField(
+                    controller: _notesController,
+                    maxLines: 2,
+                    decoration: InputDecoration(labelText: widget.notesLabel),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: SpacingTokens.x4),
-            GlassButton(
-              expanded: true,
-              icon: Icons.check_circle_outline,
-              onPressed: _busy ? null : () => _submit(skip: false),
-              child: Text(suffix == null ? '保存并完成' : '保存并完成$suffix'),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              SpacingTokens.x5,
+              SpacingTokens.x3,
+              SpacingTokens.x5,
+              SpacingTokens.x6,
             ),
-            SizedBox(height: SpacingTokens.x2),
-            TextButton(
-              onPressed: _busy ? null : () => _submit(skip: true),
-              child: const Text('仅完成，不记录本次细节'),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.check_circle_outline),
+                    onPressed: _busy ? null : () => _submit(skip: false),
+                    label: Text(suffix == null ? '保存并完成' : '保存并完成$suffix'),
+                  ),
+                ),
+                SizedBox(height: SpacingTokens.x2),
+                TextButton(
+                  onPressed: _busy ? null : () => _submit(skip: true),
+                  child: const Text('仅完成，不记录本次细节'),
+                ),
+                SizedBox(height: SpacingTokens.x1),
+                Text(
+                  '也可以稍后在任务详情里补写备注。',
+                  style: context.captionStyle,
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            SizedBox(height: SpacingTokens.x1),
-            Text(
-              '也可以稍后在任务详情里补写备注。',
-              style: context.captionStyle,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -8,7 +8,6 @@ import '../../app/providers/core_providers.dart';
 import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
-import '../../shared/widgets/glass/glass.dart';
 import '../../shared/widgets/photo_viewer_page.dart';
 import '../../shared/widgets/record_completion_sheet.dart';
 import '../../shared/widgets/task_sheet.dart';
@@ -135,12 +134,13 @@ class _PhototherapyCompletionSheetState
           SizedBox(height: SpacingTokens.x4),
           for (var i = 0; i < _parts.length; i++) _buildPartCard(i),
           SizedBox(height: SpacingTokens.x2),
-          GlassButton(
-            expanded: true,
-            type: GlassButtonType.glass,
-            icon: Icons.add,
-            onPressed: () => setState(() => _parts.add(_PartDraft())),
-            child: const Text('添加部位'),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.tonalIcon(
+              icon: const Icon(Icons.add),
+              onPressed: () => setState(() => _parts.add(_PartDraft())),
+              label: const Text('添加部位'),
+            ),
           ),
         ],
       ),
@@ -150,7 +150,6 @@ class _PhototherapyCompletionSheetState
   /// 「应用上一次记录」按钮：一键带入同部位同短周期内通常不变的部位与时长。
   /// 照片不复用（每次治疗需重新拍摄才反映当前皮肤状态）。
   Widget _buildApplyLastButton() {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
     final summary = _lastParts!
         .map((p) {
           final d = formatDurationZh(p.durationSeconds);
@@ -161,16 +160,16 @@ class _PhototherapyCompletionSheetState
         ? ''
         : '（${DateFormat('M月d日').format(_lastCompletedAt!)}）';
 
-    return GlassButton(
-      expanded: true,
-      type: GlassButtonType.glass,
-      icon: Icons.replay,
-      onPressed: _applyLastRecord,
-      child: Text(
-        '应用上一次记录$when：$summary',
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: context.labelStyle.copyWith(color: colors.brand),
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.tonalIcon(
+        icon: const Icon(Icons.replay),
+        onPressed: _applyLastRecord,
+        label: Text(
+          '应用上一次记录$when：$summary',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     );
   }
@@ -179,7 +178,7 @@ class _PhototherapyCompletionSheetState
   Future<void> _applyLastRecord() async {
     final hasInput = _parts.any((p) => !p.isEmpty);
     if (hasInput) {
-      final ok = await showGlassConfirm(
+      final ok = await showConfirmDialog(
         context,
         title: '应用上一次记录',
         message: '将用上一次治疗的部位与时长替换当前已填写的内容（照片不受影响）。',
@@ -210,11 +209,12 @@ class _PhototherapyCompletionSheetState
 
   Widget _buildPartCard(int index) {
     final part = _parts[index];
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: EdgeInsets.only(bottom: SpacingTokens.x3),
       padding: EdgeInsets.all(SpacingTokens.x3),
       decoration: BoxDecoration(
-        color: Theme.of(context).extension<ColorTokens>()!.fillStrong,
+        color: scheme.surfaceContainerHigh,
         borderRadius: RadiusTokens.largeShape,
       ),
       child: Column(
@@ -301,6 +301,8 @@ class _PhototherapyCompletionSheetState
                         child: GestureDetector(
                           onTap: () => _removePhoto(part, photoIndex),
                           child: Container(
+                            // 照片删除角标：图像上叠加的遮罩/图标属覆盖语义，
+                            // 不受主题颜色约束（颜色规则唯一例外）。
                             decoration: const BoxDecoration(
                               color: Colors.black54,
                               shape: BoxShape.circle,
@@ -309,6 +311,7 @@ class _PhototherapyCompletionSheetState
                             child: const Icon(
                               Icons.close,
                               size: 14,
+                              // 覆盖在照片上的白色角标（图像覆盖语义例外）。
                               color: Colors.white,
                             ),
                           ),
@@ -320,12 +323,13 @@ class _PhototherapyCompletionSheetState
               ),
             ),
           if (part.photos.isNotEmpty) SizedBox(height: SpacingTokens.x2),
-          GlassButton(
-            expanded: true,
-            type: GlassButtonType.glass,
-            icon: Icons.photo_camera_outlined,
-            onPressed: () => _addPhoto(part),
-            child: const Text('拍/选该部位照片'),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.tonalIcon(
+              icon: const Icon(Icons.photo_camera_outlined),
+              onPressed: () => _addPhoto(part),
+              label: const Text('拍/选该部位照片'),
+            ),
           ),
         ],
       ),

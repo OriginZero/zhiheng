@@ -7,7 +7,6 @@ import '../../app/providers/task_providers.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
 import '../../shared/widgets/async_status_view.dart';
-import '../../shared/widgets/glass/glass.dart';
 import '../../shared/widgets/task_sheet.dart';
 
 /// 医疗时间线（开发文档 §9）。
@@ -66,7 +65,8 @@ class _TimelinePageState extends ConsumerState<TimelinePage> {
           emptyState: const EmptyState(
             icon: Icons.timeline_outlined,
             title: '时间线还是空的',
-            message: '完成一次任务、记录一次治疗或测量后，\n'
+            message:
+                '完成一次任务、记录一次治疗或测量后，\n'
                 '这里会按时间展示你的完整健康轨迹。',
           ),
           builder: (list) => _TimelineList(events: list, ref: ref),
@@ -96,10 +96,10 @@ class _FilterBar extends StatelessWidget {
       runSpacing: SpacingTokens.x2,
       children: [
         for (final disease in diseases)
-          _FilterChip(
-            label: disease.name,
+          FilterChip(
+            label: Text(disease.name),
             selected: filter.diseaseId == disease.id,
-            onTap: () => onDiseaseSelected(disease.id),
+            onSelected: (_) => onDiseaseSelected(disease.id),
           ),
         for (final type in const [
           EventType.treatment,
@@ -107,50 +107,12 @@ class _FilterBar extends StatelessWidget {
           EventType.measurement,
           EventType.taskCompleted,
         ])
-          _FilterChip(
-            label: type.labelZh,
+          FilterChip(
+            label: Text(type.labelZh),
             selected: filter.type == type,
-            onTap: () => onTypeSelected(type),
+            onSelected: (_) => onTypeSelected(type),
           ),
       ],
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
-
-    return InkWell(
-      borderRadius: RadiusTokens.pillShape,
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: SpacingTokens.x3,
-          vertical: SpacingTokens.x2,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? colors.brand : colors.fill,
-          borderRadius: RadiusTokens.pillShape,
-        ),
-        child: Text(
-          label,
-          style: context.labelStyle.copyWith(
-            color: selected ? colors.onBrand : colors.textSecondary,
-          ),
-        ),
-      ),
     );
   }
 }
@@ -205,14 +167,13 @@ class _EventTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
     // 历史事件备注可能含 v1.8.0 插值 bug 写入的「Instance of …」，展示层清洗。
     final notes = sanitizeDisplayNotes(event.notes);
     final hasDetail = event.taskId != null;
 
-    return GlassCard(
-      margin: EdgeInsets.only(bottom: SpacingTokens.x2),
-      onTap: hasDetail ? () => _openDetail(context) : null,
+    final content = Padding(
+      padding: const EdgeInsets.all(SpacingTokens.x4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -236,7 +197,9 @@ class _EventTile extends StatelessWidget {
                     SizedBox(width: SpacingTokens.x2),
                     Text(
                       event.type.labelZh,
-                      style: context.captionStyle.copyWith(color: colors.brand),
+                      style: context.captionStyle.copyWith(
+                        color: scheme.primary,
+                      ),
                     ),
                   ],
                 ),
@@ -244,12 +207,12 @@ class _EventTile extends StatelessWidget {
                   SizedBox(height: SpacingTokens.x2),
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: SpacingTokens.x3,
                       vertical: SpacingTokens.x2,
                     ),
                     decoration: BoxDecoration(
-                      color: colors.fill,
+                      color: scheme.surfaceContainerHighest,
                       borderRadius: RadiusTokens.mediumShape,
                     ),
                     child: Text(
@@ -267,13 +230,13 @@ class _EventTile extends StatelessWidget {
                       Text(
                         '查看详情',
                         style: context.captionStyle.copyWith(
-                          color: colors.brand,
+                          color: scheme.primary,
                         ),
                       ),
                       Icon(
                         Icons.chevron_right,
                         size: 14,
-                        color: colors.brand,
+                        color: scheme.primary,
                       ),
                     ],
                   ),
@@ -283,6 +246,17 @@ class _EventTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    return Card(
+      margin: EdgeInsets.only(bottom: SpacingTokens.x2),
+      child: hasDetail
+          ? InkWell(
+              borderRadius: RadiusTokens.mediumShape,
+              onTap: () => _openDetail(context),
+              child: content,
+            )
+          : content,
     );
   }
 
@@ -300,38 +274,36 @@ class _EventIcon extends StatelessWidget {
   final EventType type;
 
   IconData get _icon => switch (type) {
-        EventType.treatment => Icons.healing_outlined,
-        EventType.medication => Icons.medication_outlined,
-        EventType.measurement => Icons.monitor_heart_outlined,
-        EventType.symptom => Icons.sick_outlined,
-        EventType.lab => Icons.science_outlined,
-        EventType.photo => Icons.photo_outlined,
-        EventType.exercise => Icons.directions_run_outlined,
-        EventType.adverse => Icons.warning_amber_outlined,
-        EventType.appointment => Icons.event_outlined,
-        EventType.taskCompleted => Icons.check_circle_outline,
-        EventType.diagnosis => Icons.description_outlined,
-        EventType.planAdjustment => Icons.tune_outlined,
-        EventType.custom => Icons.note_outlined,
-      };
+    EventType.treatment => Icons.healing_outlined,
+    EventType.medication => Icons.medication_outlined,
+    EventType.measurement => Icons.monitor_heart_outlined,
+    EventType.symptom => Icons.sick_outlined,
+    EventType.lab => Icons.science_outlined,
+    EventType.photo => Icons.photo_outlined,
+    EventType.exercise => Icons.directions_run_outlined,
+    EventType.adverse => Icons.warning_amber_outlined,
+    EventType.appointment => Icons.event_outlined,
+    EventType.taskCompleted => Icons.check_circle_outline,
+    EventType.diagnosis => Icons.description_outlined,
+    EventType.planAdjustment => Icons.tune_outlined,
+    EventType.custom => Icons.note_outlined,
+  };
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    // 不良事件图标属医疗警示语义，走 ColorTokens.warning；其余用 colorScheme 强调色。
     final colors = Theme.of(context).extension<ColorTokens>()!;
     final isAlert = type == EventType.adverse;
+    final color = isAlert ? colors.warning : scheme.primary;
 
     return Container(
       padding: EdgeInsets.all(SpacingTokens.x2),
       decoration: BoxDecoration(
-        color: (isAlert ? colors.warning : colors.brand)
-            .withValues(alpha: 0.12),
+        color: color.withValues(alpha: 0.12),
         shape: BoxShape.circle,
       ),
-      child: Icon(
-        _icon,
-        size: 20,
-        color: isAlert ? colors.warning : colors.brand,
-      ),
+      child: Icon(_icon, size: 20, color: color),
     );
   }
 }

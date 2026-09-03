@@ -8,7 +8,6 @@ import '../../app/providers/core_providers.dart';
 import '../../app/providers/task_providers.dart';
 import '../../core/theme/theme.dart';
 import '../domain/domain.dart';
-import '../widgets/glass/glass.dart';
 import '../widgets/photo_viewer_page.dart';
 
 /// 任务操作弹层：查看任务、补写备注、查看/删除执行补充、撤销完成。
@@ -17,15 +16,11 @@ import '../widgets/photo_viewer_page.dart';
 /// - 有执行补充：查看部位/时长/照片，可主动删除（含关联照片）；
 /// - 已完成：可撤销（恢复待办，清理派生任务与时间线事件；
 ///   备注与执行补充保留，只有主动删除才丢弃）。
-Future<void> showTaskSheet(
-  BuildContext context,
-  WidgetRef ref,
-  Task task,
-) {
+Future<void> showTaskSheet(BuildContext context, WidgetRef ref, Task task) {
+  // 官方 M3 bottom sheet：表面色 / 顶圆角 / 遮罩由主题 bottomSheetTheme 提供。
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (_) => _TaskSheet(task: task),
   );
 }
@@ -75,106 +70,125 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
     final colors = Theme.of(context).extension<ColorTokens>()!;
     final done = task.isDone;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: GlassSurface(
-        level: GlassLevel.overlay,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(RadiusTokens.xlarge),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        padding: EdgeInsets.fromLTRB(
-          SpacingTokens.x5,
-          SpacingTokens.x4,
-          SpacingTokens.x5,
-          SpacingTokens.x6,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(task.title, style: context.headlineStyle),
-                  ),
-                  _StatusBadge(
-                    label: done ? '已完成' : '待完成',
-                    color: done ? colors.success : colors.attention,
-                  ),
-                ],
-              ),
-              SizedBox(height: SpacingTokens.x2),
-              Wrap(
-                spacing: SpacingTokens.x2,
-                runSpacing: SpacingTokens.x2,
-                children: [
-                  _MetaChip(
-                    icon: Icons.tag,
-                    label: task.type.labelZh,
-                  ),
-                  _MetaChip(
-                    icon: Icons.schedule,
-                    label: DateFormat('M月d日 HH:mm').format(task.dueAt),
-                  ),
-                  _MetaChip(
-                    icon: Icons.rule_outlined,
-                    label: task.source.labelZh,
-                  ),
-                  if (task.isRecurring)
-                    _MetaChip(
-                      icon: Icons.repeat,
-                      label: task.recurrence.descriptionZh,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  SpacingTokens.x5,
+                  SpacingTokens.x4,
+                  SpacingTokens.x5,
+                  0,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(task.title, style: context.headlineStyle),
+                        ),
+                        _StatusBadge(
+                          label: done ? '已完成' : '待完成',
+                          color: done ? colors.success : colors.attention,
+                        ),
+                      ],
                     ),
+                    SizedBox(height: SpacingTokens.x2),
+                    Wrap(
+                      spacing: SpacingTokens.x2,
+                      runSpacing: SpacingTokens.x2,
+                      children: [
+                        _MetaChip(icon: Icons.tag, label: task.type.labelZh),
+                        _MetaChip(
+                          icon: Icons.schedule,
+                          label: DateFormat('M月d日 HH:mm').format(task.dueAt),
+                        ),
+                        _MetaChip(
+                          icon: Icons.rule_outlined,
+                          label: task.source.labelZh,
+                        ),
+                        if (task.isRecurring)
+                          _MetaChip(
+                            icon: Icons.repeat,
+                            label: task.recurrence.descriptionZh,
+                          ),
+                      ],
+                    ),
+                    if (task.description != null &&
+                        task.description!.isNotEmpty) ...[
+                      SizedBox(height: SpacingTokens.x3),
+                      Text(
+                        task.description!,
+                        style: context.secondaryBodyStyle,
+                      ),
+                    ],
+                    if (done && task.completedAt != null) ...[
+                      SizedBox(height: SpacingTokens.x2),
+                      Text(
+                        '完成于 ${DateFormat('M月d日 HH:mm').format(task.completedAt!)}',
+                        style: context.captionStyle.copyWith(
+                          color: colors.success,
+                        ),
+                      ),
+                    ],
+                    if (task.supplement != null) ...[
+                      SizedBox(height: SpacingTokens.x4),
+                      _buildSupplementSection(task),
+                    ],
+                    SizedBox(height: SpacingTokens.x4),
+                    TextField(
+                      controller: _notesController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: '备注（执行情况，如剂量、感受）',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                SpacingTokens.x5,
+                SpacingTokens.x3,
+                SpacingTokens.x5,
+                SpacingTokens.x6,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.tonal(
+                      onPressed: _saving ? null : _saveNotes,
+                      child: const Text('保存备注'),
+                    ),
+                  ),
+                  if (done) ...[
+                    SizedBox(height: SpacingTokens.x2),
+                    TextButton(
+                      onPressed: _saving ? null : _revert,
+                      style: TextButton.styleFrom(
+                        foregroundColor: colors.warning,
+                      ),
+                      child: const Text('撤销完成'),
+                    ),
+                  ],
                 ],
               ),
-              if (task.description != null &&
-                  task.description!.isNotEmpty) ...[
-                SizedBox(height: SpacingTokens.x3),
-                Text(task.description!, style: context.secondaryBodyStyle),
-              ],
-              if (done && task.completedAt != null) ...[
-                SizedBox(height: SpacingTokens.x2),
-                Text(
-                  '完成于 ${DateFormat('M月d日 HH:mm').format(task.completedAt!)}',
-                  style: context.captionStyle.copyWith(color: colors.success),
-                ),
-              ],
-              if (task.supplement != null) ...[
-                SizedBox(height: SpacingTokens.x4),
-                _buildSupplementSection(task, colors),
-              ],
-              SizedBox(height: SpacingTokens.x4),
-              TextField(
-                controller: _notesController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: '备注（执行情况，如剂量、感受）',
-                ),
-              ),
-              SizedBox(height: SpacingTokens.x3),
-              GlassButton(
-                expanded: true,
-                type: GlassButtonType.glass,
-                onPressed: _saving ? null : _saveNotes,
-                child: const Text('保存备注'),
-              ),
-              if (done) ...[
-                SizedBox(height: SpacingTokens.x2),
-                GlassButton(
-                  expanded: true,
-                  type: GlassButtonType.plain,
-                  onPressed: _saving ? null : _revert,
-                  child: Text(
-                    '撤销完成',
-                    style: TextStyle(color: colors.warning),
-                  ),
-                ),
-              ],
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -188,19 +202,20 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
         .updateTaskNotes(widget.task.id, text.isEmpty ? null : text);
     if (mounted) {
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('备注已保存')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('备注已保存')));
     }
   }
 
   /// 补充记录展示：部位/时长 + 照片缩略 + 主动删除入口。
-  Widget _buildSupplementSection(Task task, ColorTokens colors) {
+  Widget _buildSupplementSection(Task task) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = Theme.of(context).extension<ColorTokens>()!;
     final parts = phototherapyExposureParts(task.supplement);
     return Container(
       padding: EdgeInsets.all(SpacingTokens.x3),
       decoration: BoxDecoration(
-        color: colors.fill,
+        color: scheme.surfaceContainerHighest,
         borderRadius: RadiusTokens.largeShape,
       ),
       child: Column(
@@ -208,11 +223,9 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
         children: [
           Row(
             children: [
-              Icon(Icons.healing_outlined, size: 16, color: colors.brand),
+              Icon(Icons.healing_outlined, size: 16, color: scheme.primary),
               SizedBox(width: SpacingTokens.x2),
-              Expanded(
-                child: Text('本次治疗补充', style: context.labelBoldStyle),
-              ),
+              Expanded(child: Text('本次治疗补充', style: context.labelBoldStyle)),
               InkWell(
                 borderRadius: RadiusTokens.pillShape,
                 onTap: _saving ? null : _deleteSupplement,
@@ -237,12 +250,7 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      part.name,
-                      style: context.bodyStyle,
-                    ),
-                  ),
+                  Expanded(child: Text(part.name, style: context.bodyStyle)),
                   Text(
                     formatDurationZh(part.durationSeconds) ?? '时长未记录',
                     style: context.secondaryLabelStyle,
@@ -293,10 +301,11 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
   /// 主动删除本次治疗补充（含关联照片）。
   /// 撤销完成不清空补充，只有这里（或重新记录覆盖）才会丢弃。
   Future<void> _deleteSupplement() async {
-    final confirmed = await showGlassConfirm(
+    final confirmed = await showConfirmDialog(
       context,
       title: '删除本次治疗记录',
-      message: '将删除「${widget.task.title}」上记录的部位时长与照片。'
+      message:
+          '将删除「${widget.task.title}」上记录的部位时长与照片。'
           '删除后不可恢复，确定？',
       confirmLabel: '删除',
     );
@@ -305,16 +314,16 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
     await ref.read(repositoryProvider).deleteTaskSupplement(widget.task.id);
     if (!mounted) return;
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已删除本次治疗记录')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('已删除本次治疗记录')));
   }
 
   Future<void> _revert() async {
-    final confirmed = await showGlassConfirm(
+    final confirmed = await showConfirmDialog(
       context,
       title: '撤销完成',
-      message: '将「${widget.task.title}」恢复为待完成，'
+      message:
+          '将「${widget.task.title}」恢复为待完成，'
           '并删除本次完成沉淀的时间线记录与自动生成的下一次任务。\n\n'
           '已填写的备注与本次治疗补充（含照片）会保留，可在确认无误后手动删除。确定？',
       confirmLabel: '撤销',
@@ -325,9 +334,8 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
     await ref.read(revertTaskProvider.notifier).revert(widget.task);
     if (mounted) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已撤销，任务恢复待完成')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('已撤销，任务恢复待完成')));
     }
   }
 }
@@ -349,10 +357,7 @@ class _StatusBadge extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: RadiusTokens.pillShape,
       ),
-      child: Text(
-        label,
-        style: context.captionStyle.copyWith(color: color),
-      ),
+      child: Text(label, style: context.captionStyle.copyWith(color: color)),
     );
   }
 }
@@ -365,12 +370,10 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
-
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: colors.textTertiary),
+        Icon(icon, size: 14, color: Theme.of(context).colorScheme.outline),
         SizedBox(width: SpacingTokens.x1),
         Text(label, style: context.captionStyle),
       ],
@@ -378,50 +381,30 @@ class _MetaChip extends StatelessWidget {
   }
 }
 
-/// 玻璃确认对话框。
-Future<bool?> showGlassConfirm(
+/// M3 确认对话框（函数名保持兼容，由旧 bottom sheet 实现改为官方 AlertDialog）。
+///
+/// 标题 / 内容 / 按钮的样式与表面由主题 dialogTheme 统一提供。
+Future<bool?> showConfirmDialog(
   BuildContext context, {
   required String title,
   required String message,
   String confirmLabel = '确定',
 }) {
-  return showModalBottomSheet<bool>(
+  return showDialog<bool>(
     context: context,
-    backgroundColor: Colors.transparent,
-    builder: (sheetContext) => GlassSurface(
-      level: GlassLevel.overlay,
-      borderRadius: const BorderRadius.vertical(
-        top: Radius.circular(RadiusTokens.xlarge),
-      ),
-      padding: EdgeInsets.all(SpacingTokens.x5),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(title, style: context.headlineStyle),
-          SizedBox(height: SpacingTokens.x3),
-          Text(message, style: context.secondaryBodyStyle),
-          SizedBox(height: SpacingTokens.x4),
-          Row(
-            children: [
-              Expanded(
-                child: GlassButton(
-                  type: GlassButtonType.glass,
-                  onPressed: () => Navigator.of(sheetContext).pop(false),
-                  child: const Text('取消'),
-                ),
-              ),
-              SizedBox(width: SpacingTokens.x3),
-              Expanded(
-                child: GlassButton(
-                  onPressed: () => Navigator.of(sheetContext).pop(true),
-                  child: Text(confirmLabel),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    builder: (dialogContext) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(confirmLabel),
+        ),
+      ],
     ),
   );
 }

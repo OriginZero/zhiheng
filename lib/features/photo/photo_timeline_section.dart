@@ -9,7 +9,6 @@ import '../../app/providers/task_providers.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
 import '../../shared/widgets/async_status_view.dart';
-import '../../shared/widgets/glass/glass.dart';
 import '../../shared/widgets/photo_viewer_page.dart';
 import 'photo_capture_sheet.dart';
 
@@ -25,53 +24,41 @@ class PhotoTimelineSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final photos = ref.watch(photosProvider(diseaseId));
-    return photos.when(
-      loading: () => const SizedBox.shrink(),
-      error: (error, _) => Center(
-        child: Padding(
-          padding: EdgeInsets.all(SpacingTokens.x4),
-          child: Text('照片加载失败', style: context.secondaryLabelStyle),
+    return AsyncStatusView(
+      value: photos,
+      emptyState: EmptyState(
+        icon: Icons.photo_camera_outlined,
+        title: '还没有照片',
+        message: '完成治疗后拍下患处照片，长期对比变化。',
+        action: FilledButton.icon(
+          icon: const Icon(Icons.photo_camera_outlined),
+          onPressed: () => _capture(context, ref),
+          label: const Text('拍照'),
         ),
       ),
-      data: (list) {
-        if (list.isEmpty) {
-          return EmptyState(
-            icon: Icons.photo_camera_outlined,
-            title: '还没有照片',
-            message: '完成治疗后拍下患处照片，长期对比变化。',
-            action: GlassButton(
-              icon: Icons.photo_camera_outlined,
+      builder: (list) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.tonalIcon(
+              icon: const Icon(Icons.add),
               onPressed: () => _capture(context, ref),
-              child: const Text('拍照'),
+              label: const Text('拍照'),
             ),
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: GlassButton(
-                type: GlassButtonType.glass,
-                icon: Icons.add,
-                onPressed: () => _capture(context, ref),
-                child: const Text('拍照'),
-              ),
+          ),
+          SizedBox(height: SpacingTokens.x2),
+          SizedBox(
+            height: 140,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: list.length,
+              separatorBuilder: (_, _) => SizedBox(width: SpacingTokens.x2),
+              itemBuilder: (context, index) => _PhotoTile(photo: list[index]),
             ),
-            SizedBox(height: SpacingTokens.x2),
-            SizedBox(
-              height: 140,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: list.length,
-                separatorBuilder: (_, _) => SizedBox(width: SpacingTokens.x2),
-                itemBuilder: (context, index) =>
-                    _PhotoTile(photo: list[index]),
-              ),
-            ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 
@@ -96,6 +83,7 @@ class _PhotoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: () => _openViewer(context),
       child: ClipRRect(
@@ -109,6 +97,9 @@ class _PhotoTile extends StatelessWidget {
                 File(photo.filePath),
                 fit: BoxFit.cover,
                 cacheWidth: 400,
+                // 图片加载失败占位：底色用 scheme，避免白/黑块。
+                errorBuilder: (_, _, _) =>
+                    ColoredBox(color: scheme.surfaceContainerHighest),
               ),
               Positioned(
                 left: 0,
@@ -119,6 +110,8 @@ class _PhotoTile extends StatelessWidget {
                     horizontal: SpacingTokens.x2,
                     vertical: SpacingTokens.x1,
                   ),
+                  // 照片上的半透明遮罩与叠加白字 = 图像覆盖语义
+                  // （本文件裸 Colors.* 的唯一允许场景）。
                   color: Colors.black.withValues(alpha: 0.45),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

@@ -10,11 +10,9 @@ import '../../shared/domain/domain.dart';
 import '../../shared/forms/task_form_sheet.dart';
 import '../../shared/widgets/task_sheet.dart';
 import '../../shared/widgets/async_status_view.dart';
-import '../../shared/widgets/glass/glass.dart';
 import '../../shared/widgets/event_record_sheet.dart';
 import '../phototherapy/phototherapy_task_flow.dart';
 import '../diabetes/glucose_task_flow.dart';
-
 
 /// 首页：Today（开发文档 §31）。
 ///
@@ -56,11 +54,10 @@ class HomePage extends ConsumerWidget {
             message:
                 '建立管理计划后，每天的任务会在这里生成。\n'
                 '也可以先手动添加一条今日任务。',
-            action: GlassButton(
-              type: GlassButtonType.glass,
-              icon: Icons.add,
+            action: FilledButton.tonalIcon(
+              icon: const Icon(Icons.add),
               onPressed: () => _addTask(context, ref),
-              child: const Text('添加任务'),
+              label: const Text('添加任务'),
             ),
           ),
           builder: (tasks) => _TaskGroups(tasks: tasks),
@@ -109,46 +106,30 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     return Row(
       children: [
         Expanded(child: Text(title, style: context.headlineStyle)),
         if (onRecord != null) ...[
-          Semantics(
-            button: true,
-            label: '记录',
-            child: InkWell(
-              borderRadius: RadiusTokens.pillShape,
-              onTap: onRecord,
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: colors.brand.withValues(alpha: 0.14),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.edit_note, size: 20, color: colors.brand),
-              ),
+          IconButton(
+            icon: const Icon(Icons.edit_note),
+            tooltip: '记录',
+            onPressed: onRecord,
+            style: IconButton.styleFrom(
+              foregroundColor: scheme.primary,
+              backgroundColor: scheme.primary.withValues(alpha: 0.14),
             ),
           ),
           SizedBox(width: SpacingTokens.x2),
         ],
-        Semantics(
-          button: true,
-          label: '添加任务',
-          child: InkWell(
-            borderRadius: RadiusTokens.pillShape,
-            onTap: onAdd,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: colors.brand.withValues(alpha: 0.14),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.add, size: 20, color: colors.brand),
-            ),
+        IconButton(
+          icon: const Icon(Icons.add),
+          tooltip: '添加任务',
+          onPressed: onAdd,
+          style: IconButton.styleFrom(
+            foregroundColor: scheme.primary,
+            backgroundColor: scheme.primary.withValues(alpha: 0.14),
           ),
         ),
       ],
@@ -163,27 +144,33 @@ class _DiseaseSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final diseases = ref.watch(diseasesProvider).value ?? const <Disease>[];
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     if (diseases.isEmpty) {
-      return GlassCard(
-        onTap: () => context.push('/diseases'),
-        child: Row(
-          children: [
-            Icon(
-              Icons.medical_services_outlined,
-              size: 22,
-              color: colors.brand,
+      return Card(
+        child: InkWell(
+          borderRadius: RadiusTokens.mediumShape,
+          onTap: () => context.push('/diseases'),
+          child: Padding(
+            padding: const EdgeInsets.all(SpacingTokens.x4),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.medical_services_outlined,
+                  size: 22,
+                  color: scheme.primary,
+                ),
+                SizedBox(width: SpacingTokens.x3),
+                Expanded(
+                  child: Text(
+                    '添加你在管理的疾病，开始建立管理计划',
+                    style: context.secondaryBodyStyle,
+                  ),
+                ),
+                Icon(Icons.chevron_right, size: 20, color: scheme.outline),
+              ],
             ),
-            SizedBox(width: SpacingTokens.x3),
-            Expanded(
-              child: Text(
-                '添加你在管理的疾病，开始建立管理计划',
-                style: context.secondaryBodyStyle,
-              ),
-            ),
-            Icon(Icons.chevron_right, size: 20, color: colors.textTertiary),
-          ],
+          ),
         ),
       );
     }
@@ -213,35 +200,40 @@ class _DiseaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     return SizedBox(
       width: 180,
-      child: GlassCard(
-        onTap: () => context.push('/disease/${disease.id}'),
-        padding: const EdgeInsets.symmetric(
-          horizontal: SpacingTokens.x4,
-          vertical: SpacingTokens.x3,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.medical_services_outlined,
-              size: 20,
-              color: colors.brand,
+      child: Card(
+        child: InkWell(
+          borderRadius: RadiusTokens.mediumShape,
+          onTap: () => context.push('/disease/${disease.id}'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: SpacingTokens.x4,
+              vertical: SpacingTokens.x3,
             ),
-            SizedBox(height: SpacingTokens.x2),
-            Text(
-              disease.name,
-              style: context.labelBoldStyle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.medical_services_outlined,
+                  size: 20,
+                  color: scheme.primary,
+                ),
+                SizedBox(height: SpacingTokens.x2),
+                Text(
+                  disease.name,
+                  style: context.labelBoldStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: SpacingTokens.x1),
+                Text(disease.status.labelZh, style: context.captionStyle),
+              ],
             ),
-            SizedBox(height: SpacingTokens.x1),
-            Text(disease.status.labelZh, style: context.captionStyle),
-          ],
+          ),
         ),
       ),
     );
@@ -251,20 +243,26 @@ class _DiseaseCard extends StatelessWidget {
 class _AddDiseaseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     return SizedBox(
       width: 88,
-      child: GlassCard(
-        onTap: () => context.push('/diseases'),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.add, size: 22, color: colors.brand),
-              SizedBox(height: SpacingTokens.x1),
-              Text('添加', style: context.captionStyle),
-            ],
+      child: Card(
+        child: InkWell(
+          borderRadius: RadiusTokens.mediumShape,
+          onTap: () => context.push('/diseases'),
+          child: Padding(
+            padding: const EdgeInsets.all(SpacingTokens.x4),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add, size: 22, color: scheme.primary),
+                  SizedBox(height: SpacingTokens.x1),
+                  Text('添加', style: context.captionStyle),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -299,12 +297,7 @@ class _Greeting extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$greeting，$patientName',
-            style: context.displayStyle.copyWith(
-              fontSize: TypographyTokens.titleSize,
-            ),
-          ),
+          Text('$greeting，$patientName', style: context.titleStyle),
           SizedBox(height: SpacingTokens.x1),
           Text(
             DateFormat('M月d日 EEEE', 'zh_CN').format(DateTime.now()),
@@ -328,42 +321,46 @@ class _OverdueSection extends ConsumerWidget {
     if (overdue.isEmpty) {
       return const SizedBox.shrink();
     }
+    // 逾期提醒属医疗警示语义色，仍走 ColorTokens.warning；其余一律 colorScheme。
     final colors = Theme.of(context).extension<ColorTokens>()!;
 
     return Padding(
       padding: EdgeInsets.only(bottom: SpacingTokens.x5),
-      child: GlassCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  size: 22,
-                  color: colors.warning,
-                ),
-                SizedBox(width: SpacingTokens.x2),
-                Expanded(
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(SpacingTokens.x4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 22,
+                    color: colors.warning,
+                  ),
+                  SizedBox(width: SpacingTokens.x2),
+                  Expanded(
+                    child: Text(
+                      '有 ${overdue.length} 个逾期未完成的任务',
+                      style: context.labelBoldStyle,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: SpacingTokens.x2),
+              for (final task in overdue.take(3))
+                Padding(
+                  padding: EdgeInsets.only(bottom: SpacingTokens.x1),
                   child: Text(
-                    '有 ${overdue.length} 个逾期未完成的任务',
-                    style: context.labelBoldStyle,
+                    '· ${task.title}',
+                    style: context.secondaryBodyStyle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ],
-            ),
-            SizedBox(height: SpacingTokens.x2),
-            for (final task in overdue.take(3))
-              Padding(
-                padding: EdgeInsets.only(bottom: SpacingTokens.x1),
-                child: Text(
-                  '· ${task.title}',
-                  style: context.secondaryBodyStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -425,92 +422,82 @@ class _TaskTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final done = task.isDone;
+    final scheme = Theme.of(context).colorScheme;
 
-    return GlassCard(
+    return Card(
       margin: EdgeInsets.only(bottom: SpacingTokens.x2),
-      onTap: () => showTaskSheet(context, ref, task),
-      child: Row(
-        children: [
-          InkWell(
-            borderRadius: RadiusTokens.pillShape,
-            onTap: done
-                ? null
+      child: InkWell(
+        borderRadius: RadiusTokens.mediumShape,
+        onTap: () => showTaskSheet(context, ref, task),
+        child: Padding(
+          padding: const EdgeInsets.all(SpacingTokens.x4),
+          child: Row(
+            children: [
+              InkWell(
+                borderRadius: RadiusTokens.pillShape,
+                onTap: done
+                    ? null
                     : () {
                         if (task.templateId == 'vitiligo.phototherapy') {
                           completePhototherapyTaskFlow(context, ref, task);
                         } else if (isGlucoseTask(task)) {
                           completeGlucoseTaskFlow(context, ref, task);
                         } else {
-                          ref.read(completeTaskProvider.notifier).complete(task);
-                       }
+                          ref
+                              .read(completeTaskProvider.notifier)
+                              .complete(task);
+                        }
                       },
-            child: Padding(
-              padding: EdgeInsets.all(SpacingTokens.x2),
-              child: Icon(
-                done ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: done
-                    ? Theme.of(context).extension<ColorTokens>()!.success
-                    : Theme.of(context).extension<ColorTokens>()!.textTertiary,
-              ),
-            ),
-          ),
-          SizedBox(width: SpacingTokens.x2),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task.title,
-                  style: context.bodyBoldStyle.copyWith(
-                    decoration: done ? TextDecoration.lineThrough : null,
-                    color: done
-                        ? Theme.of(context)
-                              .extension<ColorTokens>()!
-                              .textTertiary
-                        : null,
+                child: Padding(
+                  padding: const EdgeInsets.all(SpacingTokens.x2),
+                  // 勾选完成态 primary；未选 outline（原 textTertiary 同值迁移）。
+                  child: Icon(
+                    done ? Icons.check_circle : Icons.radio_button_unchecked,
+                    color: done ? scheme.primary : scheme.outline,
                   ),
                 ),
-                SizedBox(height: SpacingTokens.x1),
-                Row(
+              ),
+              SizedBox(width: SpacingTokens.x2),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.tag,
-                      size: 12,
-                      color: Theme.of(context)
-                          .extension<ColorTokens>()!
-                          .textTertiary,
-                    ),
-                    SizedBox(width: SpacingTokens.x1),
                     Text(
-                      '${task.type.labelZh} · ${DateFormat('HH:mm').format(task.dueAt)}',
-                      style: context.captionStyle,
+                      task.title,
+                      style: context.bodyBoldStyle.copyWith(
+                        decoration: done ? TextDecoration.lineThrough : null,
+                        color: done ? scheme.outline : null,
+                      ),
                     ),
-                    if (task.isRecurring) ...[
-                      SizedBox(width: SpacingTokens.x2),
-                      Icon(
-                        Icons.repeat,
-                        size: 12,
-                        color: Theme.of(context)
-                            .extension<ColorTokens>()!
-                            .brand,
-                      ),
-                      Text(
-                        task.recurrence.descriptionZh,
-                        style: context.captionStyle.copyWith(
-                          color: Theme.of(context)
-                              .extension<ColorTokens>()!
-                              .brand,
+                    SizedBox(height: SpacingTokens.x1),
+                    Row(
+                      children: [
+                        Icon(Icons.tag, size: 12, color: scheme.outline),
+                        SizedBox(width: SpacingTokens.x1),
+                        Text(
+                          '${task.type.labelZh} · ${DateFormat('HH:mm').format(task.dueAt)}',
+                          style: context.captionStyle,
                         ),
-                      ),
-                    ],
+                        if (task.isRecurring) ...[
+                          SizedBox(width: SpacingTokens.x2),
+                          Icon(Icons.repeat, size: 12, color: scheme.primary),
+                          Text(
+                            task.recurrence.descriptionZh,
+                            style: context.captionStyle.copyWith(
+                              color: scheme.primary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              // 任务来源标记（§10：来源必须可追踪）。
+              _SourceBadge(source: task.source),
+            ],
           ),
-          // 任务来源标记（§10：来源必须可追踪）。
-          _SourceBadge(source: task.source),
-        ],
+        ),
       ),
     );
   }
@@ -523,13 +510,15 @@ class _SourceBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: SpacingTokens.x2,
         vertical: SpacingTokens.x1,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).extension<ColorTokens>()!.fill,
+        color: scheme.surfaceContainerHighest,
         borderRadius: RadiusTokens.pillShape,
       ),
       child: Text(source.labelZh, style: context.captionStyle),
@@ -544,16 +533,19 @@ class _UpcomingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
+    return Card(
       margin: EdgeInsets.only(bottom: SpacingTokens.x2),
-      child: Row(
-        children: [
-          Expanded(child: Text(task.title, style: context.bodyStyle)),
-          Text(
-            DateFormat('M/d HH:mm').format(task.dueAt),
-            style: context.secondaryLabelStyle,
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(SpacingTokens.x4),
+        child: Row(
+          children: [
+            Expanded(child: Text(task.title, style: context.bodyStyle)),
+            Text(
+              DateFormat('M/d HH:mm').format(task.dueAt),
+              style: context.secondaryLabelStyle,
+            ),
+          ],
+        ),
       ),
     );
   }

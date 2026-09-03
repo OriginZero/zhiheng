@@ -8,7 +8,6 @@ import '../../app/providers/preferences_providers.dart';
 import '../../app/providers/task_providers.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
-import '../../shared/widgets/glass/glass.dart';
 
 /// 「我的」页面：患者档案 + 疾病管理入口 + 外观设置 + 医疗安全说明。
 class SettingsPage extends ConsumerWidget {
@@ -49,48 +48,48 @@ class _ProfileCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
-    return GlassCard(
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: colors.brand.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(SpacingTokens.x4),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.person, color: scheme.primary, size: 28),
             ),
-            child: Icon(Icons.person, color: colors.brand, size: 28),
-          ),
-          SizedBox(width: SpacingTokens.x4),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  patient?.name ?? '未建档',
-                  style: context.bodyBoldStyle,
-                ),
-                SizedBox(height: SpacingTokens.x1),
-                Text(
-                  [
-                    patient?.gender.labelZh,
-                    if (patient?.ageYears != null) '${patient!.ageYears} 岁',
-                  ].join(' · '),
-                  style: context.captionStyle,
-                ),
-              ],
+            SizedBox(width: SpacingTokens.x4),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(patient?.name ?? '未建档', style: context.bodyBoldStyle),
+                  SizedBox(height: SpacingTokens.x1),
+                  Text(
+                    [
+                      patient?.gender.labelZh,
+                      if (patient?.ageYears != null) '${patient!.ageYears} 岁',
+                    ].join(' · '),
+                    style: context.captionStyle,
+                  ),
+                ],
+              ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 20),
-            tooltip: '编辑档案',
-            onPressed: patient == null
-                ? null
-                : () => _showProfileSheet(context, patient!),
-          ),
-        ],
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, size: 20),
+              tooltip: '编辑档案',
+              onPressed: patient == null
+                  ? null
+                  : () => _showProfileSheet(context, patient!),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -99,7 +98,6 @@ class _ProfileCard extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => _ProfileSheet(patient: patient),
     );
   }
@@ -152,7 +150,9 @@ class _ProfileSheetState extends ConsumerState<_ProfileSheet> {
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
-    await ref.read(repositoryProvider).savePatient(
+    await ref
+        .read(repositoryProvider)
+        .savePatient(
           widget.patient.copyWith(
             name: name,
             gender: _gender,
@@ -165,105 +165,77 @@ class _ProfileSheetState extends ConsumerState<_ProfileSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: GlassSurface(
-        level: GlassLevel.overlay,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(RadiusTokens.xlarge),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        padding: EdgeInsets.fromLTRB(
-          SpacingTokens.x5,
-          SpacingTokens.x4,
-          SpacingTokens.x5,
-          SpacingTokens.x6,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('编辑档案', style: context.headlineStyle),
-              SizedBox(height: SpacingTokens.x4),
-              TextField(
-                controller: _nameController,
-                autofocus: true,
-                decoration: const InputDecoration(labelText: '名字'),
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              Text('性别', style: context.labelBoldStyle),
-              SizedBox(height: SpacingTokens.x2),
-              Wrap(
-                spacing: SpacingTokens.x2,
-                runSpacing: SpacingTokens.x2,
-                children: [
-                  for (final gender in Gender.values)
-                    _GenderChip(
-                      label: gender.labelZh,
-                      selected: _gender == gender,
-                      onTap: () => setState(() => _gender = gender),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  SpacingTokens.x5,
+                  SpacingTokens.x4,
+                  SpacingTokens.x5,
+                  0,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('编辑档案', style: context.headlineStyle),
+                    SizedBox(height: SpacingTokens.x4),
+                    TextField(
+                      controller: _nameController,
+                      autofocus: true,
+                      decoration: const InputDecoration(labelText: '名字'),
                     ),
-                ],
+                    SizedBox(height: SpacingTokens.x4),
+                    Text('性别', style: context.labelBoldStyle),
+                    SizedBox(height: SpacingTokens.x2),
+                    Wrap(
+                      spacing: SpacingTokens.x2,
+                      runSpacing: SpacingTokens.x2,
+                      children: [
+                        for (final gender in Gender.values)
+                          ChoiceChip(
+                            label: Text(gender.labelZh),
+                            selected: _gender == gender,
+                            onSelected: (_) => setState(() => _gender = gender),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    Text('出生日期', style: context.labelBoldStyle),
+                    SizedBox(height: SpacingTokens.x2),
+                    _BirthDateField(
+                      date: _birthDate,
+                      onTap: _pickBirthDate,
+                      onClear: _birthDate == null
+                          ? null
+                          : () => setState(() => _birthDate = null),
+                    ),
+                  ],
+                ),
               ),
-              SizedBox(height: SpacingTokens.x4),
-              Text('出生日期', style: context.labelBoldStyle),
-              SizedBox(height: SpacingTokens.x2),
-              _BirthDateField(
-                date: _birthDate,
-                onTap: _pickBirthDate,
-                onClear: _birthDate == null
-                    ? null
-                    : () => setState(() => _birthDate = null),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                SpacingTokens.x5,
+                SpacingTokens.x3,
+                SpacingTokens.x5,
+                SpacingTokens.x6,
               ),
-              SizedBox(height: SpacingTokens.x4),
-              GlassButton(
-                expanded: true,
-                onPressed: _save,
-                child: const Text('保存'),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(onPressed: _save, child: const Text('保存')),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// 性别选择 chip。
-class _GenderChip extends StatelessWidget {
-  const _GenderChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
-
-    return InkWell(
-      borderRadius: RadiusTokens.pillShape,
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: SpacingTokens.x3,
-          vertical: SpacingTokens.x2,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? colors.brand : colors.fill,
-          borderRadius: RadiusTokens.pillShape,
-        ),
-        child: Text(
-          label,
-          style: context.labelStyle.copyWith(
-            color: selected ? colors.onBrand : colors.textSecondary,
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -284,7 +256,7 @@ class _BirthDateField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     return InkWell(
       borderRadius: RadiusTokens.mediumShape,
@@ -295,21 +267,19 @@ class _BirthDateField extends StatelessWidget {
           vertical: SpacingTokens.x3,
         ),
         decoration: BoxDecoration(
-          color: colors.fill,
+          color: scheme.surfaceContainerHighest,
           borderRadius: RadiusTokens.mediumShape,
-          border: Border.all(color: colors.divider),
+          border: Border.all(color: scheme.outlineVariant),
         ),
         child: Row(
           children: [
-            Icon(Icons.cake_outlined, size: 18, color: colors.textSecondary),
+            Icon(Icons.cake_outlined, size: 18, color: scheme.onSurfaceVariant),
             SizedBox(width: SpacingTokens.x2),
             Expanded(
               child: Text(
-                date == null
-                    ? '未设置'
-                    : DateFormat('yyyy年M月d日').format(date!),
+                date == null ? '未设置' : DateFormat('yyyy年M月d日').format(date!),
                 style: date == null
-                    ? context.labelStyle.copyWith(color: colors.textTertiary)
+                    ? context.labelStyle.copyWith(color: scheme.outline)
                     : context.labelStyle,
               ),
             ),
@@ -320,7 +290,7 @@ class _BirthDateField extends StatelessWidget {
                   padding: EdgeInsets.all(SpacingTokens.x1),
                   child: Text(
                     '清除',
-                    style: context.labelStyle.copyWith(color: colors.brand),
+                    style: context.labelStyle.copyWith(color: scheme.primary),
                   ),
                 ),
               ),
@@ -335,24 +305,30 @@ class _BirthDateField extends StatelessWidget {
 class _DiseaseEntry extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
     final count = ref.watch(diseasesProvider).value?.length ?? 0;
 
-    return GlassCard(
-      onTap: () => context.push('/diseases'),
-      child: Row(
-        children: [
-          Icon(Icons.medical_services_outlined,
-              size: 22, color: colors.brand),
-          SizedBox(width: SpacingTokens.x3),
-          Expanded(child: Text('我的疾病', style: context.bodyBoldStyle)),
-          Text(
-            count > 0 ? '$count 个' : '去添加',
-            style: context.captionStyle,
+    return Card(
+      child: InkWell(
+        borderRadius: RadiusTokens.mediumShape,
+        onTap: () => context.push('/diseases'),
+        child: Padding(
+          padding: const EdgeInsets.all(SpacingTokens.x4),
+          child: Row(
+            children: [
+              Icon(
+                Icons.medical_services_outlined,
+                size: 22,
+                color: scheme.primary,
+              ),
+              SizedBox(width: SpacingTokens.x3),
+              Expanded(child: Text('我的疾病', style: context.bodyBoldStyle)),
+              Text(count > 0 ? '$count 个' : '去添加', style: context.captionStyle),
+              SizedBox(width: SpacingTokens.x2),
+              Icon(Icons.chevron_right, size: 20, color: scheme.outline),
+            ],
           ),
-          SizedBox(width: SpacingTokens.x2),
-          Icon(Icons.chevron_right, size: 20, color: colors.textTertiary),
-        ],
+        ),
       ),
     );
   }
@@ -370,50 +346,53 @@ class _ThemeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
     final current = ref.watch(themeModeProvider).value ?? ThemeMode.system;
 
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.palette_outlined, size: 20, color: colors.brand),
-              SizedBox(width: SpacingTokens.x2),
-              Text('外观', style: context.labelBoldStyle),
-            ],
-          ),
-          SizedBox(height: SpacingTokens.x3),
-          Row(
-            children: [
-              for (final option in _options)
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: SpacingTokens.x1,
-                    ),
-                    child: _ThemeOption(
-                      label: option.label,
-                      icon: option.icon,
-                      selected: current == option.mode,
-                      onTap: () => ref
-                          .read(themeModeProvider.notifier)
-                          .setThemeMode(option.mode),
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(SpacingTokens.x4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.palette_outlined, size: 20, color: scheme.primary),
+                SizedBox(width: SpacingTokens.x2),
+                Text('外观', style: context.labelBoldStyle),
+              ],
+            ),
+            SizedBox(height: SpacingTokens.x3),
+            Row(
+              children: [
+                for (final option in _options)
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: SpacingTokens.x1,
+                      ),
+                      child: _ThemeOption(
+                        label: option.label,
+                        icon: option.icon,
+                        selected: current == option.mode,
+                        onTap: () => ref
+                            .read(themeModeProvider.notifier)
+                            .setThemeMode(option.mode),
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
-          SizedBox(height: SpacingTokens.x4),
-          Text('配色', style: context.labelBoldStyle),
-          SizedBox(height: SpacingTokens.x2),
-          _PalettePicker(
-            currentId: ref.watch(accentPaletteProvider).value?.id,
-            onSelect: (palette) =>
-                ref.read(accentPaletteProvider.notifier).setPalette(palette),
-          ),
-        ],
+              ],
+            ),
+            SizedBox(height: SpacingTokens.x4),
+            Text('配色', style: context.labelBoldStyle),
+            SizedBox(height: SpacingTokens.x2),
+            _PalettePicker(
+              currentId: ref.watch(accentPaletteProvider).value?.id,
+              onSelect: (palette) =>
+                  ref.read(accentPaletteProvider.notifier).setPalette(palette),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -428,7 +407,7 @@ class _PalettePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     return Wrap(
       spacing: SpacingTokens.x3,
@@ -453,7 +432,7 @@ class _PalettePicker extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: palette.id == currentId
-                            ? colors.textPrimary
+                            ? scheme.onSurface
                             : Colors.transparent,
                         width: 2,
                       ),
@@ -475,8 +454,8 @@ class _PalettePicker extends StatelessWidget {
                     palette.labelZh,
                     style: context.captionStyle.copyWith(
                       color: palette.id == currentId
-                          ? colors.brand
-                          : colors.textTertiary,
+                          ? scheme.primary
+                          : scheme.outline,
                     ),
                   ),
                 ],
@@ -503,7 +482,7 @@ class _ThemeOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     return Semantics(
       button: true,
@@ -516,11 +495,11 @@ class _ThemeOption extends StatelessWidget {
           padding: EdgeInsets.symmetric(vertical: SpacingTokens.x3),
           decoration: BoxDecoration(
             color: selected
-                ? colors.brand.withValues(alpha: 0.14)
-                : colors.fill,
+                ? scheme.primary.withValues(alpha: 0.14)
+                : scheme.surfaceContainerHighest,
             borderRadius: RadiusTokens.mediumShape,
             border: Border.all(
-              color: selected ? colors.brand : Colors.transparent,
+              color: selected ? scheme.primary : Colors.transparent,
               width: 1.25,
             ),
           ),
@@ -529,13 +508,13 @@ class _ThemeOption extends StatelessWidget {
               Icon(
                 icon,
                 size: 20,
-                color: selected ? colors.brand : colors.textSecondary,
+                color: selected ? scheme.primary : scheme.onSurfaceVariant,
               ),
               SizedBox(height: SpacingTokens.x1),
               Text(
                 label,
                 style: context.captionStyle.copyWith(
-                  color: selected ? colors.brand : colors.textSecondary,
+                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
@@ -551,30 +530,35 @@ class _ThemeOption extends StatelessWidget {
 class _SafetyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.verified_user_outlined,
-                size: 20,
-                color: Theme.of(context).extension<ColorTokens>()!.brand,
-              ),
-              SizedBox(width: SpacingTokens.x2),
-              Text('医疗安全说明', style: context.labelBoldStyle),
-            ],
-          ),
-          SizedBox(height: SpacingTokens.x3),
-          Text(
-            '知衡用于记录、提醒与整理你的健康管理数据，'
-            '不提供诊断、处方或治疗剂量建议。\n\n'
-            '涉及治疗方案、药物与光疗剂量的决定，'
-            '请务必遵循你的主治医生意见。',
-            style: context.secondaryLabelStyle,
-          ),
-        ],
+    final scheme = Theme.of(context).colorScheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(SpacingTokens.x4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.verified_user_outlined,
+                  size: 20,
+                  color: scheme.primary,
+                ),
+                SizedBox(width: SpacingTokens.x2),
+                Text('医疗安全说明', style: context.labelBoldStyle),
+              ],
+            ),
+            SizedBox(height: SpacingTokens.x3),
+            Text(
+              '知衡用于记录、提醒与整理你的健康管理数据，'
+              '不提供诊断、处方或治疗剂量建议。\n\n'
+              '涉及治疗方案、药物与光疗剂量的决定，'
+              '请务必遵循你的主治医生意见。',
+              style: context.secondaryLabelStyle,
+            ),
+          ],
+        ),
       ),
     );
   }

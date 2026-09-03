@@ -49,11 +49,11 @@ void main() {
     await tester.pump();
 
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
-    final lightTheme = app.theme!;
-    final brand = lightTheme
-        .extension<ColorTokens>()!
-        .brand;
-    expect(brand, AccentPalettes.mint.brand);
+    // M3：主题色 = mint seed 派生的 ColorScheme.primary（不再是 seed 原值）。
+    expect(
+      app.theme!.colorScheme.primary,
+      ColorScheme.fromSeed(seedColor: AccentPalettes.mint.brand).primary,
+    );
 
     // 已持久化。
     await tester.runAsync(() async {

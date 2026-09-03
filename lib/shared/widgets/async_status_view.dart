@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_error.dart';
 import '../../core/theme/theme.dart';
-import '../widgets/glass/glass_button.dart';
 
 /// 统一异步状态视图（开发文档 §38）。
 ///
@@ -74,10 +73,7 @@ class _ErrorView extends StatelessWidget {
             Icon(
               Icons.error_outline,
               size: 40,
-              color: Theme.of(context)
-                  .extension<ColorTokens>()!
-                  .critical
-                  .withValues(alpha: 0.8),
+              color: Theme.of(context).colorScheme.error,
             ),
             SizedBox(height: SpacingTokens.x3),
             Text(
@@ -87,11 +83,10 @@ class _ErrorView extends StatelessWidget {
             ),
             if (onRetry != null) ...[
               SizedBox(height: SpacingTokens.x4),
-              GlassButton(
-                type: GlassButtonType.glass,
-                icon: Icons.refresh,
+              FilledButton.tonalIcon(
+                icon: const Icon(Icons.refresh),
                 onPressed: onRetry,
-                child: const Text('重试'),
+                label: const Text('重试'),
               ),
             ],
           ],
@@ -122,15 +117,13 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
-
     return Center(
       child: Padding(
         padding: EdgeInsets.all(SpacingTokens.x6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 44, color: colors.textTertiary),
+            Icon(icon, size: 44, color: Theme.of(context).colorScheme.outline),
             SizedBox(height: SpacingTokens.x3),
             Text(title, style: context.labelBoldStyle),
             SizedBox(height: SpacingTokens.x2),

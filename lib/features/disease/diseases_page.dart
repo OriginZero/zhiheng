@@ -9,7 +9,6 @@ import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
 import '../../shared/widgets/async_status_view.dart';
-import '../../shared/widgets/glass/glass.dart';
 
 /// 疾病管理页：列出所有疾病，支持添加（§6 疾病模块可扩展）。
 class DiseasesPage extends ConsumerWidget {
@@ -20,7 +19,6 @@ class DiseasesPage extends ConsumerWidget {
     final diseases = ref.watch(diseasesProvider);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('我的疾病'),
         actions: [
@@ -36,20 +34,19 @@ class DiseasesPage extends ConsumerWidget {
         emptyState: EmptyState(
           icon: Icons.medical_services_outlined,
           title: '还没有添加疾病',
-          message: '添加你在管理的疾病后，\n'
+          message:
+              '添加你在管理的疾病后，\n'
               '可以为它制定计划、生成任务、记录治疗。',
-          action: GlassButton(
-            type: GlassButtonType.glass,
-            icon: Icons.add,
+          action: FilledButton.tonalIcon(
             onPressed: () => _showCreateSheet(context, ref),
-            child: const Text('添加疾病'),
+            icon: const Icon(Icons.add),
+            label: const Text('添加疾病'),
           ),
         ),
         builder: (list) => ListView.separated(
           padding: EdgeInsets.all(SpacingTokens.x5),
           itemCount: list.length,
-          separatorBuilder: (context, _) =>
-              SizedBox(height: SpacingTokens.x3),
+          separatorBuilder: (context, _) => SizedBox(height: SpacingTokens.x3),
           itemBuilder: (context, index) => _DiseaseTile(disease: list[index]),
         ),
       ),
@@ -60,7 +57,6 @@ class DiseasesPage extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => const _DiseaseFormSheet(),
     );
   }
@@ -73,47 +69,54 @@ class _DiseaseTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onLongPress: () => _showStatusSheet(context, ref),
-      child: GlassCard(
-        onTap: () => context.push('/disease/${disease.id}'),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: colors.brand.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.medical_services_outlined,
-                color: colors.brand,
-                size: 22,
-              ),
-            ),
-            SizedBox(width: SpacingTokens.x3),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(disease.name, style: context.bodyBoldStyle),
-                  SizedBox(height: SpacingTokens.x1),
-                  Text(
-                    [
-                      disease.status.labelZh,
-                      if (disease.diagnosedAt != null)
-                        '确诊于 ${DateFormat('yyyy/M/d').format(disease.diagnosedAt!)}',
-                    ].join(' · '),
-                    style: context.captionStyle,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          borderRadius: RadiusTokens.mediumShape,
+          onTap: () => context.push('/disease/${disease.id}'),
+          child: Padding(
+            padding: const EdgeInsets.all(SpacingTokens.x4),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer,
+                    shape: BoxShape.circle,
                   ),
-                ],
-              ),
+                  child: Icon(
+                    Icons.medical_services_outlined,
+                    color: scheme.primary,
+                    size: 22,
+                  ),
+                ),
+                SizedBox(width: SpacingTokens.x3),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(disease.name, style: context.bodyBoldStyle),
+                      SizedBox(height: SpacingTokens.x1),
+                      Text(
+                        [
+                          disease.status.labelZh,
+                          if (disease.diagnosedAt != null)
+                            '确诊于 ${DateFormat('yyyy/M/d').format(disease.diagnosedAt!)}',
+                        ].join(' · '),
+                        style: context.captionStyle,
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: scheme.outline),
+              ],
             ),
-            Icon(Icons.chevron_right, color: colors.textTertiary),
-          ],
+          ),
         ),
       ),
     );
@@ -124,13 +127,8 @@ class _DiseaseTile extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => GlassSurface(
-        level: GlassLevel.overlay,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(RadiusTokens.xlarge),
-        ),
-        padding: EdgeInsets.fromLTRB(
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(
           SpacingTokens.x5,
           SpacingTokens.x4,
           SpacingTokens.x5,
@@ -142,19 +140,28 @@ class _DiseaseTile extends ConsumerWidget {
           children: [
             Text('${disease.name} · 状态', style: context.headlineStyle),
             SizedBox(height: SpacingTokens.x4),
-            for (final status in DiseaseStatus.values)
-              _DiseaseOption(
-                title: status.labelZh,
-                selected: disease.status == status,
-                onTap: () async {
-                  await ref
-                      .read(repositoryProvider)
-                      .updateDiseaseStatus(disease.id, status);
-                  if (sheetContext.mounted) {
-                    Navigator.of(sheetContext).pop();
-                  }
-                },
+            RadioGroup<DiseaseStatus>(
+              groupValue: disease.status,
+              onChanged: (status) async {
+                if (status == null) return;
+                await ref
+                    .read(repositoryProvider)
+                    .updateDiseaseStatus(disease.id, status);
+                if (sheetContext.mounted) {
+                  Navigator.of(sheetContext).pop();
+                }
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final status in DiseaseStatus.values)
+                    RadioListTile<DiseaseStatus>(
+                      value: status,
+                      title: Text(status.labelZh),
+                    ),
+                ],
               ),
+            ),
           ],
         ),
       ),
@@ -177,10 +184,7 @@ class _DiseaseFormSheetState extends ConsumerState<_DiseaseFormSheet> {
   String? _code;
   final _customController = TextEditingController();
 
-  static const _builtIn = [
-    DiseaseCodes.vitiligo,
-    DiseaseCodes.type2Diabetes,
-  ];
+  static const _builtIn = [DiseaseCodes.vitiligo, DiseaseCodes.type2Diabetes];
 
   @override
   void dispose() {
@@ -190,51 +194,74 @@ class _DiseaseFormSheetState extends ConsumerState<_DiseaseFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: GlassSurface(
-        level: GlassLevel.overlay,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(RadiusTokens.xlarge),
-        ),
-        padding: EdgeInsets.fromLTRB(
-          SpacingTokens.x5,
-          SpacingTokens.x4,
-          SpacingTokens.x5,
-          SpacingTokens.x6,
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('添加疾病', style: context.headlineStyle),
-            SizedBox(height: SpacingTokens.x4),
-            for (final code in _builtIn)
-              _DiseaseOption(
-                title: DiseaseCodes.displayName(code),
-                selected: _code == code,
-                onTap: () => setState(() => _code = code),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  SpacingTokens.x5,
+                  SpacingTokens.x4,
+                  SpacingTokens.x5,
+                  0,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('添加疾病', style: context.headlineStyle),
+                    SizedBox(height: SpacingTokens.x4),
+                    RadioGroup<String>(
+                      groupValue: _code,
+                      onChanged: (code) => setState(() => _code = code),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final code in _builtIn)
+                            RadioListTile<String>(
+                              value: code,
+                              title: Text(DiseaseCodes.displayName(code)),
+                            ),
+                          RadioListTile<String>(
+                            value: 'custom',
+                            title: const Text('其他疾病'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_code == 'custom') ...[
+                      SizedBox(height: SpacingTokens.x3),
+                      TextField(
+                        controller: _customController,
+                        autofocus: true,
+                        decoration: const InputDecoration(labelText: '疾病名称'),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            _DiseaseOption(
-              title: '其他疾病',
-              selected: _code == 'custom',
-              onTap: () => setState(() => _code = 'custom'),
             ),
-            if (_code == 'custom') ...[
-              SizedBox(height: SpacingTokens.x3),
-              TextField(
-                controller: _customController,
-                autofocus: true,
-                decoration: const InputDecoration(labelText: '疾病名称'),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                SpacingTokens.x5,
+                SpacingTokens.x3,
+                SpacingTokens.x5,
+                SpacingTokens.x6,
               ),
-            ],
-            SizedBox(height: SpacingTokens.x4),
-            GlassButton(
-              expanded: true,
-              onPressed: _submit,
-              child: const Text('添加'),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _submit,
+                  child: const Text('添加'),
+                ),
+              ),
             ),
           ],
         ),
@@ -250,9 +277,8 @@ class _DiseaseFormSheetState extends ConsumerState<_DiseaseFormSheet> {
     if (_code == 'custom') {
       name = _customController.text.trim();
       if (name.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('请填写疾病名称')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('请填写疾病名称')));
         return;
       }
       code = name;
@@ -272,54 +298,5 @@ class _DiseaseFormSheetState extends ConsumerState<_DiseaseFormSheet> {
       ),
     );
     if (mounted) Navigator.of(context).pop();
-  }
-}
-
-class _DiseaseOption extends StatelessWidget {
-  const _DiseaseOption({
-    required this.title,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
-
-    return InkWell(
-      borderRadius: RadiusTokens.mediumShape,
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(bottom: SpacingTokens.x2),
-        padding: EdgeInsets.symmetric(
-          horizontal: SpacingTokens.x4,
-          vertical: SpacingTokens.x3,
-        ),
-        decoration: BoxDecoration(
-          color: selected
-              ? colors.brand.withValues(alpha: 0.12)
-              : colors.fill,
-          borderRadius: RadiusTokens.mediumShape,
-          border: Border.all(
-            color: selected ? colors.brand : colors.fill,
-            width: selected ? 1.5 : 0.75,
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(child: Text(title, style: context.bodyStyle)),
-            Icon(
-              selected ? Icons.check_circle : Icons.radio_button_unchecked,
-              size: 20,
-              color: selected ? colors.brand : colors.textTertiary,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

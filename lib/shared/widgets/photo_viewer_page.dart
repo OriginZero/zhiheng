@@ -17,6 +17,8 @@ class PhotoViewerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 全屏照片查看器是黑底图像展示页：黑底 / 白色前景属于图像覆盖语义
+    // （照片上的遮罩与文字），不是主题表面色，按项目约定保留字面量。
     final colors = Theme.of(context).extension<ColorTokens>()!;
 
     return Scaffold(
@@ -40,6 +42,7 @@ class PhotoViewerPage extends StatelessWidget {
             ),
           ),
           if (photo.guidePassed.isNotEmpty)
+            // 底部说明条叠在照片黑底上，白字属图像覆盖语义（见上注释）。
             Container(
               width: double.infinity,
               color: Colors.black,
@@ -57,8 +60,11 @@ class PhotoViewerPage extends StatelessWidget {
                       padding: EdgeInsets.only(bottom: SpacingTokens.x1),
                       child: Row(
                         children: [
-                          Icon(Icons.check_circle, size: 16,
-                              color: colors.success),
+                          Icon(
+                            Icons.check_circle,
+                            size: 16,
+                            color: colors.success,
+                          ),
                           SizedBox(width: SpacingTokens.x2),
                           Text(
                             photoGuideLabel(key),
@@ -81,8 +87,6 @@ class PhotoViewerPage extends StatelessWidget {
 /// 全屏查看照片的统一入口：缩略图点击处都走这里，避免重复路由代码。
 void openPhotoViewer(BuildContext context, CarePhoto photo) {
   Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) => PhotoViewerPage(photo: photo),
-    ),
+    MaterialPageRoute<void>(builder: (_) => PhotoViewerPage(photo: photo)),
   );
 }

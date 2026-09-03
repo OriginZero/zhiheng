@@ -10,7 +10,6 @@ import 'package:zhiheng/core/theme/theme.dart';
 import 'package:zhiheng/features/home/home_page.dart';
 import 'package:zhiheng/shared/domain/domain.dart';
 import 'package:zhiheng/shared/widgets/event_record_sheet.dart';
-import 'package:zhiheng/shared/widgets/glass/glass.dart';
 
 /// 手动健康记录与首页「需要关注」区测试。
 ///
@@ -118,7 +117,7 @@ void main() {
 
   /// 直接触发保存按钮回调（等价于点击，测试环境浮层下点击命中不稳定）。
   void invokeSave(WidgetTester tester) =>
-      tester.widget<GlassButton>(find.byType(GlassButton)).onPressed!();
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed!();
 
   testWidgets('标题为空时不保存并提示', (tester) async {
     await pumpSheet(tester);

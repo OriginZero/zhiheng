@@ -159,30 +159,19 @@ Appointment
 
 ## UI / Design System
 
-视觉风格采用 **Apple Liquid Glass / 透明玻璃质感**。
+采用 **Flutter 官方 Design System + Material 3**（官方组件优先，禁止自研 UI Framework 与毛玻璃效果）。
 
 要求：
 
-- 建立统一 Design System
-- 统一颜色、字体、间距、圆角、Blur、透明度
-- Glass 效果集中封装
-- 业务页面不要重复实现玻璃效果
-- 保持统一视觉层级
-- 避免过度透明、模糊和动画
-- 优先保证可读性和性能
-
-推荐统一组件：
-
-```text
-GlassSurface
-GlassCard
-GlassButton
-GlassNavigation
-GlassSheet
-GlassDialog
-```
-
-不要为了视觉效果牺牲医疗信息的清晰度。
+- 官方优先：能用 Flutter 官方组件/主题解决的，不自定义（按钮/输入/卡片/弹层/对话框/底部导航一律官方组件）
+- 颜色：`Theme.of(context).colorScheme`；医疗状态色（normal/attention/warning/critical/success）走 `ColorTokens`（ThemeExtension）
+- 排版：`Theme.of(context).textTheme` / `context.*Style` 扩展
+- 间距/圆角/动效：SpacingTokens / RadiusTokens / MotionTokens
+- 明暗双主题由 `AppTheme.light()/dark()` + 5 套强调色（seed）统一派生
+- 禁止 BackdropFilter / ImageFilter.blur / ShaderMask / Opacity 制造玻璃效果；背景纯表面色
+- 弹层字段滚动区 + 底部主按钮钉底；空/载/错状态统一 AsyncStatusView / EmptyState
+- 页面禁止定义独立颜色/字体/圆角；保留照片上图覆盖白字例外
+- 不要为了视觉效果牺牲医疗信息的清晰度
 
 ---
 
@@ -251,7 +240,7 @@ GlassDialog
 | docs/功能文档.md | 功能清单、模块说明、当前状态 | **每次功能变更**（新增/修改/删除功能）后同步「功能清单」与「功能全景」 |
 | docs/更新文档.md | 版本发布记录（**线性追加，永不改写历史**） | **每次发布版本**（打 tag）时在「最新版本」前追加一节，格式：版本号 → 日期 → 变更 → 验证 |
 | docs/约束性文档.md | 架构/医疗安全/代码/依赖/隐私硬约束 | 架构决策、规则变更、依赖策略调整时 |
-| docs/UI风格文档.md | Design System、Glass 组件、Tokens、排版动效 | Design System / Tokens / 视觉规范变更时 |
+| docs/UI风格文档.md | Design System（Material 3）、Tokens、排版动效 | Design System / Tokens / 视觉规范变更时 |
 | docs/数据模型文档.md | Drift schema（v7）、领域模型、迁移历史 | 数据库表/列/schema 版本/领域模型变更时 |
 | docs/医学知识库.md | 已核实的循证医学条目 + 引用核验方法 | 新增/修改医学规则或知识条目时（**先核实来源再录入**） |
 
@@ -320,7 +309,7 @@ GlassDialog
 
 > **AI 可以解释，但不能凭空创造医学规则。**
 
-> **Liquid Glass 服务于信息层级，而不是为了玻璃而玻璃。**
+> **官方 Material 3 服务于信息层级，而不是为了「好看」自造组件。**
 
 > **不确定的医学问题不要猜。**
 

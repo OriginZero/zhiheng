@@ -6,7 +6,6 @@ import '../../app/providers/core_providers.dart';
 import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
-import '../widgets/glass/glass.dart';
 
 /// 任务创建结果。
 class TaskDraft {
@@ -31,15 +30,11 @@ class TaskDraft {
   final int? remindBeforeMinutes;
 }
 
-/// 任务创建表单（玻璃弹层，§11 链路中的 UserCreated 任务入口）。
+/// 任务创建表单（M3 底部弹层，§11 链路中的 UserCreated 任务入口）。
 ///
 /// 用法：`TaskFormSheet.show(context)` → 返回 [TaskDraft]（取消返回 null）。
 class TaskFormSheet extends ConsumerStatefulWidget {
-  const TaskFormSheet({
-    super.key,
-    this.diseaseId,
-    this.diseaseName,
-  });
+  const TaskFormSheet({super.key, this.diseaseId, this.diseaseName});
 
   /// 预绑定的疾病（从疾病详情页发起时）。
   final String? diseaseId;
@@ -50,15 +45,12 @@ class TaskFormSheet extends ConsumerStatefulWidget {
     String? diseaseId,
     String? diseaseName,
   }) {
+    // 官方 M3 bottom sheet：表面色 / 顶圆角 / 遮罩由主题 bottomSheetTheme 提供。
     return showModalBottomSheet<TaskDraft>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.25),
-      builder: (_) => TaskFormSheet(
-        diseaseId: diseaseId,
-        diseaseName: diseaseName,
-      ),
+      builder: (_) =>
+          TaskFormSheet(diseaseId: diseaseId, diseaseName: diseaseName),
     );
   }
 
@@ -97,149 +89,172 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: GlassSurface(
-        level: GlassLevel.overlay,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(RadiusTokens.xlarge),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        padding: EdgeInsets.fromLTRB(
-          SpacingTokens.x5,
-          SpacingTokens.x4,
-          SpacingTokens.x5,
-          SpacingTokens.x6,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('添加任务', style: context.headlineStyle),
-              SizedBox(height: SpacingTokens.x4),
-              TextField(
-                controller: _titleController,
-                autofocus: true,
-                decoration: const InputDecoration(labelText: '任务名称'),
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              Text('类型', style: context.labelBoldStyle),
-              SizedBox(height: SpacingTokens.x2),
-              Wrap(
-                spacing: SpacingTokens.x2,
-                runSpacing: SpacingTokens.x2,
-                children: [
-                  for (final type in TaskType.values)
-                    _ChoiceChip(
-                      label: type.labelZh,
-                      selected: _type == type,
-                      onTap: () => setState(() => _type = type),
-                    ),
-                ],
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              Text('优先级', style: context.labelBoldStyle),
-              SizedBox(height: SpacingTokens.x2),
-              Wrap(
-                spacing: SpacingTokens.x2,
-                children: [
-                  for (final p in TaskPriority.values)
-                    _ChoiceChip(
-                      label: p.labelZh,
-                      selected: _priority == p,
-                      onTap: () => setState(() => _priority = p),
-                    ),
-                ],
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              Row(
-                children: [
-                  Expanded(
-                    child: _FieldButton(
-                      icon: Icons.calendar_today_outlined,
-                      label: DateFormat('yyyy/M/d').format(_dueDate),
-                      onTap: _pickDate,
-                    ),
-                  ),
-                  SizedBox(width: SpacingTokens.x3),
-                  Expanded(
-                    child: _FieldButton(
-                      icon: Icons.access_time,
-                      label: DateFormat('HH:mm').format(
-                        DateTime(2000, 1, 1, _dueTime.hour, _dueTime.minute),
-                      ),
-                      onTap: _pickTime,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              Text('提醒', style: context.labelBoldStyle),
-              SizedBox(height: SpacingTokens.x2),
-              Wrap(
-                spacing: SpacingTokens.x2,
-                runSpacing: SpacingTokens.x2,
-                children: [
-                  _ChoiceChip(
-                    label: '不提醒',
-                    selected: !_customRemind && _remindBeforeMinutes == null,
-                    onTap: () => setState(() {
-                      _customRemind = false;
-                      _remindBeforeMinutes = null;
-                    }),
-                  ),
-                  _ChoiceChip(
-                    label: '提前 5 分钟',
-                    selected: !_customRemind && _remindBeforeMinutes == 5,
-                    onTap: () => setState(() {
-                      _customRemind = false;
-                      _remindBeforeMinutes = 5;
-                    }),
-                  ),
-                  _ChoiceChip(
-                    label: '提前 30 分钟',
-                    selected: !_customRemind && _remindBeforeMinutes == 30,
-                    onTap: () => setState(() {
-                      _customRemind = false;
-                      _remindBeforeMinutes = 30;
-                    }),
-                  ),
-                  _ChoiceChip(
-                    label: '提前 1 小时',
-                    selected: !_customRemind && _remindBeforeMinutes == 60,
-                    onTap: () => setState(() {
-                      _customRemind = false;
-                      _remindBeforeMinutes = 60;
-                    }),
-                  ),
-                  _ChoiceChip(
-                    label: '自定义',
-                    selected: _customRemind,
-                    onTap: () => setState(() => _customRemind = true),
-                  ),
-                ],
-              ),
-              if (_customRemind) ...[
-                SizedBox(height: SpacingTokens.x3),
-                TextField(
-                  controller: _customRemindController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: '提前分钟数',
-                    hintText: '如 15',
-                  ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  SpacingTokens.x5,
+                  SpacingTokens.x4,
+                  SpacingTokens.x5,
+                  0,
                 ),
-              ],
-              SizedBox(height: SpacingTokens.x4),
-              GlassButton(
-                expanded: true,
-                onPressed: _submit,
-                child: const Text('添加'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('添加任务', style: context.headlineStyle),
+                    SizedBox(height: SpacingTokens.x4),
+                    TextField(
+                      controller: _titleController,
+                      autofocus: true,
+                      decoration: const InputDecoration(labelText: '任务名称'),
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    Text('类型', style: context.labelBoldStyle),
+                    SizedBox(height: SpacingTokens.x2),
+                    Wrap(
+                      spacing: SpacingTokens.x2,
+                      runSpacing: SpacingTokens.x2,
+                      children: [
+                        for (final type in TaskType.values)
+                          _ChoiceChip(
+                            label: type.labelZh,
+                            selected: _type == type,
+                            onTap: () => setState(() => _type = type),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    Text('优先级', style: context.labelBoldStyle),
+                    SizedBox(height: SpacingTokens.x2),
+                    Wrap(
+                      spacing: SpacingTokens.x2,
+                      children: [
+                        for (final p in TaskPriority.values)
+                          _ChoiceChip(
+                            label: p.labelZh,
+                            selected: _priority == p,
+                            onTap: () => setState(() => _priority = p),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _FieldButton(
+                            icon: Icons.calendar_today_outlined,
+                            label: DateFormat('yyyy/M/d').format(_dueDate),
+                            onTap: _pickDate,
+                          ),
+                        ),
+                        SizedBox(width: SpacingTokens.x3),
+                        Expanded(
+                          child: _FieldButton(
+                            icon: Icons.access_time,
+                            label: DateFormat('HH:mm').format(
+                              DateTime(
+                                2000,
+                                1,
+                                1,
+                                _dueTime.hour,
+                                _dueTime.minute,
+                              ),
+                            ),
+                            onTap: _pickTime,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    Text('提醒', style: context.labelBoldStyle),
+                    SizedBox(height: SpacingTokens.x2),
+                    Wrap(
+                      spacing: SpacingTokens.x2,
+                      runSpacing: SpacingTokens.x2,
+                      children: [
+                        _ChoiceChip(
+                          label: '不提醒',
+                          selected:
+                              !_customRemind && _remindBeforeMinutes == null,
+                          onTap: () => setState(() {
+                            _customRemind = false;
+                            _remindBeforeMinutes = null;
+                          }),
+                        ),
+                        _ChoiceChip(
+                          label: '提前 5 分钟',
+                          selected: !_customRemind && _remindBeforeMinutes == 5,
+                          onTap: () => setState(() {
+                            _customRemind = false;
+                            _remindBeforeMinutes = 5;
+                          }),
+                        ),
+                        _ChoiceChip(
+                          label: '提前 30 分钟',
+                          selected:
+                              !_customRemind && _remindBeforeMinutes == 30,
+                          onTap: () => setState(() {
+                            _customRemind = false;
+                            _remindBeforeMinutes = 30;
+                          }),
+                        ),
+                        _ChoiceChip(
+                          label: '提前 1 小时',
+                          selected:
+                              !_customRemind && _remindBeforeMinutes == 60,
+                          onTap: () => setState(() {
+                            _customRemind = false;
+                            _remindBeforeMinutes = 60;
+                          }),
+                        ),
+                        _ChoiceChip(
+                          label: '自定义',
+                          selected: _customRemind,
+                          onTap: () => setState(() => _customRemind = true),
+                        ),
+                      ],
+                    ),
+                    if (_customRemind) ...[
+                      SizedBox(height: SpacingTokens.x3),
+                      TextField(
+                        controller: _customRemindController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: '提前分钟数',
+                          hintText: '如 15',
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                SpacingTokens.x5,
+                SpacingTokens.x3,
+                SpacingTokens.x5,
+                SpacingTokens.x6,
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _submit,
+                  child: const Text('添加'),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -258,7 +273,10 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
   }
 
   Future<void> _pickTime() async {
-    final picked = await showTimePicker(context: context, initialTime: _dueTime);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _dueTime,
+    );
     if (picked != null) {
       setState(() => _dueTime = picked);
     }
@@ -267,9 +285,8 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
   void _submit() {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写任务名称')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('请填写任务名称')));
       return;
     }
     // 自定义分钟数：合法正整数才生效，否则视为不提醒。
@@ -330,27 +347,14 @@ class _ChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
-
-    return InkWell(
-      borderRadius: RadiusTokens.pillShape,
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: SpacingTokens.x3,
-          vertical: SpacingTokens.x2,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? colors.brand : colors.fill,
-          borderRadius: RadiusTokens.pillShape,
-        ),
-        child: Text(
-          label,
-          style: context.labelStyle.copyWith(
-            color: selected ? colors.onBrand : colors.textSecondary,
-          ),
-        ),
-      ),
+    // 官方 ChoiceChip（互斥单选）：忽略反选事件，保证始终有一项被选中，
+    // 与原「点选即选中、再点不取消」的交互一致。
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (isSelected) {
+        if (isSelected) onTap();
+      },
     );
   }
 }
@@ -368,7 +372,7 @@ class _FieldButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     return InkWell(
       borderRadius: RadiusTokens.mediumShape,
@@ -379,17 +383,15 @@ class _FieldButton extends StatelessWidget {
           vertical: SpacingTokens.x3,
         ),
         decoration: BoxDecoration(
-          color: colors.fill,
+          color: scheme.surfaceContainerHighest,
           borderRadius: RadiusTokens.mediumShape,
-          border: Border.all(color: colors.divider),
+          border: Border.all(color: scheme.outlineVariant),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: colors.textSecondary),
+            Icon(icon, size: 18, color: scheme.onSurfaceVariant),
             SizedBox(width: SpacingTokens.x2),
-            Expanded(
-              child: Text(label, style: context.labelStyle),
-            ),
+            Expanded(child: Text(label, style: context.labelStyle)),
           ],
         ),
       ),

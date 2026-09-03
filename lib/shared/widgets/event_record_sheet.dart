@@ -7,7 +7,6 @@ import '../../app/providers/task_providers.dart';
 import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
-import '../widgets/glass/glass.dart';
 
 /// 手动记录支持的事件类型（§7 Event First，覆盖日常高频行为）。
 const _recordTypes = [
@@ -18,19 +17,18 @@ const _recordTypes = [
   EventType.custom,
 ];
 
-/// 手动健康记录表单（玻璃底部弹层，§7 Event First 的 user 来源入口）。
+/// 手动健康记录表单（M3 底部弹层，§7 Event First 的 user 来源入口）。
 ///
 /// 用法：`EventRecordSheet.show(context)`，保存成功写入事件并关闭。
 /// 测量事件额外采集「指标 / 数值 / 单位」，存入 [HealthEvent.payload]。
 class EventRecordSheet extends ConsumerStatefulWidget {
   const EventRecordSheet({super.key});
 
+  /// 官方 M3 bottom sheet：表面色 / 顶圆角 / 遮罩由主题 bottomSheetTheme 提供。
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.25),
       builder: (_) => const EventRecordSheet(),
     );
   }
@@ -167,139 +165,156 @@ class _EventRecordSheetState extends ConsumerState<EventRecordSheet> {
   Widget build(BuildContext context) {
     final diseases = ref.watch(diseasesProvider).value ?? const <Disease>[];
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: GlassSurface(
-        level: GlassLevel.overlay,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(RadiusTokens.xlarge),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        padding: EdgeInsets.fromLTRB(
-          SpacingTokens.x5,
-          SpacingTokens.x4,
-          SpacingTokens.x5,
-          SpacingTokens.x6,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('记录健康数据', style: context.headlineStyle),
-              SizedBox(height: SpacingTokens.x4),
-              TextField(
-                controller: _titleController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: '标题',
-                  hintText: _titlePlaceholder,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  SpacingTokens.x5,
+                  SpacingTokens.x4,
+                  SpacingTokens.x5,
+                  0,
                 ),
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              Text('类型', style: context.labelBoldStyle),
-              SizedBox(height: SpacingTokens.x2),
-              Wrap(
-                spacing: SpacingTokens.x2,
-                runSpacing: SpacingTokens.x2,
-                children: [
-                  for (final type in _recordTypes)
-                    _ChoiceChip(
-                      label: type.labelZh,
-                      selected: _type == type,
-                      onTap: () => setState(() => _type = type),
-                    ),
-                ],
-              ),
-              if (_type == EventType.measurement) ...[
-                SizedBox(height: SpacingTokens.x4),
-                Text('测量数据', style: context.labelBoldStyle),
-                SizedBox(height: SpacingTokens.x2),
-                TextField(
-                  controller: _metricController,
-                  decoration: const InputDecoration(
-                    labelText: '指标',
-                    hintText: '如 fasting_glucose',
-                  ),
-                ),
-                SizedBox(height: SpacingTokens.x3),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      flex: 3,
-                      child: TextField(
-                        controller: _valueController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(labelText: '数值'),
+                    Text('记录健康数据', style: context.headlineStyle),
+                    SizedBox(height: SpacingTokens.x4),
+                    TextField(
+                      controller: _titleController,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: '标题',
+                        hintText: _titlePlaceholder,
                       ),
                     ),
-                    SizedBox(width: SpacingTokens.x3),
-                    Expanded(
-                      flex: 2,
-                      child: TextField(
-                        controller: _unitController,
+                    SizedBox(height: SpacingTokens.x4),
+                    Text('类型', style: context.labelBoldStyle),
+                    SizedBox(height: SpacingTokens.x2),
+                    Wrap(
+                      spacing: SpacingTokens.x2,
+                      runSpacing: SpacingTokens.x2,
+                      children: [
+                        for (final type in _recordTypes)
+                          _ChoiceChip(
+                            label: type.labelZh,
+                            selected: _type == type,
+                            onTap: () => setState(() => _type = type),
+                          ),
+                      ],
+                    ),
+                    if (_type == EventType.measurement) ...[
+                      SizedBox(height: SpacingTokens.x4),
+                      Text('测量数据', style: context.labelBoldStyle),
+                      SizedBox(height: SpacingTokens.x2),
+                      TextField(
+                        controller: _metricController,
                         decoration: const InputDecoration(
-                          labelText: '单位',
-                          hintText: '如 mmol/L',
+                          labelText: '指标',
+                          hintText: '如 fasting_glucose',
                         ),
                       ),
+                      SizedBox(height: SpacingTokens.x3),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: TextField(
+                              controller: _valueController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              decoration: const InputDecoration(
+                                labelText: '数值',
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: SpacingTokens.x3),
+                          Expanded(
+                            flex: 2,
+                            child: TextField(
+                              controller: _unitController,
+                              decoration: const InputDecoration(
+                                labelText: '单位',
+                                hintText: '如 mmol/L',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    SizedBox(height: SpacingTokens.x4),
+                    TextField(
+                      controller: _notesController,
+                      maxLines: 2,
+                      decoration: const InputDecoration(labelText: '备注（可选）'),
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    Text('关联疾病（可选）', style: context.labelBoldStyle),
+                    SizedBox(height: SpacingTokens.x2),
+                    DropdownButtonFormField<String>(
+                      initialValue: _diseaseId,
+                      hint: const Text('不关联'),
+                      items: [
+                        for (final disease in diseases)
+                          DropdownMenuItem(
+                            value: disease.id,
+                            child: Text(disease.name),
+                          ),
+                      ],
+                      onChanged: (value) => setState(() => _diseaseId = value),
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _FieldButton(
+                            icon: Icons.calendar_today_outlined,
+                            label: DateFormat('yyyy/M/d').format(_occurredAt),
+                            onTap: _pickDate,
+                          ),
+                        ),
+                        SizedBox(width: SpacingTokens.x3),
+                        Expanded(
+                          child: _FieldButton(
+                            icon: Icons.access_time,
+                            label: DateFormat('HH:mm').format(_occurredAt),
+                            onTap: _pickTime,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-              SizedBox(height: SpacingTokens.x4),
-              TextField(
-                controller: _notesController,
-                maxLines: 2,
-                decoration: const InputDecoration(labelText: '备注（可选）'),
               ),
-              SizedBox(height: SpacingTokens.x4),
-              Text('关联疾病（可选）', style: context.labelBoldStyle),
-              SizedBox(height: SpacingTokens.x2),
-              DropdownButtonFormField<String>(
-                initialValue: _diseaseId,
-                hint: const Text('不关联'),
-                items: [
-                  for (final disease in diseases)
-                    DropdownMenuItem(
-                      value: disease.id,
-                      child: Text(disease.name),
-                    ),
-                ],
-                onChanged: (value) => setState(() => _diseaseId = value),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                SpacingTokens.x5,
+                SpacingTokens.x3,
+                SpacingTokens.x5,
+                SpacingTokens.x6,
               ),
-              SizedBox(height: SpacingTokens.x4),
-              Row(
-                children: [
-                  Expanded(
-                    child: _FieldButton(
-                      icon: Icons.calendar_today_outlined,
-                      label: DateFormat('yyyy/M/d').format(_occurredAt),
-                      onTap: _pickDate,
-                    ),
-                  ),
-                  SizedBox(width: SpacingTokens.x3),
-                  Expanded(
-                    child: _FieldButton(
-                      icon: Icons.access_time,
-                      label: DateFormat('HH:mm').format(_occurredAt),
-                      onTap: _pickTime,
-                    ),
-                  ),
-                ],
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _submit,
+                  child: const Text('保存'),
+                ),
               ),
-              SizedBox(height: SpacingTokens.x4),
-              GlassButton(
-                expanded: true,
-                onPressed: _submit,
-                child: const Text('保存'),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -319,27 +334,14 @@ class _ChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
-
-    return InkWell(
-      borderRadius: RadiusTokens.pillShape,
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: SpacingTokens.x3,
-          vertical: SpacingTokens.x2,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? colors.brand : colors.fill,
-          borderRadius: RadiusTokens.pillShape,
-        ),
-        child: Text(
-          label,
-          style: context.labelStyle.copyWith(
-            color: selected ? colors.onBrand : colors.textSecondary,
-          ),
-        ),
-      ),
+    // 官方 ChoiceChip（互斥单选）：忽略反选事件，保证始终有一项被选中，
+    // 与原「点选即选中、再点不取消」的交互一致。
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (isSelected) {
+        if (isSelected) onTap();
+      },
     );
   }
 }
@@ -357,7 +359,7 @@ class _FieldButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     return InkWell(
       borderRadius: RadiusTokens.mediumShape,
@@ -368,13 +370,13 @@ class _FieldButton extends StatelessWidget {
           vertical: SpacingTokens.x3,
         ),
         decoration: BoxDecoration(
-          color: colors.fill,
+          color: scheme.surfaceContainerHighest,
           borderRadius: RadiusTokens.mediumShape,
-          border: Border.all(color: colors.divider),
+          border: Border.all(color: scheme.outlineVariant),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: colors.textSecondary),
+            Icon(icon, size: 18, color: scheme.onSurfaceVariant),
             SizedBox(width: SpacingTokens.x2),
             Expanded(child: Text(label, style: context.labelStyle)),
           ],

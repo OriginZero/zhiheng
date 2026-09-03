@@ -1,53 +1,37 @@
 import 'package:flutter/material.dart';
 
-/// iOS 26 风格强调色（tint）主题。
+/// 强调色主题（Material 3 seed）。
 ///
-/// 设计依据：iOS 26 / Liquid Glass 引入系统级可自定义强调色，
-/// 玻璃面板随强调色渲染（Adaptive Colors）。
-/// 医疗产品约束（§24）：低饱和、克制，颜色服务于层级而非装饰。
-/// 这里提供的是「低饱和适配版」tint，非 Apple 官方精确值。
+/// 每套主题提供 [brand] 作为 `ColorScheme.fromSeed` 的 seed 色，
+/// 亮/暗两套 ColorScheme 均由 Material 3 从该 seed 派生（官方 tonal palette），
+/// 页面一律经 `Theme.of(context).colorScheme` 取色。
+/// 医疗产品约束：低饱和、克制，颜色服务于层级而非装饰。
 class AccentPalette {
   const AccentPalette({
     required this.id,
     required this.labelZh,
     required this.brand,
-    required this.brandStrong,
     required this.onBrand,
-    required this.ambientStart,
-    required this.ambientEnd,
   });
 
   final String id;
   final String labelZh;
 
-  /// 品牌主色（按钮、选中态、图标）。
+  /// seed 主色（设置页色板圆与主题派生共用）。
   final Color brand;
 
-  /// 深色背景下更亮的品牌色。
-  final Color brandStrong;
-
-  /// 品牌色上的前景色。
+  /// seed 色上的可读前景色（色板选中勾）。
   final Color onBrand;
-
-  /// 背景环境渐变起止色（Level 1 环境光）。
-  final Color ambientStart;
-  final Color ambientEnd;
-
-  Color brandFor(Brightness brightness) =>
-      brightness == Brightness.dark ? brandStrong : brand;
 }
 
-/// 内置强调色主题（iOS 26 tint 风格，低饱和适配）。
+/// 内置强调色（低饱和适配，均满足在浅色 seed 上放白色勾选标记的对比度）。
 abstract final class AccentPalettes {
-  /// 海盐蓝（默认，沿用既有品牌色）。
+  /// 海盐蓝（默认）。
   static const AccentPalette ocean = AccentPalette(
     id: 'ocean',
     labelZh: '海盐蓝',
     brand: Color(0xFF4F7C8C),
-    brandStrong: Color(0xFF7FB0C0),
     onBrand: Color(0xFFFFFFFF),
-    ambientStart: Color(0xFFEDF1F6),
-    ambientEnd: Color(0xFFF7F3EE),
   );
 
   /// 薰衣草紫。
@@ -55,10 +39,7 @@ abstract final class AccentPalettes {
     id: 'lavender',
     labelZh: '薰衣草紫',
     brand: Color(0xFF7A6FA6),
-    brandStrong: Color(0xFFB3A8E0),
     onBrand: Color(0xFFFFFFFF),
-    ambientStart: Color(0xFFF1EEF7),
-    ambientEnd: Color(0xFFF7F3EF),
   );
 
   /// 薄荷青。
@@ -66,21 +47,15 @@ abstract final class AccentPalettes {
     id: 'mint',
     labelZh: '薄荷青',
     brand: Color(0xFF3E8E8C),
-    brandStrong: Color(0xFF6FC4C0),
     onBrand: Color(0xFFFFFFFF),
-    ambientStart: Color(0xFFEDF5F4),
-    ambientEnd: Color(0xFFF4F7EF),
   );
 
-  /// 珊瑚暖橙。
+  /// 珊瑚橙。
   static const AccentPalette coral = AccentPalette(
     id: 'coral',
     labelZh: '珊瑚暖橙',
     brand: Color(0xFFB0695A),
-    brandStrong: Color(0xFFE09A88),
     onBrand: Color(0xFFFFFFFF),
-    ambientStart: Color(0xFFF8F1EE),
-    ambientEnd: Color(0xFFF6F4EF),
   );
 
   /// 鼠尾草绿。
@@ -88,10 +63,7 @@ abstract final class AccentPalettes {
     id: 'sage',
     labelZh: '鼠尾草绿',
     brand: Color(0xFF6E8C5F),
-    brandStrong: Color(0xFFA3C08F),
     onBrand: Color(0xFFFFFFFF),
-    ambientStart: Color(0xFFF0F5EC),
-    ambientEnd: Color(0xFFF6F4EF),
   );
 
   static const List<AccentPalette> all = [
@@ -102,7 +74,7 @@ abstract final class AccentPalettes {
     sage,
   ];
 
-  /// 按 id 查找；未知 id 回退默认。
+  /// 按 id 取主题，未知/空回退默认 [ocean]。
   static AccentPalette byId(String? id) =>
       all.firstWhere((p) => p.id == id, orElse: () => ocean);
 }

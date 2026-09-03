@@ -8,7 +8,6 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
-import '../../shared/widgets/glass/glass.dart';
 
 /// 医疗照片拍摄弹层（开发文档 §34）。
 ///
@@ -49,8 +48,10 @@ class PhotoCaptureSheet extends StatefulWidget {
     PhotoKind kind = PhotoKind.after,
     String? phototherapyRecordId,
   }) {
-    return GlassSheet.show<CarePhoto>(
+    // 官方 M3 bottom sheet：表面色 / 顶圆角 / 遮罩由主题 bottomSheetTheme 提供。
+    return showModalBottomSheet<CarePhoto>(
       context: context,
+      isScrollControlled: true,
       builder: (_) => PhotoCaptureSheet(
         patientId: patientId,
         diseaseId: diseaseId,
@@ -73,61 +74,68 @@ class _PhotoCaptureSheetState extends State<PhotoCaptureSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('拍下患处照片', style: context.headlineStyle),
-          SizedBox(height: SpacingTokens.x1),
-          Text('本次拍摄：${widget.kind.labelZh}',
-              style: context.secondaryLabelStyle),
-          SizedBox(height: SpacingTokens.x4),
-          Text('拍摄引导', style: context.labelBoldStyle),
-          SizedBox(height: SpacingTokens.x1),
-          Text(
-            '为便于长期对比，请尽量保持与上次一致的拍摄条件。',
-            style: context.secondaryLabelStyle,
-          ),
-          SizedBox(height: SpacingTokens.x1),
-          for (final item in kPhotoGuideItems)
-            Row(
-              children: [
-                Checkbox(
-                  value: _checked.contains(item.key),
-                  onChanged: _busy
-                      ? null
-                      : (v) => setState(() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        SpacingTokens.x5,
+        SpacingTokens.x4,
+        SpacingTokens.x5,
+        SpacingTokens.x8,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('拍下患处照片', style: context.headlineStyle),
+            SizedBox(height: SpacingTokens.x1),
+            Text(
+              '本次拍摄：${widget.kind.labelZh}',
+              style: context.secondaryLabelStyle,
+            ),
+            SizedBox(height: SpacingTokens.x4),
+            Text('拍摄引导', style: context.labelBoldStyle),
+            SizedBox(height: SpacingTokens.x1),
+            Text(
+              '为便于长期对比，请尽量保持与上次一致的拍摄条件。',
+              style: context.secondaryLabelStyle,
+            ),
+            SizedBox(height: SpacingTokens.x1),
+            for (final item in kPhotoGuideItems)
+              Row(
+                children: [
+                  Checkbox(
+                    value: _checked.contains(item.key),
+                    onChanged: _busy
+                        ? null
+                        : (v) => setState(() {
                             if (v ?? false) {
                               _checked.add(item.key);
                             } else {
                               _checked.remove(item.key);
                             }
                           }),
-                ),
-                Expanded(child: Text(item.labelZh, style: context.bodyStyle)),
-              ],
+                  ),
+                  Expanded(child: Text(item.labelZh, style: context.bodyStyle)),
+                ],
+              ),
+            SizedBox(height: SpacingTokens.x4),
+            FilledButton.icon(
+              icon: const Icon(Icons.photo_camera_outlined),
+              onPressed: _allChecked && !_busy
+                  ? () => _capture(ImageSource.camera)
+                  : null,
+              label: Text(_busy ? '保存中…' : '拍照'),
             ),
-          SizedBox(height: SpacingTokens.x4),
-          GlassButton(
-            expanded: true,
-            icon: Icons.photo_camera_outlined,
-            onPressed: _allChecked && !_busy
-                ? () => _capture(ImageSource.camera)
-                : null,
-            child: Text(_busy ? '保存中…' : '拍照'),
-          ),
-          SizedBox(height: SpacingTokens.x2),
-          GlassButton(
-            expanded: true,
-            type: GlassButtonType.glass,
-            icon: Icons.photo_library_outlined,
-            onPressed: _allChecked && !_busy
-                ? () => _capture(ImageSource.gallery)
-                : null,
-            child: const Text('从相册选择'),
-          ),
-        ],
+            SizedBox(height: SpacingTokens.x2),
+            FilledButton.tonalIcon(
+              icon: const Icon(Icons.photo_library_outlined),
+              onPressed: _allChecked && !_busy
+                  ? () => _capture(ImageSource.gallery)
+                  : null,
+              label: const Text('从相册选择'),
+            ),
+          ],
+        ),
       ),
     );
   }

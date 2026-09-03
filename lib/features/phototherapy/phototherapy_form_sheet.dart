@@ -6,9 +6,8 @@ import '../../app/providers/core_providers.dart';
 import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
-import '../../shared/widgets/glass/glass.dart';
 
-/// 308nm 光疗记录表单（玻璃底部弹层）。
+/// 308nm 光疗记录表单（Material 3 底部弹层）。
 ///
 /// 结构化记录治疗部位、左右侧、剂量、红斑及不良反应。
 /// 记录只做数据沉淀，不做剂量建议。
@@ -33,8 +32,6 @@ class PhototherapyFormSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.25),
       builder: (_) =>
           PhototherapyFormSheet(patientId: patientId, diseaseId: diseaseId),
     );
@@ -88,194 +85,218 @@ class _PhototherapyFormSheetState extends ConsumerState<PhototherapyFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: GlassSurface(
-        level: GlassLevel.overlay,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(RadiusTokens.xlarge),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        padding: EdgeInsets.fromLTRB(
-          SpacingTokens.x5,
-          SpacingTokens.x4,
-          SpacingTokens.x5,
-          SpacingTokens.x6,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('记录光疗', style: context.headlineStyle),
-              SizedBox(height: SpacingTokens.x1),
-              Text(
-                '记录 308nm 光疗的剂量与皮肤反应，便于长期追踪效果。',
-                style: context.secondaryLabelStyle,
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              Text('治疗时间', style: context.labelBoldStyle),
-              SizedBox(height: SpacingTokens.x2),
-              Row(
-                children: [
-                  Expanded(
-                    child: _FieldButton(
-                      icon: Icons.calendar_today_outlined,
-                      label: DateFormat('yyyy/M/d').format(_occurredAt),
-                      onTap: _pickOccurredDate,
-                    ),
-                  ),
-                  SizedBox(width: SpacingTokens.x3),
-                  Expanded(
-                    child: _FieldButton(
-                      icon: Icons.access_time,
-                      label: DateFormat('HH:mm').format(_occurredAt),
-                      onTap: _pickOccurredTime,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              TextField(
-                controller: _bodyPartController,
-                decoration: const InputDecoration(labelText: '治疗部位（必填）'),
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              Text('左右侧', style: context.labelBoldStyle),
-              SizedBox(height: SpacingTokens.x2),
-              Wrap(
-                spacing: SpacingTokens.x2,
-                runSpacing: SpacingTokens.x2,
-                children: [
-                  for (final laterality in BodyLaterality.values)
-                    _ChoiceChip(
-                      label: laterality.labelZh,
-                      selected: _laterality == laterality,
-                      onTap: () => setState(() => _laterality = laterality),
-                    ),
-                ],
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _deviceController,
-                      decoration: const InputDecoration(labelText: '设备'),
-                    ),
-                  ),
-                  SizedBox(width: SpacingTokens.x3),
-                  Expanded(
-                    child: TextField(
-                      controller: _doseUnitController,
-                      decoration: const InputDecoration(labelText: '剂量单位'),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              TextField(
-                controller: _doseController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                // 主题已统一底部弹层表面与圆角；此处只保留内容区边距。
+                padding: EdgeInsets.fromLTRB(
+                  SpacingTokens.x5,
+                  SpacingTokens.x4,
+                  SpacingTokens.x5,
+                  0,
                 ),
-                decoration: const InputDecoration(labelText: '单次剂量（可选）'),
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              Row(
-                children: [
-                  Expanded(child: Text('红斑', style: context.labelBoldStyle)),
-                  Switch(
-                    value: _erythema,
-                    onChanged: (v) => setState(() {
-                      _erythema = v;
-                      if (v) {
-                        _erythemaStart = _occurredAt;
-                      }
-                    }),
-                  ),
-                ],
-              ),
-              if (_erythema) ...[
-                SizedBox(height: SpacingTokens.x2),
-                Text('开始时间', style: context.labelBoldStyle),
-                SizedBox(height: SpacingTokens.x2),
-                Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: _FieldButton(
-                        icon: Icons.calendar_today_outlined,
-                        label: DateFormat('yyyy/M/d').format(_erythemaStart),
-                        onTap: _pickErythemaDate,
-                      ),
+                    Text('记录光疗', style: context.headlineStyle),
+                    SizedBox(height: SpacingTokens.x1),
+                    Text(
+                      '记录 308nm 光疗的剂量与皮肤反应，便于长期追踪效果。',
+                      style: context.secondaryLabelStyle,
                     ),
-                    SizedBox(width: SpacingTokens.x3),
-                    Expanded(
-                      child: _FieldButton(
-                        icon: Icons.access_time,
-                        label: DateFormat('HH:mm').format(_erythemaStart),
-                        onTap: _pickErythemaTime,
+                    SizedBox(height: SpacingTokens.x4),
+                    Text('治疗时间', style: context.labelBoldStyle),
+                    SizedBox(height: SpacingTokens.x2),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _FieldButton(
+                            icon: Icons.calendar_today_outlined,
+                            label: DateFormat('yyyy/M/d').format(_occurredAt),
+                            onTap: _pickOccurredDate,
+                          ),
+                        ),
+                        SizedBox(width: SpacingTokens.x3),
+                        Expanded(
+                          child: _FieldButton(
+                            icon: Icons.access_time,
+                            label: DateFormat('HH:mm').format(_occurredAt),
+                            onTap: _pickOccurredTime,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    TextField(
+                      controller: _bodyPartController,
+                      decoration: const InputDecoration(labelText: '治疗部位（必填）'),
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    Text('左右侧', style: context.labelBoldStyle),
+                    SizedBox(height: SpacingTokens.x2),
+                    Wrap(
+                      spacing: SpacingTokens.x2,
+                      runSpacing: SpacingTokens.x2,
+                      children: [
+                        for (final laterality in BodyLaterality.values)
+                          _ChoiceChip(
+                            label: laterality.labelZh,
+                            selected: _laterality == laterality,
+                            onTap: () =>
+                                setState(() => _laterality = laterality),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _deviceController,
+                            decoration: const InputDecoration(labelText: '设备'),
+                          ),
+                        ),
+                        SizedBox(width: SpacingTokens.x3),
+                        Expanded(
+                          child: TextField(
+                            controller: _doseUnitController,
+                            decoration: const InputDecoration(
+                              labelText: '剂量单位',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    TextField(
+                      controller: _doseController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
                       ),
+                      decoration: const InputDecoration(labelText: '单次剂量（可选）'),
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text('红斑', style: context.labelBoldStyle),
+                        ),
+                        Switch(
+                          value: _erythema,
+                          onChanged: (v) => setState(() {
+                            _erythema = v;
+                            if (v) {
+                              _erythemaStart = _occurredAt;
+                            }
+                          }),
+                        ),
+                      ],
+                    ),
+                    if (_erythema) ...[
+                      SizedBox(height: SpacingTokens.x2),
+                      Text('开始时间', style: context.labelBoldStyle),
+                      SizedBox(height: SpacingTokens.x2),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _FieldButton(
+                              icon: Icons.calendar_today_outlined,
+                              label: DateFormat('yyyy/M/d')
+                                  .format(_erythemaStart),
+                              onTap: _pickErythemaDate,
+                            ),
+                          ),
+                          SizedBox(width: SpacingTokens.x3),
+                          Expanded(
+                            child: _FieldButton(
+                              icon: Icons.access_time,
+                              label: DateFormat('HH:mm').format(_erythemaStart),
+                              onTap: _pickErythemaTime,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: SpacingTokens.x4),
+                      TextField(
+                        controller: _erythemaDurationController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: '持续时间（小时，可选）',
+                        ),
+                      ),
+                    ],
+                    SizedBox(height: SpacingTokens.x4),
+                    Text('不良反应', style: context.labelBoldStyle),
+                    SizedBox(height: SpacingTokens.x2),
+                    _LevelRow(
+                      label: '疼痛',
+                      level: _painLevel,
+                      onChanged: (v) => setState(() => _painLevel = v),
+                    ),
+                    SizedBox(height: SpacingTokens.x2),
+                    _LevelRow(
+                      label: '瘙痒',
+                      level: _itchingLevel,
+                      onChanged: (v) => setState(() => _itchingLevel = v),
+                    ),
+                    SizedBox(height: SpacingTokens.x2),
+                    _LevelRow(
+                      label: '灼热',
+                      level: _burningLevel,
+                      onChanged: (v) => setState(() => _burningLevel = v),
+                    ),
+                    SizedBox(height: SpacingTokens.x2),
+                    Row(
+                      children: [
+                        Expanded(child: Text('水疱', style: context.labelStyle)),
+                        Checkbox(
+                          value: _blister,
+                          onChanged: (v) =>
+                              setState(() => _blister = v ?? false),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: SpacingTokens.x2),
+                    TextField(
+                      controller: _otherReactionController,
+                      decoration: const InputDecoration(labelText: '其他反应（可选）'),
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    TextField(
+                      controller: _patientNotesController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(labelText: '患者备注（可选）'),
                     ),
                   ],
                 ),
-                SizedBox(height: SpacingTokens.x4),
-                TextField(
-                  controller: _erythemaDurationController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: '持续时间（小时，可选）'),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                SpacingTokens.x5,
+                SpacingTokens.x3,
+                SpacingTokens.x5,
+                SpacingTokens.x6,
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _submit,
+                  child: const Text('保存'),
                 ),
-              ],
-              SizedBox(height: SpacingTokens.x4),
-              Text('不良反应', style: context.labelBoldStyle),
-              SizedBox(height: SpacingTokens.x2),
-              _LevelRow(
-                label: '疼痛',
-                level: _painLevel,
-                onChanged: (v) => setState(() => _painLevel = v),
               ),
-              SizedBox(height: SpacingTokens.x2),
-              _LevelRow(
-                label: '瘙痒',
-                level: _itchingLevel,
-                onChanged: (v) => setState(() => _itchingLevel = v),
-              ),
-              SizedBox(height: SpacingTokens.x2),
-              _LevelRow(
-                label: '灼热',
-                level: _burningLevel,
-                onChanged: (v) => setState(() => _burningLevel = v),
-              ),
-              SizedBox(height: SpacingTokens.x2),
-              Row(
-                children: [
-                  Expanded(child: Text('水疱', style: context.labelStyle)),
-                  Checkbox(
-                    value: _blister,
-                    onChanged: (v) => setState(() => _blister = v ?? false),
-                  ),
-                ],
-              ),
-              SizedBox(height: SpacingTokens.x2),
-              TextField(
-                controller: _otherReactionController,
-                decoration: const InputDecoration(labelText: '其他反应（可选）'),
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              TextField(
-                controller: _patientNotesController,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: '患者备注（可选）'),
-              ),
-              SizedBox(height: SpacingTokens.x4),
-              GlassButton(
-                expanded: true,
-                onPressed: _submit,
-                child: const Text('保存'),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -451,7 +472,7 @@ class _ChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     return InkWell(
       borderRadius: RadiusTokens.pillShape,
@@ -462,13 +483,13 @@ class _ChoiceChip extends StatelessWidget {
           vertical: SpacingTokens.x2,
         ),
         decoration: BoxDecoration(
-          color: selected ? colors.brand : colors.fill,
+          color: selected ? scheme.primary : scheme.surfaceContainerHighest,
           borderRadius: RadiusTokens.pillShape,
         ),
         child: Text(
           label,
           style: context.labelStyle.copyWith(
-            color: selected ? colors.onBrand : colors.textSecondary,
+            color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
           ),
         ),
       ),
@@ -489,7 +510,7 @@ class _FieldButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
 
     return InkWell(
       borderRadius: RadiusTokens.mediumShape,
@@ -500,13 +521,13 @@ class _FieldButton extends StatelessWidget {
           vertical: SpacingTokens.x3,
         ),
         decoration: BoxDecoration(
-          color: colors.fill,
+          color: scheme.surfaceContainerHighest,
           borderRadius: RadiusTokens.mediumShape,
-          border: Border.all(color: colors.divider),
+          border: Border.all(color: scheme.outlineVariant),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: colors.textSecondary),
+            Icon(icon, size: 18, color: scheme.onSurfaceVariant),
             SizedBox(width: SpacingTokens.x2),
             Expanded(child: Text(label, style: context.labelStyle)),
           ],

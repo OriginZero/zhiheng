@@ -9,7 +9,6 @@ import '../../core/theme/theme.dart';
 
 import '../../shared/domain/domain.dart';
 import '../../shared/widgets/async_status_view.dart';
-import '../../shared/widgets/glass/glass.dart';
 import '../../shared/widgets/trend_chart.dart';
 import '../disease/phototherapy_trend_section.dart';
 import 'glucose_completion_sheet.dart';
@@ -31,9 +30,9 @@ class DiabetesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tasks = ref.watch(diseaseTasksProvider(diseaseId));
-    final events = ref.watch(timelineEventsProvider(
-      TimelineFilter(diseaseId: diseaseId),
-    ));
+    final events = ref.watch(
+      timelineEventsProvider(TimelineFilter(diseaseId: diseaseId)),
+    );
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -91,22 +90,23 @@ class _HypoBanner extends StatelessWidget {
     final hypoValue = _getLatestHypoValue();
     if (hypoValue == null) return const SizedBox.shrink();
 
-    final colors = Theme.of(context).extension<ColorTokens>()!;
+    // 医疗警示：M3 error 角色区分严重度，图标 + 文字并用（不单靠颜色传达）。
+    final scheme = Theme.of(context).colorScheme;
     final isSevere = hypoValue < kSevereHypoglycemiaThreshold;
-    final color = isSevere ? colors.critical : colors.warning;
+    final surface = isSevere ? scheme.error : scheme.errorContainer;
+    final onSurface = isSevere ? scheme.onError : scheme.onErrorContainer;
 
     return Container(
       padding: EdgeInsets.all(SpacingTokens.x3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: surface,
         borderRadius: RadiusTokens.largeShape,
-        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Icon(
             isSevere ? Icons.error_outline : Icons.warning_amber_outlined,
-            color: color,
+            color: onSurface,
           ),
           SizedBox(width: SpacingTokens.x2),
           Expanded(
@@ -115,14 +115,12 @@ class _HypoBanner extends StatelessWidget {
               children: [
                 Text(
                   isSevere ? '严重低血糖记录' : '低血糖记录',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: context.labelBoldStyle.copyWith(color: onSurface),
                 ),
+                SizedBox(height: SpacingTokens.x1),
                 Text(
                   '最近一次记录 $hypoValue mmol/L（<3.9），请关注后续变化。',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: context.captionStyle.copyWith(color: onSurface),
                 ),
               ],
             ),
@@ -146,19 +144,17 @@ class _TodayGlucoseTasks extends StatelessWidget {
         .toList();
 
     if (glucoseTasks.isEmpty) {
-      return GlassCard(
-        child: Text(
-          '今日血糖任务已完成或尚未创建。'
-          '在「管理计划」中创建血糖监测模板可自动生成每日任务。',
-          style: context.secondaryLabelStyle,
+      return const Card(
+        child: EmptyState(
+          icon: Icons.event_available,
+          title: '今日血糖任务已完成或尚未创建。',
+          message: '在「管理计划」中创建血糖监测模板可自动生成每日任务。',
         ),
       );
     }
 
     return Column(
-      children: [
-        for (final task in glucoseTasks) _GlucoseTaskTile(task: task),
-      ],
+      children: [for (final task in glucoseTasks) _GlucoseTaskTile(task: task)],
     );
   }
 }
@@ -171,44 +167,40 @@ class _GlucoseTaskTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
-    final textTheme = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
 
-    return GlassCard(
+    return Card(
       margin: EdgeInsets.only(bottom: SpacingTokens.x2),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(task.title, style: textTheme.bodyLarge),
-                SizedBox(height: SpacingTokens.x1),
-                Text(
-                  DateFormat('HH:mm').format(task.dueAt),
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colors.textSecondary,
+      child: Padding(
+        padding: EdgeInsets.all(SpacingTokens.x4),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(task.title, style: context.bodyStyle),
+                  SizedBox(height: SpacingTokens.x1),
+                  Text(
+                    DateFormat('HH:mm').format(task.dueAt),
+                    style: context.captionStyle,
                   ),
-                ),
-              ],
-            ),
-          ),
-          InkWell(
-            borderRadius: RadiusTokens.pillShape,
-            onTap: () => completeGlucoseTaskFlow(
-              context,
-              ref,
-              task,
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(SpacingTokens.x2),
-              child: Icon(
-                Icons.radio_button_unchecked,
-                color: colors.textTertiary,
+                ],
               ),
             ),
-          ),
-        ],
+            InkWell(
+              borderRadius: RadiusTokens.pillShape,
+              onTap: () => completeGlucoseTaskFlow(context, ref, task),
+              child: Padding(
+                padding: EdgeInsets.all(SpacingTokens.x2),
+                child: Icon(
+                  Icons.radio_button_unchecked,
+                  color: scheme.outline,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -222,22 +214,22 @@ class _QuickRecord extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return GlassCard(
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '记录一次血糖（不关联任务）',
-              style: Theme.of(context).textTheme.bodyMedium,
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(SpacingTokens.x4),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text('记录一次血糖（不关联任务）', style: context.secondaryBodyStyle),
             ),
-          ),
-          GlassButton(
-            type: GlassButtonType.glass,
-            icon: Icons.add,
-            onPressed: () => _showQuickRecord(context, ref),
-            child: const Text('记录'),
-          ),
-        ],
+            SizedBox(width: SpacingTokens.x3),
+            FilledButton.tonalIcon(
+              icon: const Icon(Icons.add),
+              onPressed: () => _showQuickRecord(context, ref),
+              label: const Text('记录'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -262,7 +254,9 @@ class _QuickRecord extends ConsumerWidget {
     final reading = glucoseReadingFrom(result.supplement);
     if (reading != null) {
       final now = DateTime.now();
-      await ref.read(repositoryProvider).addEvent(
+      await ref
+          .read(repositoryProvider)
+          .addEvent(
             HealthEvent(
               id: newId(),
               patientId: localPatientId,
@@ -284,9 +278,8 @@ class _QuickRecord extends ConsumerWidget {
           );
     }
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已记录血糖')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('已记录血糖')));
   }
 }
 
@@ -306,7 +299,7 @@ class _GlucoseTrend extends StatelessWidget {
     }).toList();
 
     if (glucoseEvents.isEmpty) {
-      return const GlassCard(
+      return const Card(
         child: EmptyState(
           icon: Icons.show_chart,
           title: '还没有血糖数据',
@@ -317,21 +310,24 @@ class _GlucoseTrend extends StatelessWidget {
 
     final points = buildMeasurementTrendPoints(glucoseEvents);
 
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('近 30 次', style: Theme.of(context).textTheme.bodySmall),
-          SizedBox(height: SpacingTokens.x2),
-          SizedBox(
-            height: 120,
-            child: TrendChart(
-              points: points,
-              // 低血糖参考线（3.9 mmol/L）：低于此线为低血糖范围
-              targetMin: kHypoglycemiaThreshold,
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(SpacingTokens.x4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('近 30 次', style: context.captionStyle),
+            SizedBox(height: SpacingTokens.x2),
+            SizedBox(
+              height: 120,
+              child: TrendChart(
+                points: points,
+                // 低血糖参考线（3.9 mmol/L）：低于此线为低血糖范围
+                targetMin: kHypoglycemiaThreshold,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

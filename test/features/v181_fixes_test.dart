@@ -238,50 +238,52 @@ void main() {
   });
 
   group('主题：输入框与次级填充面明暗方向', () {
-    ColorTokens tokensFor(Brightness brightness) {
+    ColorScheme schemeFor(Brightness brightness) {
       final theme = brightness == Brightness.light
           ? AppTheme.light()
           : AppTheme.dark();
-      return theme.extension<ColorTokens>()!;
+      return theme.colorScheme;
     }
 
-    test('亮色模式 fill 为浅色、暗色模式 fill 为深色（divider 反色 bug 回归）', () {
-      final light = tokensFor(Brightness.light);
-      final dark = tokensFor(Brightness.dark);
+    test('亮色模式输入底为浅色、暗色模式为深色（明暗反转 bug 回归）', () {
+      final light = schemeFor(Brightness.light);
+      final dark = schemeFor(Brightness.dark);
 
-      // 旧实现：divider.withValues(alpha: 0.5) → 亮色 50% 黑 / 暗色 50% 白。
-      // 新实现：fill token 方向正确（亮色 fill 亮度高于亮色文字，暗色反之）。
-      expect(_luminance(light.fill), greaterThan(0.6));
-      expect(_luminance(dark.fill), lessThan(0.2));
-      expect(light.fill, isNot(equals(dark.fill)));
+      // M3：filled 输入底 = surfaceContainerHighest（亮色浅、暗色深）。
+      expect(_luminance(light.surfaceContainerHighest), greaterThan(0.6));
+      expect(_luminance(dark.surfaceContainerHighest), lessThan(0.2));
+      expect(
+        light.surfaceContainerHighest,
+        isNot(equals(dark.surfaceContainerHighest)),
+      );
     });
 
-    test('输入框主题使用 fill 作为填充色', () {
-      final light = tokensFor(Brightness.light);
-      final dark = tokensFor(Brightness.dark);
+    test('输入框主题使用 surfaceContainerHighest 作为填充色', () {
+      final light = schemeFor(Brightness.light);
+      final dark = schemeFor(Brightness.dark);
       final lightInput = AppTheme.light().inputDecorationTheme;
       final darkInput = AppTheme.dark().inputDecorationTheme;
 
-      expect(lightInput.fillColor, light.fill);
-      expect(darkInput.fillColor, dark.fill);
+      expect(lightInput.fillColor, light.surfaceContainerHighest);
+      expect(darkInput.fillColor, dark.surfaceContainerHighest);
       expect(lightInput.filled, isTrue);
-      // 填充色上输入文字（textPrimary）对比度 ≥ 4.5:1。
+      // 填充色上输入文字（onSurface）对比度 ≥ 4.5:1。
       expect(
-        _contrast(light.fill, light.textPrimary),
+        _contrast(light.surfaceContainerHighest, light.onSurface),
         greaterThanOrEqualTo(4.5),
       );
       expect(
-        _contrast(dark.fill, dark.textPrimary),
+        _contrast(dark.surfaceContainerHighest, dark.onSurface),
         greaterThanOrEqualTo(4.5),
       );
     });
 
-    test('fillStrong 与 fill 分层且方向一致', () {
-      final light = tokensFor(Brightness.light);
-      final dark = tokensFor(Brightness.dark);
-      expect(light.fillStrong, isNot(equals(light.fill)));
-      expect(_luminance(light.fillStrong), greaterThan(0.5));
-      expect(_luminance(dark.fillStrong), lessThan(0.25));
+    test('surfaceContainerHigh 与 surfaceContainerHighest 分层且方向一致', () {
+      final light = schemeFor(Brightness.light);
+      final dark = schemeFor(Brightness.dark);
+      expect(light.surfaceContainerHigh, isNot(equals(light.surfaceContainerHighest)));
+      expect(_luminance(light.surfaceContainerHigh), greaterThan(0.5));
+      expect(_luminance(dark.surfaceContainerHigh), lessThan(0.25));
     });
   });
 }

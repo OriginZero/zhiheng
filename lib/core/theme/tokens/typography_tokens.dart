@@ -1,101 +1,29 @@
 import 'package:flutter/material.dart';
 
-import 'color_tokens.dart';
-
-/// 统一 Typography 令牌（开发文档 §25）。
+/// Typography 便捷扩展：一律映射到 `Theme.of(context).textTheme`（官方角色）。
 ///
-/// 使用系统字体（iOS SF Pro / Android Roboto），所有页面遵循同一 Scale。
-abstract final class TypographyTokens {
-  static const String _fontFamily = ''; // 空字符串 = 系统字体
-
-  static const double displaySize = 34;
-  static const double titleSize = 28;
-  static const double headlineSize = 22;
-  static const double bodySize = 16;
-  static const double labelSize = 14;
-  static const double captionSize = 12;
-
-  static TextStyle display(Color color) => TextStyle(
-        fontFamily: _fontFamily,
-        fontSize: displaySize,
-        fontWeight: FontWeight.w700,
-        height: 1.15,
-        color: color,
-      );
-
-  static TextStyle title(Color color) => TextStyle(
-        fontFamily: _fontFamily,
-        fontSize: titleSize,
-        fontWeight: FontWeight.w700,
-        height: 1.2,
-        color: color,
-      );
-
-  static TextStyle headline(Color color) => TextStyle(
-        fontFamily: _fontFamily,
-        fontSize: headlineSize,
-        fontWeight: FontWeight.w600,
-        height: 1.25,
-        color: color,
-      );
-
-  static TextStyle body(Color color) => TextStyle(
-        fontFamily: _fontFamily,
-        fontSize: bodySize,
-        fontWeight: FontWeight.w400,
-        height: 1.45,
-        color: color,
-      );
-
-  static TextStyle bodyBold(Color color) => TextStyle(
-        fontFamily: _fontFamily,
-        fontSize: bodySize,
-        fontWeight: FontWeight.w600,
-        height: 1.45,
-        color: color,
-      );
-
-  static TextStyle label(Color color) => TextStyle(
-        fontFamily: _fontFamily,
-        fontSize: labelSize,
-        fontWeight: FontWeight.w500,
-        height: 1.35,
-        color: color,
-      );
-
-  static TextStyle labelBold(Color color) => TextStyle(
-        fontFamily: _fontFamily,
-        fontSize: labelSize,
-        fontWeight: FontWeight.w600,
-        height: 1.35,
-        color: color,
-      );
-
-  static TextStyle caption(Color color) => TextStyle(
-        fontFamily: _fontFamily,
-        fontSize: captionSize,
-        fontWeight: FontWeight.w400,
-        height: 1.3,
-        color: color,
-      );
-}
-
-/// 从 BuildContext 便捷取用排版样式的扩展。
+/// 禁止在业务代码里直接构造 TextStyle；统一经 textTheme 角色或本扩展取值。
+/// 迁移映射（旧尺度 → M3 角色，字号体系保持 34/28/22/16/14/12，见 app_theme）：
+/// - displayStyle → displayLarge（页首大标题）
+/// - titleStyle → headlineMedium（大节标题）
+/// - headlineStyle → headlineSmall（区块标题）
+/// - bodyStyle / bodyBoldStyle → bodyLarge（正文 / 加粗）
+/// - labelStyle / labelBoldStyle → labelLarge（标签 / 强调标签）
+/// - captionStyle / secondaryLabelStyle → 小字号次级文字
 extension TypographyContext on BuildContext {
-  ColorTokens get _colors => Theme.of(this).extension<ColorTokens>()!;
+  TextTheme get _t => Theme.of(this).textTheme;
+  ColorScheme get _c => Theme.of(this).colorScheme;
 
-  TextStyle get displayStyle => TypographyTokens.display(_colors.textPrimary);
-  TextStyle get titleStyle => TypographyTokens.title(_colors.textPrimary);
-  TextStyle get headlineStyle =>
-      TypographyTokens.headline(_colors.textPrimary);
-  TextStyle get bodyStyle => TypographyTokens.body(_colors.textPrimary);
-  TextStyle get bodyBoldStyle => TypographyTokens.bodyBold(_colors.textPrimary);
-  TextStyle get labelStyle => TypographyTokens.label(_colors.textPrimary);
-  TextStyle get labelBoldStyle =>
-      TypographyTokens.labelBold(_colors.textPrimary);
-  TextStyle get captionStyle => TypographyTokens.caption(_colors.textTertiary);
+  TextStyle get displayStyle => _t.displayLarge!;
+  TextStyle get titleStyle => _t.headlineMedium!;
+  TextStyle get headlineStyle => _t.headlineSmall!;
+  TextStyle get bodyStyle => _t.bodyLarge!;
+  TextStyle get bodyBoldStyle => _t.bodyLarge!.copyWith(fontWeight: FontWeight.w600);
+  TextStyle get labelStyle => _t.labelLarge!;
+  TextStyle get labelBoldStyle => _t.labelLarge!.copyWith(fontWeight: FontWeight.w600);
+  TextStyle get captionStyle => _t.bodySmall!.copyWith(color: _c.onSurfaceVariant);
   TextStyle get secondaryBodyStyle =>
-      TypographyTokens.body(_colors.textSecondary);
+      _t.bodyMedium!.copyWith(color: _c.onSurfaceVariant);
   TextStyle get secondaryLabelStyle =>
-      TypographyTokens.label(_colors.textSecondary);
+      _t.labelLarge!.copyWith(color: _c.onSurfaceVariant);
 }

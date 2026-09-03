@@ -189,6 +189,7 @@ class _ValueInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ColorTokens>()!;
+    final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     // 输入文字颜色：仅低血糖状态做颜色提示，其余跟随正文色（与其它表单字段一致）。
@@ -196,7 +197,7 @@ class _ValueInput extends StatelessWidget {
         ? colors.critical
         : isHypo
         ? colors.warning
-        : colors.textPrimary;
+        : scheme.onSurface;
     final alertBorder = isSevereHypo
         ? colors.critical
         : isHypo
@@ -238,10 +239,10 @@ class _HypoWarning extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<ColorTokens>()!;
-    final textTheme = Theme.of(context).textTheme;
-
-    final color = isSevere ? colors.critical : colors.warning;
+    // 医疗警示：M3 error 角色区分严重度，图标 + 文字并用（不单靠颜色传达）。
+    final scheme = Theme.of(context).colorScheme;
+    final surface = isSevere ? scheme.error : scheme.errorContainer;
+    final onSurface = isSevere ? scheme.onError : scheme.onErrorContainer;
     final icon = isSevere ? Icons.error_outline : Icons.warning_amber_outlined;
     final title = isSevere ? '严重低血糖（<3.0）' : '低血糖（<3.9）';
     final message = isSevere
@@ -251,14 +252,13 @@ class _HypoWarning extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(SpacingTokens.x3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: surface,
         borderRadius: RadiusTokens.largeShape,
-        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
+          Icon(icon, color: onSurface, size: 20),
           SizedBox(width: SpacingTokens.x2),
           Expanded(
             child: Column(
@@ -266,13 +266,14 @@ class _HypoWarning extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: context.labelBoldStyle.copyWith(color: onSurface),
                 ),
                 SizedBox(height: SpacingTokens.x1),
-                Text(message, style: textTheme.bodySmall),
+                Text(
+                  message,
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: onSurface),
+                ),
               ],
             ),
           ),
