@@ -20,9 +20,14 @@ abstract final class GlassTokens {
   static const double controlOpacity = 0.5;
   static const double controlBorderOpacity = 0.28;
 
-  // 导航栏
+  // 导航栏：悬浮胶囊形态。玻璃面透明度与 surface 同级（0.62），
+  // 并在浅色模式下用发丝描边勾勒轮廓——白玻璃贴米白背景仅靠明度差不可辨，
+  // 无轮廓时胶囊会隐形，只剩背景长块观感（v1.9.1-1.9.3 曾误将胶囊当背景反复降透明到 0.1）。
   static const double navigationBlur = 32;
-  static const double navigationOpacity = 0.1;
+  static const double navigationOpacity = 0.62;
+
+  /// 浅色模式导航胶囊的发丝描边（近黑 12%），替代不可见的白色描边。
+  static const Color navigationBorderLight = Color(0x1F1C1E1E);
 
   // 弹层（Sheet / Dialog）
   static const double overlayBlur = 30;

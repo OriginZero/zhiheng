@@ -41,9 +41,9 @@ class GlassNavigation extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         SpacingTokens.x4,
-        0,
+        SpacingTokens.x2,
         SpacingTokens.x4,
-        SpacingTokens.x3,
+        SpacingTokens.x5,
       ),
       child: GlassSurface(
         level: GlassLevel.navigation,

@@ -97,7 +97,9 @@ class GlassSurface extends StatelessWidget {
         color: glassColor.withValues(alpha: _opacity),
         borderRadius: borderRadius,
         border: Border.all(
-          color: Colors.white.withValues(alpha: _borderOpacity),
+          color: level == GlassLevel.navigation && !isDark
+              ? GlassTokens.navigationBorderLight
+              : Colors.white.withValues(alpha: _borderOpacity),
           width: 0.75,
         ),
       ),
@@ -123,8 +125,10 @@ class GlassSurface extends StatelessWidget {
       );
     }
 
-    // 阴影层：放在 ClipRRect 外部，避免被裁剪成直角
-    if (level == GlassLevel.surface) {
+    // 阴影层：放在 ClipRRect 外部，避免被裁剪成直角。
+    // surface（卡片/面板）与 navigation（悬浮胶囊）同为悬浮面，共用柔和投影，
+    // 保证浅色背景下胶囊与背景有清晰分离，不读成「背景长块」。
+    if (level == GlassLevel.surface || level == GlassLevel.navigation) {
       return Container(
         decoration: BoxDecoration(
           borderRadius: borderRadius,

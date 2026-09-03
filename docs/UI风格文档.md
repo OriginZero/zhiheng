@@ -31,7 +31,7 @@
 | GlassSurface | 玻璃基础层 | 唯一允许 BackdropFilter 的地方；`staticSurface` 变体无 blur（长列表性能，§51） |
 | GlassCard | 内容卡片 | 业务页面默认容器，默认静态（无 blur） |
 | GlassButton | 按钮 | primary（品牌色）/ glass（玻璃质感）/ plain（文字） |
-| GlassNavigation | 底部导航 | 悬浮胶囊形态，3 个入口 |
+| GlassNavigation | 底部导航 | 悬浮胶囊形态，3 个入口；浅色模式需发丝描边（GlassTokens.navigationBorderLight）勾勒轮廓，仅靠白玻璃明度差在米白背景下不可辨 |
 | GlassSheet | 底部弹层 | 拖拽指示条 + 圆角顶 |
 | GlassDialog | 对话框 | 渐入 + 缩放过渡 |
 | GlassBackground | 页面背景 | Level 1 渐变 + 环境光斑 |
