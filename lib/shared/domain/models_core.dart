@@ -10,6 +10,8 @@ class Patient {
     required this.name,
     this.gender = Gender.unspecified,
     this.birthDate,
+    this.weightKg,
+    this.heightCm,
     this.createdAt,
     this.updatedAt,
   });
@@ -18,6 +20,13 @@ class Patient {
   final String name;
   final Gender gender;
   final DateTime? birthDate;
+
+  /// 体重（kg，档案可选项，不强制；未测量为 null）。
+  final double? weightKg;
+
+  /// 身高（cm，档案可选项，不强制；未测量为 null）。
+  final int? heightCm;
+
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -39,6 +48,10 @@ class Patient {
     Gender? gender,
     DateTime? birthDate,
     bool clearBirthDate = false,
+    double? weightKg,
+    bool clearWeightKg = false,
+    int? heightCm,
+    bool clearHeightCm = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -47,6 +60,8 @@ class Patient {
       name: name ?? this.name,
       gender: gender ?? this.gender,
       birthDate: clearBirthDate ? null : (birthDate ?? this.birthDate),
+      weightKg: clearWeightKg ? null : (weightKg ?? this.weightKg),
+      heightCm: clearHeightCm ? null : (heightCm ?? this.heightCm),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

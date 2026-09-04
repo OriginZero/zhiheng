@@ -47,6 +47,28 @@ class $PatientsTable extends Patients
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _weightKgMeta = const VerificationMeta(
+    'weightKg',
+  );
+  @override
+  late final GeneratedColumn<double> weightKg = GeneratedColumn<double>(
+    'weight_kg',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _heightCmMeta = const VerificationMeta(
+    'heightCm',
+  );
+  @override
+  late final GeneratedColumn<int> heightCm = GeneratedColumn<int>(
+    'height_cm',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -75,6 +97,8 @@ class $PatientsTable extends Patients
     name,
     gender,
     birthDate,
+    weightKg,
+    heightCm,
     createdAt,
     updatedAt,
   ];
@@ -115,6 +139,18 @@ class $PatientsTable extends Patients
       context.handle(
         _birthDateMeta,
         birthDate.isAcceptableOrUnknown(data['birth_date']!, _birthDateMeta),
+      );
+    }
+    if (data.containsKey('weight_kg')) {
+      context.handle(
+        _weightKgMeta,
+        weightKg.isAcceptableOrUnknown(data['weight_kg']!, _weightKgMeta),
+      );
+    }
+    if (data.containsKey('height_cm')) {
+      context.handle(
+        _heightCmMeta,
+        heightCm.isAcceptableOrUnknown(data['height_cm']!, _heightCmMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -158,6 +194,14 @@ class $PatientsTable extends Patients
         DriftSqlType.dateTime,
         data['${effectivePrefix}birth_date'],
       ),
+      weightKg: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}weight_kg'],
+      ),
+      heightCm: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}height_cm'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -180,6 +224,12 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
   final String name;
   final String gender;
   final DateTime? birthDate;
+
+  /// 体重（kg，档案可选项，不强制）。
+  final double? weightKg;
+
+  /// 身高（cm，档案可选项，不强制）。
+  final int? heightCm;
   final DateTime createdAt;
   final DateTime updatedAt;
   const PatientRow({
@@ -187,6 +237,8 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
     required this.name,
     required this.gender,
     this.birthDate,
+    this.weightKg,
+    this.heightCm,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -198,6 +250,12 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
     map['gender'] = Variable<String>(gender);
     if (!nullToAbsent || birthDate != null) {
       map['birth_date'] = Variable<DateTime>(birthDate);
+    }
+    if (!nullToAbsent || weightKg != null) {
+      map['weight_kg'] = Variable<double>(weightKg);
+    }
+    if (!nullToAbsent || heightCm != null) {
+      map['height_cm'] = Variable<int>(heightCm);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -212,6 +270,12 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
       birthDate: birthDate == null && nullToAbsent
           ? const Value.absent()
           : Value(birthDate),
+      weightKg: weightKg == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weightKg),
+      heightCm: heightCm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(heightCm),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -227,6 +291,8 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
       name: serializer.fromJson<String>(json['name']),
       gender: serializer.fromJson<String>(json['gender']),
       birthDate: serializer.fromJson<DateTime?>(json['birthDate']),
+      weightKg: serializer.fromJson<double?>(json['weightKg']),
+      heightCm: serializer.fromJson<int?>(json['heightCm']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -239,6 +305,8 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
       'name': serializer.toJson<String>(name),
       'gender': serializer.toJson<String>(gender),
       'birthDate': serializer.toJson<DateTime?>(birthDate),
+      'weightKg': serializer.toJson<double?>(weightKg),
+      'heightCm': serializer.toJson<int?>(heightCm),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -249,6 +317,8 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
     String? name,
     String? gender,
     Value<DateTime?> birthDate = const Value.absent(),
+    Value<double?> weightKg = const Value.absent(),
+    Value<int?> heightCm = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => PatientRow(
@@ -256,6 +326,8 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
     name: name ?? this.name,
     gender: gender ?? this.gender,
     birthDate: birthDate.present ? birthDate.value : this.birthDate,
+    weightKg: weightKg.present ? weightKg.value : this.weightKg,
+    heightCm: heightCm.present ? heightCm.value : this.heightCm,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -265,6 +337,8 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
       name: data.name.present ? data.name.value : this.name,
       gender: data.gender.present ? data.gender.value : this.gender,
       birthDate: data.birthDate.present ? data.birthDate.value : this.birthDate,
+      weightKg: data.weightKg.present ? data.weightKg.value : this.weightKg,
+      heightCm: data.heightCm.present ? data.heightCm.value : this.heightCm,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -277,6 +351,8 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
           ..write('name: $name, ')
           ..write('gender: $gender, ')
           ..write('birthDate: $birthDate, ')
+          ..write('weightKg: $weightKg, ')
+          ..write('heightCm: $heightCm, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -284,8 +360,16 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, gender, birthDate, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    gender,
+    birthDate,
+    weightKg,
+    heightCm,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -294,6 +378,8 @@ class PatientRow extends DataClass implements Insertable<PatientRow> {
           other.name == this.name &&
           other.gender == this.gender &&
           other.birthDate == this.birthDate &&
+          other.weightKg == this.weightKg &&
+          other.heightCm == this.heightCm &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -303,6 +389,8 @@ class PatientsCompanion extends UpdateCompanion<PatientRow> {
   final Value<String> name;
   final Value<String> gender;
   final Value<DateTime?> birthDate;
+  final Value<double?> weightKg;
+  final Value<int?> heightCm;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -311,6 +399,8 @@ class PatientsCompanion extends UpdateCompanion<PatientRow> {
     this.name = const Value.absent(),
     this.gender = const Value.absent(),
     this.birthDate = const Value.absent(),
+    this.weightKg = const Value.absent(),
+    this.heightCm = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -320,6 +410,8 @@ class PatientsCompanion extends UpdateCompanion<PatientRow> {
     required String name,
     required String gender,
     this.birthDate = const Value.absent(),
+    this.weightKg = const Value.absent(),
+    this.heightCm = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -333,6 +425,8 @@ class PatientsCompanion extends UpdateCompanion<PatientRow> {
     Expression<String>? name,
     Expression<String>? gender,
     Expression<DateTime>? birthDate,
+    Expression<double>? weightKg,
+    Expression<int>? heightCm,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -342,6 +436,8 @@ class PatientsCompanion extends UpdateCompanion<PatientRow> {
       if (name != null) 'name': name,
       if (gender != null) 'gender': gender,
       if (birthDate != null) 'birth_date': birthDate,
+      if (weightKg != null) 'weight_kg': weightKg,
+      if (heightCm != null) 'height_cm': heightCm,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -353,6 +449,8 @@ class PatientsCompanion extends UpdateCompanion<PatientRow> {
     Value<String>? name,
     Value<String>? gender,
     Value<DateTime?>? birthDate,
+    Value<double?>? weightKg,
+    Value<int?>? heightCm,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -362,6 +460,8 @@ class PatientsCompanion extends UpdateCompanion<PatientRow> {
       name: name ?? this.name,
       gender: gender ?? this.gender,
       birthDate: birthDate ?? this.birthDate,
+      weightKg: weightKg ?? this.weightKg,
+      heightCm: heightCm ?? this.heightCm,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -383,6 +483,12 @@ class PatientsCompanion extends UpdateCompanion<PatientRow> {
     if (birthDate.present) {
       map['birth_date'] = Variable<DateTime>(birthDate.value);
     }
+    if (weightKg.present) {
+      map['weight_kg'] = Variable<double>(weightKg.value);
+    }
+    if (heightCm.present) {
+      map['height_cm'] = Variable<int>(heightCm.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -402,6 +508,8 @@ class PatientsCompanion extends UpdateCompanion<PatientRow> {
           ..write('name: $name, ')
           ..write('gender: $gender, ')
           ..write('birthDate: $birthDate, ')
+          ..write('weightKg: $weightKg, ')
+          ..write('heightCm: $heightCm, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -6113,6 +6221,8 @@ typedef $$PatientsTableCreateCompanionBuilder = PatientsCompanion Function({
   required String name,
   required String gender,
   Value<DateTime?> birthDate,
+  Value<double?> weightKg,
+  Value<int?> heightCm,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -6122,6 +6232,8 @@ typedef $$PatientsTableUpdateCompanionBuilder = PatientsCompanion Function({
   Value<String> name,
   Value<String> gender,
   Value<DateTime?> birthDate,
+  Value<double?> weightKg,
+  Value<int?> heightCm,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -6153,6 +6265,16 @@ class $$PatientsTableFilterComposer
 
   ColumnFilters<DateTime> get birthDate => $composableBuilder(
     column: $table.birthDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get weightKg => $composableBuilder(
+    column: $table.weightKg,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get heightCm => $composableBuilder(
+    column: $table.heightCm,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6196,6 +6318,16 @@ class $$PatientsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get weightKg => $composableBuilder(
+    column: $table.weightKg,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get heightCm => $composableBuilder(
+    column: $table.heightCm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -6227,6 +6359,12 @@ class $$PatientsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get birthDate =>
       $composableBuilder(column: $table.birthDate, builder: (column) => column);
+
+  GeneratedColumn<double> get weightKg =>
+      $composableBuilder(column: $table.weightKg, builder: (column) => column);
+
+  GeneratedColumn<int> get heightCm =>
+      $composableBuilder(column: $table.heightCm, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -6270,6 +6408,8 @@ class $$PatientsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String> gender = const Value.absent(),
                 Value<DateTime?> birthDate = const Value.absent(),
+                Value<double?> weightKg = const Value.absent(),
+                Value<int?> heightCm = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -6278,6 +6418,8 @@ class $$PatientsTableTableManager
                 name: name,
                 gender: gender,
                 birthDate: birthDate,
+                weightKg: weightKg,
+                heightCm: heightCm,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -6288,6 +6430,8 @@ class $$PatientsTableTableManager
                 required String name,
                 required String gender,
                 Value<DateTime?> birthDate = const Value.absent(),
+                Value<double?> weightKg = const Value.absent(),
+                Value<int?> heightCm = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -6296,6 +6440,8 @@ class $$PatientsTableTableManager
                 name: name,
                 gender: gender,
                 birthDate: birthDate,
+                weightKg: weightKg,
+                heightCm: heightCm,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

@@ -9,6 +9,13 @@ class Patients extends Table {
   TextColumn get name => text()();
   TextColumn get gender => text()();
   DateTimeColumn get birthDate => dateTime().nullable()();
+
+  /// 体重（kg，档案可选项，不强制）。
+  RealColumn get weightKg => real().nullable()();
+
+  /// 身高（cm，档案可选项，不强制）。
+  IntColumn get heightCm => integer().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -251,7 +258,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -292,6 +299,11 @@ class AppDatabase extends _$AppDatabase {
           if (from < 8) {
             await m.addColumn(tasks, tasks.supplementJson);
             await m.addColumn(carePhotos, carePhotos.taskId);
+          }
+          // v9：患者档案可选项（体重 kg / 身高 cm）。
+          if (from < 9) {
+            await m.addColumn(patients, patients.weightKg);
+            await m.addColumn(patients, patients.heightCm);
           }
         },
       );

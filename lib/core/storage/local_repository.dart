@@ -12,6 +12,20 @@ const _uuid = Uuid();
 /// 生成统一 id。
 String newId() => _uuid.v4();
 
+/// 删除计划前的数据面（确认文案用）。
+class CarePlanDeletionOverview {
+  const CarePlanDeletionOverview({
+    required this.pendingCount,
+    required this.hasHistory,
+  });
+
+  /// 将随计划删除的未完成任务数。
+  final int pendingCount;
+
+  /// 是否已有完成记录/执行补充（时间线、照片等历史，删除计划后保留）。
+  final bool hasHistory;
+}
+
 DateTime _now() => DateTime.now();
 
 // ---- Drift 行 -> 领域模型映射 ----
@@ -21,6 +35,8 @@ Patient patientFromRow(PatientRow d) => Patient(
   name: d.name,
   gender: Gender.values.byName(d.gender),
   birthDate: d.birthDate,
+  weightKg: d.weightKg,
+  heightCm: d.heightCm,
   createdAt: d.createdAt,
   updatedAt: d.updatedAt,
 );
@@ -169,6 +185,8 @@ class LocalRepository {
             name: patient.name,
             gender: patient.gender.name,
             birthDate: Value(patient.birthDate),
+            weightKg: Value(patient.weightKg),
+            heightCm: Value(patient.heightCm),
             createdAt: patient.createdAt ?? now,
             updatedAt: now,
           ),
@@ -223,6 +241,94 @@ class LocalRepository {
           ..where((t) => t.id.equals(planId)))
         .getSingleOrNull();
     return row == null ? null : carePlanFromRow(row);
+  }
+
+  /// 按模板查询该患者已存在的计划（模板快速创建防重的判据；任意状态都算占用）。
+  Future<CarePlan?> getCarePlanByTemplate(
+    String patientId,
+    String templateId,
+  ) async {
+    final rows = await (_db.select(_db.carePlans)
+          ..where(
+            (t) =>
+                t.patientId.equals(patientId) &
+                t.templateId.equals(templateId),
+          )
+          ..limit(1))
+        .get();
+    return rows.isEmpty ? null : carePlanFromRow(rows.single);
+  }
+
+  /// 某计划下所有未完成任务（待办；生命周期操作的作用域 = 单计划，§44）。
+  Future<List<Task>> pendingTasksForPlan(String planId) async {
+    final rows = await (_db.select(_db.tasks)
+          ..where(
+            (t) =>
+                t.carePlanId.equals(planId) &
+                t.status.equals(TaskStatus.pending.name),
+          ))
+        .get();
+    return rows.map(taskFromRow).toList();
+  }
+
+  /// 暂停计划：置 paused 并取消其未完成任务的全部提醒（不再打扰）。
+  Future<void> pauseCarePlan(String planId) async {
+    for (final task in await pendingTasksForPlan(planId)) {
+      await cancelTaskReminder(task.id);
+    }
+    await updateCarePlanStatus(planId, CarePlanStatus.paused);
+  }
+
+  /// 恢复计划：置 active 并重建其未完成任务应有的提醒。
+  ///
+  /// 链重建（空链时按模板重新锚点）由调用层（疾病详情页）负责——模板定义
+  /// 位于 features 层，仓储不感知模板排程。
+  Future<void> resumeCarePlan(String planId) async {
+    await updateCarePlanStatus(planId, CarePlanStatus.active);
+    for (final task in await pendingTasksForPlan(planId)) {
+      await syncTaskReminder(task);
+    }
+  }
+
+  /// 完成计划：置 completed（终态）并取消其未完成任务的全部提醒。
+  Future<void> completeCarePlan(String planId) async {
+    for (final task in await pendingTasksForPlan(planId)) {
+      await cancelTaskReminder(task.id);
+    }
+    await updateCarePlanStatus(planId, CarePlanStatus.completed);
+  }
+
+  /// 删除前的数据面信息（决定确认文案）。
+  Future<CarePlanDeletionOverview> carePlanDeletionOverview(
+    String planId,
+  ) async {
+    final rows = await (_db.select(_db.tasks)..where((t) => t.carePlanId.equals(planId))).get();
+    var pending = 0;
+    var completed = 0;
+    var supplemented = 0;
+    for (final r in rows) {
+      final status = TaskStatus.values.byName(r.status);
+      if (status == TaskStatus.pending) {
+        pending++;
+      } else if (status == TaskStatus.completed) {
+        completed++;
+      }
+      if (r.supplementJson != null) supplemented++;
+    }
+    return CarePlanDeletionOverview(
+      pendingCount: pending,
+      hasHistory: completed > 0 || supplemented > 0,
+    );
+  }
+
+  /// 删除计划（级联）：删除计划自身与其未完成任务（含提醒行）；
+  /// 已完成任务、时间线事件、执行补充与照片**保留**（历史不可变，§44）。
+  Future<void> deleteCarePlan(String planId) async {
+    for (final task in await pendingTasksForPlan(planId)) {
+      await cancelTaskReminder(task.id);
+      await deleteTask(task.id);
+    }
+    await (_db.delete(_db.carePlans)..where((t) => t.id.equals(planId))).go();
   }
 
   /// 更新计划状态（active / paused / completed / cancelled）。
@@ -551,6 +657,14 @@ class LocalRepository {
         updatedAt: Value(_now()),
       ),
     );
+  }
+
+  /// 读取某任务的提醒（无则 null；测试与暂停/恢复断言用）。
+  Future<Reminder?> getReminderForTask(String taskId) async {
+    final row = await (_db.select(_db.reminders)
+          ..where((t) => t.taskId.equals(taskId)))
+        .getSingleOrNull();
+    return row == null ? null : reminderFromRow(row);
   }
 
   /// 取消任务提醒。

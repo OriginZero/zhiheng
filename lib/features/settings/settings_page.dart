@@ -41,6 +41,10 @@ class SettingsPage extends ConsumerWidget {
   }
 }
 
+/// 体重展示：整数不带小数位（63 → 63，63.5 → 63.5）。
+String _formatWeight(double kg) =>
+    kg == kg.roundToDouble() ? kg.toStringAsFixed(0) : kg.toString();
+
 class _ProfileCard extends ConsumerWidget {
   const _ProfileCard({required this.patient});
 
@@ -75,6 +79,9 @@ class _ProfileCard extends ConsumerWidget {
                     [
                       patient?.gender.labelZh,
                       if (patient?.ageYears != null) '${patient!.ageYears} 岁',
+                      if (patient?.weightKg != null)
+                        '${_formatWeight(patient!.weightKg!)} kg',
+                      if (patient?.heightCm != null) '${patient!.heightCm} cm',
                     ].join(' · '),
                     style: context.captionStyle,
                   ),
@@ -115,6 +122,8 @@ class _ProfileSheet extends ConsumerStatefulWidget {
 
 class _ProfileSheetState extends ConsumerState<_ProfileSheet> {
   late final TextEditingController _nameController;
+  late final TextEditingController _weightController;
+  late final TextEditingController _heightController;
   late Gender _gender;
   DateTime? _birthDate;
 
@@ -122,6 +131,14 @@ class _ProfileSheetState extends ConsumerState<_ProfileSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.patient.name);
+    _weightController = TextEditingController(
+      text: widget.patient.weightKg == null
+          ? ''
+          : _formatWeight(widget.patient.weightKg!),
+    );
+    _heightController = TextEditingController(
+      text: widget.patient.heightCm?.toString() ?? '',
+    );
     _gender = widget.patient.gender;
     _birthDate = widget.patient.birthDate;
   }
@@ -129,6 +146,8 @@ class _ProfileSheetState extends ConsumerState<_ProfileSheet> {
   @override
   void dispose() {
     _nameController.dispose();
+    _weightController.dispose();
+    _heightController.dispose();
     super.dispose();
   }
 
@@ -150,6 +169,34 @@ class _ProfileSheetState extends ConsumerState<_ProfileSheet> {
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
+
+    final weightText = _weightController.text.trim();
+    final heightText = _heightController.text.trim();
+    double? weight;
+    int? height;
+    if (weightText.isNotEmpty) {
+      weight = double.tryParse(weightText);
+      if (weight == null || weight <= 0 || weight > 500) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('体重请输入有效数字，如 63.5（kg）')));
+        }
+        return;
+      }
+    }
+    if (heightText.isNotEmpty) {
+      height = int.tryParse(heightText);
+      if (height == null || height < 30 || height > 250) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('身高请输入有效整数，如 170（cm）')));
+        }
+        return;
+      }
+    }
+
     await ref
         .read(repositoryProvider)
         .savePatient(
@@ -158,6 +205,10 @@ class _ProfileSheetState extends ConsumerState<_ProfileSheet> {
             gender: _gender,
             birthDate: _birthDate,
             clearBirthDate: _birthDate == null,
+            weightKg: weight,
+            clearWeightKg: weight == null,
+            heightCm: height,
+            clearHeightCm: height == null,
           ),
         );
     if (mounted) Navigator.of(context).pop();
@@ -218,6 +269,28 @@ class _ProfileSheetState extends ConsumerState<_ProfileSheet> {
                       onClear: _birthDate == null
                           ? null
                           : () => setState(() => _birthDate = null),
+                    ),
+                    SizedBox(height: SpacingTokens.x4),
+                    Text('身体数据（可选）', style: context.labelBoldStyle),
+                    SizedBox(height: SpacingTokens.x2),
+                    TextField(
+                      controller: _weightController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: '体重（kg，可选）',
+                        hintText: '如 63.5',
+                      ),
+                    ),
+                    SizedBox(height: SpacingTokens.x3),
+                    TextField(
+                      controller: _heightController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: '身高（cm，可选）',
+                        hintText: '如 170',
+                      ),
                     ),
                   ],
                 ),

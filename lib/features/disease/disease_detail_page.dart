@@ -174,14 +174,28 @@ class DiseaseDetailPage extends ConsumerWidget {
 }
 
 /// 指南模板卡：展示依据，点击按模板创建周期任务。
-class _TemplateCard extends ConsumerWidget {
+///
+/// 同一患者同一模板只允许存在一份计划（防重复创建）：点击创建前先查询，
+/// 已有计划（任意状态）时提示去「管理计划」区暂停 / 恢复 / 删除，不再重复创建。
+class _TemplateCard extends ConsumerStatefulWidget {
   const _TemplateCard({required this.template, required this.disease});
 
   final DiseaseTaskTemplate template;
   final Disease disease;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_TemplateCard> createState() => _TemplateCardState();
+}
+
+class _TemplateCardState extends ConsumerState<_TemplateCard> {
+  /// 连点锁：创建请求在途时忽略后续点击（配合仓储查询防重）。
+  bool _busy = false;
+
+  DiseaseTaskTemplate get template => widget.template;
+  Disease get disease => widget.disease;
+
+  @override
+  Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final knowledge = KnowledgeBase.entries
         .where((e) => e.id == template.knowledgeId)
@@ -192,7 +206,7 @@ class _TemplateCard extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: SpacingTokens.x2),
       child: InkWell(
         borderRadius: RadiusTokens.mediumShape,
-        onTap: () => _create(context, ref),
+        onTap: _busy ? null : _create,
         child: Padding(
           padding: const EdgeInsets.all(SpacingTokens.x4),
           child: Column(
@@ -237,36 +251,55 @@ class _TemplateCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _create(BuildContext context, WidgetRef ref) async {
-    final repo = ref.read(repositoryProvider);
-    final now = DateTime.now();
+  Future<void> _create() async {
+    if (_busy) return;
+    _busy = true;
+    try {
+      final repo = ref.read(repositoryProvider);
+      // 防重：同患者同模板只允许一份计划（任意状态都占用）。
+      final existing = await repo.getCarePlanByTemplate(
+        localPatientId,
+        template.id,
+      );
+      if (existing != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '「${template.title}」计划已存在，'
+              '可在下方「管理计划」中暂停 / 恢复 / 删除，无需重复创建。',
+            ),
+          ),
+        );
+        return;
+      }
 
-    // 模板创建后立即开始：首次任务就是现在（今天出现在首页「今日管理」）。
-    // 光疗链随后按实际完成时刻排程下一次（见 recurrence.nextPhototherapyOccurrence），
-    // 因此从任何一天开始都保持每周 2～3 次、间隔 ≥2 天的模板节奏。
-    final dueAt = now;
+      // 模板创建后立即开始：首次任务就是现在（今天出现在首页「今日管理」）。
+      // 光疗链随后按实际完成时刻排程下一次（见 recurrence.nextPhototherapyOccurrence），
+      // 因此从任何一天开始都保持每周 2～3 次、间隔 ≥2 天的模板节奏。
+      final dueAt = DateTime.now();
 
-    // 1. 模板实例化为管理计划（PlanDefinition → CarePlan）。
-    final plan = template.buildCarePlan(
-      patientId: localPatientId,
-      diseaseId: disease.id,
-      startAt: dueAt,
-      endAtMonths: template.defaultEndAtMonths > 0
-          ? template.defaultEndAtMonths
-          : null,
-    );
-    await repo.saveCarePlan(plan);
+      // 1. 模板实例化为管理计划（PlanDefinition → CarePlan）。
+      final plan = template.buildCarePlan(
+        patientId: localPatientId,
+        diseaseId: disease.id,
+        startAt: dueAt,
+        endAtMonths: template.defaultEndAtMonths > 0
+            ? template.defaultEndAtMonths
+            : null,
+      );
+      await repo.saveCarePlan(plan);
 
-    // 2. 计划生成首条任务（CarePlan → Task）。
-    final task = template.buildFirstTask(
-      patientId: localPatientId,
-      diseaseId: disease.id,
-      carePlanId: plan.id,
-      dueAt: dueAt,
-    );
-    await repo.saveTask(task);
+      // 2. 计划生成首条任务（CarePlan → Task）。
+      final task = template.buildFirstTask(
+        patientId: localPatientId,
+        diseaseId: disease.id,
+        carePlanId: plan.id,
+        dueAt: dueAt,
+      );
+      await repo.saveTask(task);
 
-    if (context.mounted) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -275,6 +308,8 @@ class _TemplateCard extends ConsumerWidget {
           ),
         ),
       );
+    } finally {
+      _busy = false;
     }
   }
 }
@@ -344,7 +379,37 @@ class _PlanTile extends ConsumerWidget {
     final template = DiseaseTemplates.all
         .where((t) => t.id == plan.templateId)
         .firstOrNull;
-    final active = plan.status == CarePlanStatus.active;
+
+    final actions = switch (plan.status) {
+      CarePlanStatus.active => [
+        _PlanAction(label: '暂停', onPressed: () => _pause(context, ref)),
+        _PlanAction(
+          label: '完成计划',
+          onPressed: () => _confirmComplete(context, ref),
+        ),
+        _PlanAction(
+          label: '删除计划',
+          onPressed: () => _delete(context, ref),
+          destructive: true,
+        ),
+      ],
+      CarePlanStatus.paused => [
+        _PlanAction(label: '恢复计划', onPressed: () => _resume(context, ref)),
+        _PlanAction(
+          label: '删除计划',
+          onPressed: () => _delete(context, ref),
+          destructive: true,
+        ),
+      ],
+      // 已完成 / 已取消：终态，仅可删除（删除后可重新按模板创建）。
+      _ => [
+        _PlanAction(
+          label: '删除计划',
+          onPressed: () => _delete(context, ref),
+          destructive: true,
+        ),
+      ],
+    };
 
     return Card(
       margin: const EdgeInsets.only(bottom: SpacingTokens.x2),
@@ -371,37 +436,137 @@ class _PlanTile extends ConsumerWidget {
                 style: context.captionStyle.copyWith(color: scheme.primary),
               ),
             ],
-            if (active) ...[
-              SizedBox(height: SpacingTokens.x2),
-              Row(
-                children: [
+            SizedBox(height: SpacingTokens.x2),
+            Row(
+              children: [
+                for (final action in actions)
                   Expanded(
                     child: TextButton(
-                      onPressed: () => ref
-                          .read(repositoryProvider)
-                          .updateCarePlanStatus(plan.id, CarePlanStatus.paused),
-                      child: const Text('暂停'),
+                      style: action.destructive
+                          ? TextButton.styleFrom(foregroundColor: scheme.error)
+                          : null,
+                      onPressed: action.onPressed,
+                      child: Text(action.label),
                     ),
                   ),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => ref
-                          .read(repositoryProvider)
-                          .updateCarePlanStatus(
-                            plan.id,
-                            CarePlanStatus.completed,
-                          ),
-                      child: const Text('完成计划'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ],
         ),
       ),
     );
   }
+
+  void _showSnack(BuildContext context, String message) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// 暂停：不再生成新任务并取消未完成任务的提醒（作用域 = 本计划，不影响其它计划）。
+  Future<void> _pause(BuildContext context, WidgetRef ref) async {
+    await ref.read(repositoryProvider).pauseCarePlan(plan.id);
+    if (!context.mounted) return;
+    _showSnack(context, '已暂停「${plan.title}」，未完成任务提醒已取消');
+  }
+
+  /// 恢复：重新排程并恢复未完成任务提醒；空链（暂停期间任务已全部完成）时
+  /// 从当前时间重新锚点生成下一条任务，链重新开始。
+  Future<void> _resume(BuildContext context, WidgetRef ref) async {
+    final repo = ref.read(repositoryProvider);
+    final now = DateTime.now();
+    // 疗程已结束且链已空：提示删除重建，避免超出疗程继续生成。
+    if (plan.endAt != null && now.isAfter(plan.endAt!)) {
+      final pending = await repo.pendingTasksForPlan(plan.id);
+      if (pending.isEmpty) {
+        if (!context.mounted) return;
+        _showSnack(
+          context,
+          '「${plan.title}」疗程已于 ${DateFormat('yyyy/M/d').format(plan.endAt!)} 结束；'
+          '如需继续，可删除该计划后重新按模板创建。',
+        );
+        return;
+      }
+    }
+    await repo.resumeCarePlan(plan.id);
+    final pending = await repo.pendingTasksForPlan(plan.id);
+    var restarted = false;
+    if (pending.isEmpty && plan.templateId != null && plan.diseaseId != null) {
+      final template = DiseaseTemplates.all
+          .where((t) => t.id == plan.templateId)
+          .firstOrNull;
+      if (template != null) {
+        final task = template.buildFirstTask(
+          patientId: plan.patientId,
+          diseaseId: plan.diseaseId!,
+          carePlanId: plan.id,
+          dueAt: now,
+        );
+        await repo.saveTask(task);
+        restarted = true;
+      }
+    }
+    if (!context.mounted) return;
+    _showSnack(
+      context,
+      restarted ? '已恢复「${plan.title}」，从当前时间重新排程' : '已恢复「${plan.title}」',
+    );
+  }
+
+  /// 完成计划（终态）：停止生成新任务并取消未完成任务提醒。
+  Future<void> _confirmComplete(BuildContext context, WidgetRef ref) async {
+    final ok = await showConfirmDialog(
+      context,
+      title: '完成计划',
+      message:
+          '将「${plan.title}」标记为已完成？完成后不再生成新任务，'
+          '未完成任务与提醒会被清理。历史记录保留，可在删除后重新创建。',
+      confirmLabel: '完成',
+    );
+    if (ok != true || !context.mounted) return;
+    await ref.read(repositoryProvider).completeCarePlan(plan.id);
+    if (!context.mounted) return;
+    _showSnack(context, '已完成「${plan.title}」');
+  }
+
+  /// 删除计划：无数据直接删；有完成记录/执行补充时明确提示「历史保留」。
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final repo = ref.read(repositoryProvider);
+    final overview = await repo.carePlanDeletionOverview(plan.id);
+    if (!context.mounted) return;
+    final pendingPart = overview.pendingCount == 0
+        ? ''
+        : '并移除 ${overview.pendingCount} 条未完成任务';
+    final message = overview.hasHistory
+        ? '「${plan.title}」已有完成记录（时间线 / 照片等）。'
+              '删除计划不会删除这些历史记录，仅删除计划本身$pendingPart。'
+              '删除后不可恢复，确定？'
+        : '将删除计划「${plan.title}」$pendingPart。'
+              '删除后不可恢复，确定？';
+    final ok = await showConfirmDialog(
+      context,
+      title: '删除计划',
+      message: message,
+      confirmLabel: '删除',
+    );
+    if (ok != true || !context.mounted) return;
+    await repo.deleteCarePlan(plan.id);
+    if (!context.mounted) return;
+    _showSnack(context, '已删除计划「${plan.title}」');
+  }
+}
+
+/// 计划操作按钮描述。
+class _PlanAction {
+  const _PlanAction({
+    required this.label,
+    required this.onPressed,
+    this.destructive = false,
+  });
+
+  final String label;
+  final VoidCallback onPressed;
+  final bool destructive;
 }
 
 /// 光疗记录卡：日期、部位、剂量与皮肤反应摘要。
