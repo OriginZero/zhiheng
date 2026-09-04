@@ -175,6 +175,67 @@ Appointment
 
 ---
 
+## Theme & Color Constraints（主题与色彩约束）
+
+### Mandatory（强制要求）
+
+- 支持 Light / Dark / System 三种模式（跟随系统 / 浅色 / 深色）
+- 以 `ThemeData` + `ColorScheme` 为唯一主题体系；`ThemeExtension` 承载项目专属语义色（医疗状态色）
+- 优先使用语义色，业务 UI 一律不硬编码颜色
+- 页面禁止建立独立的颜色体系 / 字体 / 圆角 / 间距体系
+- 禁止把 `Colors.blue` / `Colors.red` / `Colors.green` 等原始色当 UI 样式默认值
+- 禁止在 Widget 里使用未在主题/设计系统中声明的任意 `Color(0xFF...)` 字面量（唯一例外：照片上的覆盖白字/遮罩，属图像覆盖语义）
+- 每个语义色必须有配套 Light / Dark 两套值
+- Dark Mode 独立设计，禁止简单反相 Light 色敷衍实现
+- 用 surface / surfaceContainer 层级（Low/High/Highest）建立视觉层次
+- 状态不得只靠颜色传达：必须配合文字 / 图标 / 形状等补充指示
+- 全应用颜色用法克制、一致（医疗信息清晰度优先）
+
+### 主题架构
+
+主题相关代码集中在 `lib/core/theme/`（本项目现状）：`app_theme.dart`（`AppTheme.light()/dark()`，`ColorScheme.fromSeed` 明暗各自派生）+ `tokens/` 下 `color_tokens.dart`（医疗状态色 `ColorTokens`，ThemeExtension）/ `typography_tokens.dart` / `spacing_tokens.dart` / `radius_tokens.dart` / `motion_tokens.dart` / `accent_palette.dart`（5 套强调色 seed）。
+
+一般性推荐结构（与本项目等价映射，命名差异不构成另建体系理由）：
+
+```text
+lib/core/theme/
+├── app_theme.dart            ← 已有
+├── app_colors.dart           ≈ tokens/color_tokens.dart + tokens/accent_palette.dart
+├── app_typography.dart       ≈ tokens/typography_tokens.dart
+├── app_spacing.dart          ≈ tokens/spacing_tokens.dart
+├── app_radius.dart           ≈ tokens/radius_tokens.dart
+└── extensions/
+    └── app_colors_extension.dart  ≈ tokens/color_tokens.dart（ThemeExtension）
+```
+
+禁止在页面内自建主题系统；确有页面级诉求需先记录到 docs/UI风格文档.md 再统一进主题层。
+
+### Palette（调色方向）
+
+可选视觉方向：Ocean Blue / Teal Health / Indigo Intelligence / Emerald Clinical / Blue + Violet / Warm Neutral + Accent。实际色值必须按产品定位（长期慢病管理：可信、冷静、亲和）与 UI 语境选择，不得照抄示例 hex。本项目已实现 5 套强调色 seed（海盐蓝 / 薰衣草紫 / 薄荷青 / 珊瑚暖橙 / 鼠尾草绿），经 `ColorScheme.fromSeed` 统一派生明暗主题，新方向先落在 `tokens/accent_palette.dart`。
+
+### UI 改动流程
+
+1. 先检查现有主题（`lib/core/theme/` 与 docs/UI风格文档.md）
+2. 优先复用集中式主题 Token / 组件
+3. 把硬编码颜色替换为语义色（colorScheme → ColorTokens）
+4. 改动必须在 Light 与 Dark 双模式下验证
+5. 禁止为单个页面引入新视觉语言
+6. 禁止为改样式而修改业务逻辑
+
+### 验证
+
+主题 / UI 改动完成后运行：
+
+```bash
+flutter analyze
+flutter test
+```
+
+条件允许时目视核验：Light Mode / Dark Mode / System Mode / 大字体 / 加载态 / 空态 / 错误态 / 禁用态 / 焦点态。
+
+---
+
 ## 开发规则
 
 修改代码前：
