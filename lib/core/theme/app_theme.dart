@@ -12,8 +12,8 @@ import 'tokens/spacing_tokens.dart';
 ///   亮/暗两套均走 Material 3 tonal palette（页面不再手写表面色）；
 /// - 业务代码经 `Theme.of(context).colorScheme / textTheme` 与下方组件主题取样式，
 ///   禁止裸 `Color(...)` / `TextStyle(...)` / `BorderRadius` 字面量；
-/// - [ColorTokens] 仅为页面迁移期过渡映射（值与 ColorScheme 同源）+ 医疗状态色，
-///   页面迁移完成后收敛删除；
+/// - [ColorTokens] 为 M3 无法表达的业务语义色（医疗状态色）常驻扩展，
+///   亮/暗各一套、带配套前景角色；其余一律用 [ColorScheme]；
 /// - 视觉规范与 Token 对照见 docs/UI风格文档.md。
 abstract final class AppTheme {
   static ThemeData light([AccentPalette palette = AccentPalettes.ocean]) =>

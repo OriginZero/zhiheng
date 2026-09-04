@@ -177,6 +177,9 @@ Appointment
 
 ## Theme & Color Constraints（主题与色彩约束）
 
+> 完整可执行规范与验收清单见项目技能 `.agents/skills/flutter-theme-color-system/SKILL.md`——
+> 主题 / 配色 / Token / 组件样式类任务必须先读取该技能再动手（本节为其核心约束摘要）。
+
 ### Mandatory（强制要求）
 
 - 支持 Light / Dark / System 三种模式（跟随系统 / 浅色 / 深色）

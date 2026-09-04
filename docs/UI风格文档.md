@@ -3,6 +3,8 @@
 > 设计体系：**Flutter 官方 Design System + Material 3**（Flutter 3.47 / M3 默认）。
 > Liquid Glass 自定义风格已整体移除（2026-09-03 v1.10.0 重构），不再作为 UI 基础。
 > 本文档是 UI 的唯一权威；Design System 变更后必须同步更新。
+> 完整主题/配色可执行规范与验收清单见项目技能 `.agents/skills/flutter-theme-color-system/SKILL.md`
+> （主题/Token/组件样式任务先读技能再动手；技能为通用方法论，本文档记录本项目落点与现状）。
 
 ---
 
@@ -27,7 +29,7 @@
 |---|---|---|
 | ColorScheme | M3 语义色（见上），`fromSeed` 派生 | `app_theme.dart` |
 | AccentPalette | 5 套强调色 seed：海盐蓝/薰衣草紫/薄荷青/珊瑚暖橙/鼠尾草绿（`brand` = seed） | `tokens/accent_palette.dart` |
-| ColorTokens | **仅剩医疗状态色** normal/attention/warning/critical/success（M3 无对应角色，明暗各一套、对比 ≥4.5:1）；过渡期曾承载的角色已随页面迁移收敛 | `tokens/color_tokens.dart` |
+| ColorTokens | **医疗状态语义色（常驻）** normal/attention/warning/critical/success：M3 无对应角色、页面只按状态使用，明暗各一套、对比 ≥4.5:1；过渡期曾承载的角色已随页面迁移收敛 | `tokens/color_tokens.dart` |
 | SpacingTokens | 4 的倍数额度：x1=4 … x16=64 | `spacing_tokens.dart` |
 | RadiusTokens | small 8 / medium 12 / large 20 / xlarge 28 / pill | `radius_tokens.dart` |
 | MotionTokens | 时长 fast 140ms / base 240ms / slow 420ms + 曲线 | `motion_tokens.dart` |
