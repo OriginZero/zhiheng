@@ -8,6 +8,7 @@ import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../features/task/disease_templates.dart';
 import '../phototherapy/phototherapy_task_flow.dart';
+import '../diabetes/diabetes_check_task_flow.dart';
 import '../diabetes/glucose_task_flow.dart';
 
 import '../../shared/domain/domain.dart';
@@ -664,6 +665,28 @@ class _TaskTile extends ConsumerWidget {
           padding: const EdgeInsets.all(SpacingTokens.x4),
           child: Row(
             children: [
+              InkWell(
+                borderRadius: RadiusTokens.pillShape,
+                onTap: () {
+                  if (task.templateId == 'vitiligo.phototherapy') {
+                    completePhototherapyTaskFlow(context, ref, task);
+                  } else if (isDiabetesCheckTask(task)) {
+                    completeDiabetesCheckTaskFlow(context, ref, task);
+                  } else if (isGlucoseTask(task)) {
+                    completeGlucoseTaskFlow(context, ref, task);
+                  } else {
+                    ref.read(completeTaskProvider.notifier).complete(task);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(SpacingTokens.x2),
+                  child: Icon(
+                    Icons.radio_button_unchecked,
+                    color: scheme.outline,
+                  ),
+                ),
+              ),
+              SizedBox(width: SpacingTokens.x2),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -690,25 +713,6 @@ class _TaskTile extends ConsumerWidget {
                       ],
                     ),
                   ],
-                ),
-              ),
-              InkWell(
-                borderRadius: RadiusTokens.pillShape,
-                onTap: () {
-                  if (task.templateId == 'vitiligo.phototherapy') {
-                    completePhototherapyTaskFlow(context, ref, task);
-                  } else if (isGlucoseTask(task)) {
-                    completeGlucoseTaskFlow(context, ref, task);
-                  } else {
-                    ref.read(completeTaskProvider.notifier).complete(task);
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(SpacingTokens.x2),
-                  child: Icon(
-                    Icons.radio_button_unchecked,
-                    color: scheme.outline,
-                  ),
                 ),
               ),
             ],

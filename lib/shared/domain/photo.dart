@@ -80,11 +80,14 @@ class CarePhoto {
   }
 }
 
-/// 照片拍摄时机。
+/// 照片拍摄时机 / 内容类别。
 enum PhotoKind {
   before('治疗前'),
   after('治疗后'),
-  lesion('患处');
+  lesion('患处'),
+
+  /// 检查报告 / 化验单等单据照片（糖尿病复查等任务勾选完成时上传）。
+  document('检查单据');
 
   const PhotoKind(this.labelZh);
 
@@ -100,6 +103,14 @@ const List<PhotoGuideItem> kPhotoGuideItems = [
   (key: 'sameDistance', labelZh: '与上次相同距离'),
   (key: 'consistentLighting', labelZh: '光线充足一致'),
   (key: 'lesionVisible', labelZh: '患处完整可见'),
+];
+
+/// 单据类拍摄引导 checklist：检查报告 / 化验单照片用（完整入镜、清晰、无反光）。
+const List<PhotoGuideItem> kPhotoDocumentGuideItems = [
+  (key: 'documentWhole', labelZh: '单据完整入镜'),
+  (key: 'documentReadable', labelZh: '字迹与数据清晰'),
+  (key: 'documentNoGlare', labelZh: '无反光遮挡'),
+  (key: 'documentUpright', labelZh: '方向端正'),
 ];
 
 /// 拍摄引导项中文文案（供全屏查看等展示场景使用）。

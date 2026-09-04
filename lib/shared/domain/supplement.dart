@@ -77,11 +77,11 @@ class PhototherapyExposurePart {
   final List<String> photoIds;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'partId': partId,
-        'name': name,
-        'durationSeconds': durationSeconds,
-        'photoIds': photoIds,
-      };
+    'partId': partId,
+    'name': name,
+    'durationSeconds': durationSeconds,
+    'photoIds': photoIds,
+  };
 
   static PhototherapyExposurePart? tryFrom(Object? json) {
     if (json is! Map) return null;
@@ -139,18 +139,26 @@ String? formatDurationZh(int? seconds) {
 /// 事件后在任务详情弹层查看。
 String? supplementSummaryZh(TaskSupplement? supplement) {
   final parts = phototherapyExposureParts(supplement);
-  if (parts.isEmpty) return null;
-  final lines = <String>[];
-  for (final part in parts) {
-    final duration = formatDurationZh(part.durationSeconds);
-    final photoCount =
-        part.photoIds.isEmpty ? '' : '（${part.photoIds.length} 张照片）';
-    final details = '${duration ?? ''}$photoCount';
-    // 注意插值范围：'$part.name' 会把 part 对象整个 toString（输出
-    // 「Instance of PhototherapyExposurePart」），必须用 ${part.name}。
-    lines.add(details.isEmpty ? part.name : '${part.name} $details');
+  if (parts.isNotEmpty) {
+    final lines = <String>[];
+    for (final part in parts) {
+      final duration = formatDurationZh(part.durationSeconds);
+      final photoCount = part.photoIds.isEmpty
+          ? ''
+          : '（${part.photoIds.length} 张照片）';
+      final details = '${duration ?? ''}$photoCount';
+      // 注意插值范围：'$part.name' 会把 part 对象整个 toString（输出
+      // 「Instance of PhototherapyExposurePart」），必须用 ${part.name}。
+      lines.add(details.isEmpty ? part.name : '${part.name} $details');
+    }
+    return '治疗记录：${lines.join('；')}';
   }
-  return '治疗记录：${lines.join('；')}';
+  final checkPhotoIds = diabetesCheckReportPhotoIds(supplement);
+  if (checkPhotoIds != null) {
+    if (checkPhotoIds.isEmpty) return null;
+    return '检查单据照片 ${checkPhotoIds.length} 张';
+  }
+  return null;
 }
 
 /// 清洗历史脏数据中的 Dart 对象 toString 痕迹。
@@ -163,8 +171,10 @@ String? sanitizeDisplayNotes(String? notes) {
   if (!notes.contains('Instance of ')) return notes;
   // 逐个移除「Instance of 'Xxx'」片段（Dart 默认 toString 带引号）及其
   // 后续属性访问残留（如 `.name`）。
-  var cleaned =
-      notes.replaceAll(RegExp(r"Instance of '?[\w<>]+'?(\.\w+)*"), '');
+  var cleaned = notes.replaceAll(
+    RegExp(r"Instance of '?[\w<>]+'?(\.\w+)*"),
+    '',
+  );
   cleaned = cleaned
       .replaceAll(RegExp(r'：\s+'), '：')
       .replaceAll(RegExp(r'；{2,}'), '；')
@@ -234,15 +244,15 @@ class GlucoseReading {
   bool get isSevereHypo => value < kSevereHypoglycemiaThreshold;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'context': context.name,
-        'value': value,
-        'method': method.name,
-        'symptoms': symptoms,
-        'exercise': exercise,
-        if (meal != null) 'meal': meal,
-        'isHypo': isHypo,
-        if (notes != null && notes!.isNotEmpty) 'notes': notes,
-      };
+    'context': context.name,
+    'value': value,
+    'method': method.name,
+    'symptoms': symptoms,
+    'exercise': exercise,
+    if (meal != null) 'meal': meal,
+    'isHypo': isHypo,
+    if (notes != null && notes!.isNotEmpty) 'notes': notes,
+  };
 
   static GlucoseReading? tryFrom(Object? json) {
     if (json is! Map) return null;
@@ -297,4 +307,27 @@ String? glucoseReadingSummaryZh(
   if (reading.isHypo) buffer.write('（低血糖）');
   if (reading.exercise) buffer.write(' · 运动前后');
   return buffer.toString();
+}
+
+/// 糖尿病检查结果记录的内置补充记录 schema（v1）。
+///
+/// 任务驱动：完成「复查 HbA1c」「年度糖尿病综合检查」等检查类任务时，
+/// 可上传本次检查报告 / 化验单照片（如 HbA1c 化验单、肾功能、眼底检查
+/// 报告等）。照片文件本体存 care_photos（关联 taskId，可全屏查看与主动
+/// 删除），content 只存照片 id 列表，便于任务详情与时间线展示数量。
+///
+/// content 结构：
+/// ```json
+/// { "photoIds": ["uuid", ...] }
+/// ```
+const String kDiabetesCheckReportSchema = 'diabetes.check.report.v1';
+
+/// 从 [TaskSupplement] 中提取糖尿病检查单据照片 id 列表（未知 schema 返回 null）。
+List<String>? diabetesCheckReportPhotoIds(TaskSupplement? supplement) {
+  if (supplement == null || supplement.schema != kDiabetesCheckReportSchema) {
+    return null;
+  }
+  final raw = supplement.content['photoIds'];
+  if (raw is! List) return null;
+  return raw.cast<String>();
 }

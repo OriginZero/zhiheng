@@ -8,7 +8,7 @@ import '../../app/providers/core_providers.dart';
 import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/domain/domain.dart';
-import '../../shared/widgets/photo_viewer_page.dart';
+import '../../shared/widgets/photo_thumb.dart';
 import '../../shared/widgets/record_completion_sheet.dart';
 import '../../shared/widgets/task_sheet.dart';
 import '../photo/photo_capture_sheet.dart';
@@ -273,53 +273,17 @@ class _PhototherapyCompletionSheetState
           SizedBox(height: SpacingTokens.x2),
           if (part.photos.isNotEmpty)
             SizedBox(
-              height: 72,
+              height: 96,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: part.photos.length,
                 separatorBuilder: (_, _) => SizedBox(width: SpacingTokens.x2),
-                itemBuilder: (context, photoIndex) {
-                  final photo = part.photos[photoIndex];
-                  return Stack(
-                    children: [
-                      GestureDetector(
-                        onTap: () => openPhotoViewer(context, photo),
-                        child: ClipRRect(
-                          borderRadius: RadiusTokens.smallShape,
-                          child: Image.file(
-                            File(photo.filePath),
-                            width: 72,
-                            height: 72,
-                            fit: BoxFit.cover,
-                            cacheWidth: 200,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 2,
-                        right: 2,
-                        child: GestureDetector(
-                          onTap: () => _removePhoto(part, photoIndex),
-                          child: Container(
-                            // 照片删除角标：图像上叠加的遮罩/图标属覆盖语义，
-                            // 不受主题颜色约束（颜色规则唯一例外）。
-                            decoration: const BoxDecoration(
-                              color: Colors.black54,
-                              shape: BoxShape.circle,
-                            ),
-                            padding: EdgeInsets.all(2),
-                            child: const Icon(
-                              Icons.close,
-                              size: 14,
-                              // 覆盖在照片上的白色角标（图像覆盖语义例外）。
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+                itemBuilder: (context, photoIndex) => PhotoThumb(
+                  photo: part.photos[photoIndex],
+                  size: 96,
+                  removeTooltip: '删除该部位照片',
+                  onRemove: () => _removePhoto(part, photoIndex),
+                ),
               ),
             ),
           if (part.photos.isNotEmpty) SizedBox(height: SpacingTokens.x2),

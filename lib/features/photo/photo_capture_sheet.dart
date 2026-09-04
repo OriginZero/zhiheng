@@ -14,6 +14,9 @@ import '../../shared/domain/domain.dart';
 /// 拍摄前按引导 checklist 确认拍摄条件，拍照后把图片复制到应用文档
 /// 目录 photos/，返回构造好的 [CarePhoto]（不入库，由调用方保存）。
 ///
+/// 患处照片走默认文案与 [kPhotoGuideItems]；检查报告 / 化验单等单据照片
+/// 由调用方传 [PhotoKind.document] 与 [kPhotoDocumentGuideItems]。
+///
 /// 用法：
 /// ```dart
 /// final photo = await PhotoCaptureSheet.show(
@@ -29,16 +32,28 @@ class PhotoCaptureSheet extends StatefulWidget {
     required this.diseaseId,
     this.kind = PhotoKind.after,
     this.phototherapyRecordId,
+    this.title = '拍下患处照片',
+    this.guideHint = '为便于长期对比，请尽量保持与上次一致的拍摄条件。',
+    this.guideItems = kPhotoGuideItems,
   });
 
   final String patientId;
   final String diseaseId;
 
-  /// 拍摄时机（默认治疗后）。
+  /// 拍摄时机（默认治疗后；单据照片传 [PhotoKind.document]）。
   final PhotoKind kind;
 
   /// 关联的光疗记录（可选）。
   final String? phototherapyRecordId;
+
+  /// 弹层标题（检查报告/化验单等单据照片可替换默认文案）。
+  final String title;
+
+  /// 拍摄引导说明文案（单据照片用单据视角的提示）。
+  final String guideHint;
+
+  /// 拍摄引导 checklist（单据照片用 [kPhotoDocumentGuideItems]）。
+  final List<PhotoGuideItem> guideItems;
 
   /// 统一的弹层入口。取消 / 关闭返回 null。
   static Future<CarePhoto?> show(
@@ -47,6 +62,9 @@ class PhotoCaptureSheet extends StatefulWidget {
     required String diseaseId,
     PhotoKind kind = PhotoKind.after,
     String? phototherapyRecordId,
+    String title = '拍下患处照片',
+    String guideHint = '为便于长期对比，请尽量保持与上次一致的拍摄条件。',
+    List<PhotoGuideItem> guideItems = kPhotoGuideItems,
   }) {
     // 官方 M3 bottom sheet：表面色 / 顶圆角 / 遮罩由主题 bottomSheetTheme 提供。
     return showModalBottomSheet<CarePhoto>(
@@ -57,6 +75,9 @@ class PhotoCaptureSheet extends StatefulWidget {
         diseaseId: diseaseId,
         kind: kind,
         phototherapyRecordId: phototherapyRecordId,
+        title: title,
+        guideHint: guideHint,
+        guideItems: guideItems,
       ),
     );
   }
@@ -67,10 +88,16 @@ class PhotoCaptureSheet extends StatefulWidget {
 
 class _PhotoCaptureSheetState extends State<PhotoCaptureSheet> {
   /// 默认全勾选（可直接保存），用户可取消不符合的项。
-  final Set<String> _checked = {for (final item in kPhotoGuideItems) item.key};
+  late final Set<String> _checked;
   bool _busy = false;
 
-  bool get _allChecked => _checked.length == kPhotoGuideItems.length;
+  bool get _allChecked => _checked.length == widget.guideItems.length;
+
+  @override
+  void initState() {
+    super.initState();
+    _checked = {for (final item in widget.guideItems) item.key};
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +113,7 @@ class _PhotoCaptureSheetState extends State<PhotoCaptureSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('拍下患处照片', style: context.headlineStyle),
+            Text(widget.title, style: context.headlineStyle),
             SizedBox(height: SpacingTokens.x1),
             Text(
               '本次拍摄：${widget.kind.labelZh}',
@@ -95,12 +122,9 @@ class _PhotoCaptureSheetState extends State<PhotoCaptureSheet> {
             SizedBox(height: SpacingTokens.x4),
             Text('拍摄引导', style: context.labelBoldStyle),
             SizedBox(height: SpacingTokens.x1),
-            Text(
-              '为便于长期对比，请尽量保持与上次一致的拍摄条件。',
-              style: context.secondaryLabelStyle,
-            ),
+            Text(widget.guideHint, style: context.secondaryLabelStyle),
             SizedBox(height: SpacingTokens.x1),
-            for (final item in kPhotoGuideItems)
+            for (final item in widget.guideItems)
               Row(
                 children: [
                   Checkbox(
@@ -170,7 +194,7 @@ class _PhotoCaptureSheetState extends State<PhotoCaptureSheet> {
       filePath: targetPath,
       takenAt: DateTime.now(),
       guidePassed: [
-        for (final item in kPhotoGuideItems)
+        for (final item in widget.guideItems)
           if (_checked.contains(item.key)) item.key,
       ],
     );

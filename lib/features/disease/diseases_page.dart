@@ -157,6 +157,7 @@ class _DiseaseTile extends ConsumerWidget {
                   for (final status in DiseaseStatus.values)
                     RadioListTile<DiseaseStatus>(
                       value: status,
+                      controlAffinity: ListTileControlAffinity.leading,
                       title: Text(status.labelZh),
                     ),
                 ],
@@ -227,10 +228,12 @@ class _DiseaseFormSheetState extends ConsumerState<_DiseaseFormSheet> {
                           for (final code in _builtIn)
                             RadioListTile<String>(
                               value: code,
+                              controlAffinity: ListTileControlAffinity.leading,
                               title: Text(DiseaseCodes.displayName(code)),
                             ),
                           RadioListTile<String>(
                             value: 'custom',
+                            controlAffinity: ListTileControlAffinity.leading,
                             title: const Text('其他疾病'),
                           ),
                         ],

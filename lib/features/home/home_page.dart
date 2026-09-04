@@ -12,6 +12,7 @@ import '../../shared/widgets/task_sheet.dart';
 import '../../shared/widgets/async_status_view.dart';
 import '../../shared/widgets/event_record_sheet.dart';
 import '../phototherapy/phototherapy_task_flow.dart';
+import '../diabetes/diabetes_check_task_flow.dart';
 import '../diabetes/glucose_task_flow.dart';
 
 /// 首页：Today（开发文档 §31）。
@@ -440,6 +441,8 @@ class _TaskTile extends ConsumerWidget {
                     : () {
                         if (task.templateId == 'vitiligo.phototherapy') {
                           completePhototherapyTaskFlow(context, ref, task);
+                        } else if (isDiabetesCheckTask(task)) {
+                          completeDiabetesCheckTaskFlow(context, ref, task);
                         } else if (isGlucoseTask(task)) {
                           completeGlucoseTaskFlow(context, ref, task);
                         } else {

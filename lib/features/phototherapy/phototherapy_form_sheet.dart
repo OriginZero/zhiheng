@@ -258,12 +258,12 @@ class _PhototherapyFormSheetState extends ConsumerState<PhototherapyFormSheet> {
                     SizedBox(height: SpacingTokens.x2),
                     Row(
                       children: [
-                        Expanded(child: Text('水疱', style: context.labelStyle)),
                         Checkbox(
                           value: _blister,
                           onChanged: (v) =>
                               setState(() => _blister = v ?? false),
                         ),
+                        Expanded(child: Text('水疱', style: context.labelStyle)),
                       ],
                     ),
                     SizedBox(height: SpacingTokens.x2),

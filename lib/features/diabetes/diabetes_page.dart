@@ -175,6 +175,18 @@ class _GlucoseTaskTile extends ConsumerWidget {
         padding: EdgeInsets.all(SpacingTokens.x4),
         child: Row(
           children: [
+            InkWell(
+              borderRadius: RadiusTokens.pillShape,
+              onTap: () => completeGlucoseTaskFlow(context, ref, task),
+              child: Padding(
+                padding: EdgeInsets.all(SpacingTokens.x2),
+                child: Icon(
+                  Icons.radio_button_unchecked,
+                  color: scheme.outline,
+                ),
+              ),
+            ),
+            SizedBox(width: SpacingTokens.x2),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,17 +198,6 @@ class _GlucoseTaskTile extends ConsumerWidget {
                     style: context.captionStyle,
                   ),
                 ],
-              ),
-            ),
-            InkWell(
-              borderRadius: RadiusTokens.pillShape,
-              onTap: () => completeGlucoseTaskFlow(context, ref, task),
-              child: Padding(
-                padding: EdgeInsets.all(SpacingTokens.x2),
-                child: Icon(
-                  Icons.radio_button_unchecked,
-                  color: scheme.outline,
-                ),
               ),
             ),
           ],

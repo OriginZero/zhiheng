@@ -44,7 +44,7 @@
 | 按钮 | `FilledButton`（主）、`FilledButton.tonalIcon`（次/图标）、`OutlinedButton`、`TextButton`（文字/危险弱操作）、`IconButton`（工具）；全宽用 `SizedBox(width: double.infinity)` 包裹 |
 | 卡片/条目 | `Card`（信息卡、分组、模板卡）；列表行条目可用裸 Row/ListTile，不必每行套卡 |
 | 输入 | `TextField`（filled 主题）；选择器 `DropdownButtonFormField`、日期/时间用官方 picker 触发按钮 |
-| 单选/多选 | `ChoiceChip`、`FilterChip`、`RadioListTile`、`Switch`、`Checkbox`、`SegmentedButton`（按语义） |
+| 单选/多选 | `ChoiceChip`、`FilterChip`、`RadioListTile`、`Switch`、`Checkbox`、`SegmentedButton`（按语义）；**列表行内勾选类控件（Checkbox / 完成圈 / Radio）统一放左侧**（单手握持优先）——M3 `platform` 亲和默认在右侧，用 RadioListTile / CheckboxListTile 时显式 `controlAffinity: ListTileControlAffinity.leading`；Switch 保持默认右侧（开关行语义） |
 | 弹层 | 一律官方 `showModalBottomSheet`（isScrollControlled: 内容超屏时）；**字段滚动区 + 底部主按钮钉底**（SafeArea(top:false) > Padding(bottom: viewInsets) > Column[min] > [Flexible(SingleChildScrollView), 按钮]），保证小屏/键盘下按钮可达 |
 | 确认对话框 | `showDialog` + `AlertDialog`（经 `task_sheet.showConfirmDialog` 统一封装） |
 | 列表 | `ListView.builder` / `ListView.separated`；长表性能敏感区用 builder，禁止整页 CustomScrollView 堆叠 |
@@ -53,6 +53,8 @@
 | 页面骨架 | Shell 三 tab 页在 AppShell 壳内（无自身 Scaffold）；独立路由页自带 `Scaffold` + `AppBar` |
 
 弹层完成记录通用外壳：`RecordCompletionSheet`（shared/widgets，标题/说明/备注/保存并完成 + 仅完成 + busy/结果），字段区由各模块提供。
+
+照片预览统一组件：`PhotoThumb`（shared/widgets/photo_thumb.dart）——方形缩略（圆角/加载失败占位走 scheme），可选「时机 · 日期」底部浮签（图像覆盖语义白字）与右上移除角标，整卡点击全屏查看；光疗完成弹层部位照片、任务详情执行补充、疾病照片时间线均收敛到该组件（草稿场景不带浮签、带删除角标；归档场景带浮签不带角标）。
 
 ## 5. 排版
 
