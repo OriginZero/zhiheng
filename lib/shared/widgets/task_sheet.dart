@@ -8,12 +8,12 @@ import '../../core/theme/theme.dart';
 import '../domain/domain.dart';
 import '../widgets/photo_thumb.dart';
 
-/// 任务操作弹层：查看任务、补写备注、查看/删除执行补充、撤销完成。
+/// 任务操作弹层：查看任务详情、查看/删除执行补充、撤销完成。
 ///
-/// - 未完成：可补备注（保存到任务）；
+/// - 点击任务条 = 查看详情（不提供备注编辑，历史备注仅在时间线展示）；
 /// - 有执行补充：查看部位/时长/照片，可主动删除（含关联照片）；
 /// - 已完成：可撤销（恢复待办，清理派生任务与时间线事件；
-///   备注与执行补充保留，只有主动删除才丢弃）。
+///   历史备注与执行补充保留，只有主动删除才丢弃）。
 Future<void> showTaskSheet(BuildContext context, WidgetRef ref, Task task) {
   // 官方 M3 bottom sheet：表面色 / 顶圆角 / 遮罩由主题 bottomSheetTheme 提供。
   return showModalBottomSheet<void>(
@@ -33,7 +33,6 @@ class _TaskSheet extends ConsumerStatefulWidget {
 }
 
 class _TaskSheetState extends ConsumerState<_TaskSheet> {
-  late final TextEditingController _notesController;
   bool _saving = false;
 
   /// 该任务的补充照片（v8：勾选光疗任务时按部位上传）。
@@ -42,7 +41,6 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
   @override
   void initState() {
     super.initState();
-    _notesController = TextEditingController(text: widget.task.notes ?? '');
     _loadPhotos();
   }
 
@@ -58,7 +56,6 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
 
   @override
   void dispose() {
-    _notesController.dispose();
     super.dispose();
   }
 
@@ -143,14 +140,6 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
                       SizedBox(height: SpacingTokens.x4),
                       _buildSupplementSection(task),
                     ],
-                    SizedBox(height: SpacingTokens.x4),
-                    TextField(
-                      controller: _notesController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: '备注（执行情况，如剂量、感受）',
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -166,21 +155,16 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.tonal(
-                      onPressed: _saving ? null : _saveNotes,
-                      child: const Text('保存备注'),
-                    ),
-                  ),
                   if (done) ...[
-                    SizedBox(height: SpacingTokens.x2),
-                    TextButton(
-                      onPressed: _saving ? null : _revert,
-                      style: TextButton.styleFrom(
-                        foregroundColor: colors.warning,
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: _saving ? null : _revert,
+                        style: TextButton.styleFrom(
+                          foregroundColor: colors.warning,
+                        ),
+                        child: const Text('撤销完成'),
                       ),
-                      child: const Text('撤销完成'),
                     ),
                   ],
                 ],
@@ -190,19 +174,6 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
         ),
       ),
     );
-  }
-
-  Future<void> _saveNotes() async {
-    final text = _notesController.text.trim();
-    setState(() => _saving = true);
-    await ref
-        .read(repositoryProvider)
-        .updateTaskNotes(widget.task.id, text.isEmpty ? null : text);
-    if (mounted) {
-      setState(() => _saving = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('备注已保存')));
-    }
   }
 
   /// 补充记录展示：schema 标题 + 结构化内容行 + 照片缩略 + 主动删除入口。

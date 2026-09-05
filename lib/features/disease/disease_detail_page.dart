@@ -665,28 +665,6 @@ class _TaskTile extends ConsumerWidget {
           padding: const EdgeInsets.all(SpacingTokens.x4),
           child: Row(
             children: [
-              InkWell(
-                borderRadius: RadiusTokens.pillShape,
-                onTap: () {
-                  if (task.templateId == 'vitiligo.phototherapy') {
-                    completePhototherapyTaskFlow(context, ref, task);
-                  } else if (isDiabetesCheckTask(task)) {
-                    completeDiabetesCheckTaskFlow(context, ref, task);
-                  } else if (isGlucoseTask(task)) {
-                    completeGlucoseTaskFlow(context, ref, task);
-                  } else {
-                    ref.read(completeTaskProvider.notifier).complete(task);
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(SpacingTokens.x2),
-                  child: Icon(
-                    Icons.radio_button_unchecked,
-                    color: scheme.outline,
-                  ),
-                ),
-              ),
-              SizedBox(width: SpacingTokens.x2),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -713,6 +691,28 @@ class _TaskTile extends ConsumerWidget {
                       ],
                     ),
                   ],
+                ),
+              ),
+              SizedBox(width: SpacingTokens.x2),
+              InkWell(
+                borderRadius: RadiusTokens.pillShape,
+                onTap: () {
+                  if (task.templateId == 'vitiligo.phototherapy') {
+                    completePhototherapyTaskFlow(context, ref, task);
+                  } else if (isDiabetesCheckTask(task)) {
+                    completeDiabetesCheckTaskFlow(context, ref, task);
+                  } else if (isGlucoseTask(task)) {
+                    completeGlucoseTaskFlow(context, ref, task);
+                  } else {
+                    ref.read(completeTaskProvider.notifier).complete(task);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(SpacingTokens.x2),
+                  child: Icon(
+                    Icons.radio_button_unchecked,
+                    color: scheme.outline,
+                  ),
                 ),
               ),
             ],

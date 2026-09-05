@@ -434,33 +434,6 @@ class _TaskTile extends ConsumerWidget {
           padding: const EdgeInsets.all(SpacingTokens.x4),
           child: Row(
             children: [
-              InkWell(
-                borderRadius: RadiusTokens.pillShape,
-                onTap: done
-                    ? null
-                    : () {
-                        if (task.templateId == 'vitiligo.phototherapy') {
-                          completePhototherapyTaskFlow(context, ref, task);
-                        } else if (isDiabetesCheckTask(task)) {
-                          completeDiabetesCheckTaskFlow(context, ref, task);
-                        } else if (isGlucoseTask(task)) {
-                          completeGlucoseTaskFlow(context, ref, task);
-                        } else {
-                          ref
-                              .read(completeTaskProvider.notifier)
-                              .complete(task);
-                        }
-                      },
-                child: Padding(
-                  padding: const EdgeInsets.all(SpacingTokens.x2),
-                  // 勾选完成态 primary；未选 outline（原 textTertiary 同值迁移）。
-                  child: Icon(
-                    done ? Icons.check_circle : Icons.radio_button_unchecked,
-                    color: done ? scheme.primary : scheme.outline,
-                  ),
-                ),
-              ),
-              SizedBox(width: SpacingTokens.x2),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,6 +471,33 @@ class _TaskTile extends ConsumerWidget {
               ),
               // 任务来源标记（§10：来源必须可追踪）。
               _SourceBadge(source: task.source),
+              SizedBox(width: SpacingTokens.x2),
+              InkWell(
+                borderRadius: RadiusTokens.pillShape,
+                onTap: done
+                    ? null
+                    : () {
+                        if (task.templateId == 'vitiligo.phototherapy') {
+                          completePhototherapyTaskFlow(context, ref, task);
+                        } else if (isDiabetesCheckTask(task)) {
+                          completeDiabetesCheckTaskFlow(context, ref, task);
+                        } else if (isGlucoseTask(task)) {
+                          completeGlucoseTaskFlow(context, ref, task);
+                        } else {
+                          ref
+                              .read(completeTaskProvider.notifier)
+                              .complete(task);
+                        }
+                      },
+                child: Padding(
+                  padding: const EdgeInsets.all(SpacingTokens.x2),
+                  // 勾选完成态 primary；未选 outline（原 textTertiary 同值迁移）。
+                  child: Icon(
+                    done ? Icons.check_circle : Icons.radio_button_unchecked,
+                    color: done ? scheme.primary : scheme.outline,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

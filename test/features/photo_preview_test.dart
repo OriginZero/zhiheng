@@ -85,11 +85,9 @@ void main() {
     );
     await tester.pump();
 
-    // 全屏查看页：AppBar 标题 = 时机 · 时间；引导通过项列表展示。
+    // 全屏查看页：黑底 + 可缩放原图，无额外信息层。
     expect(find.byType(InteractiveViewer), findsOneWidget);
-    expect(find.text('治疗前 · 2026/9/1 10:00'), findsOneWidget);
-    expect(find.text('拍摄引导通过项'), findsOneWidget);
-    expect(find.text('与上次相同距离'), findsOneWidget);
+    expect(find.text('拍摄引导通过项'), findsNothing);
 
     await tester.runAsync(() => localRepo.close());
   });
@@ -191,10 +189,7 @@ void main() {
     await tester.pump();
 
     expect(find.byType(InteractiveViewer), findsOneWidget);
-    expect(find.text('治疗后 · 2026/9/1 10:00'), findsOneWidget);
-    expect(find.text('拍摄引导通过项'), findsOneWidget);
-    expect(find.text('与上次相同角度'), findsOneWidget);
-    expect(find.text('患处完整可见'), findsOneWidget);
+    expect(find.text('拍摄引导通过项'), findsNothing);
 
     await tester.runAsync(() => repo.close());
   });
