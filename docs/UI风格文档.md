@@ -28,7 +28,7 @@
 | Token | 内容 | 位置 |
 |---|---|---|
 | ColorScheme | M3 语义色（见上），`fromSeed` 派生 | `app_theme.dart` |
-| AccentPalette | 5 套强调色 seed：海盐蓝/薰衣草紫/薄荷青/珊瑚暖橙/鼠尾草绿（`brand` = seed） | `tokens/accent_palette.dart` |
+| AccentPalette | 9 套强调色 seed：海盐蓝/薰衣草紫/薄荷青/珊瑚暖橙/鼠尾草绿/海军蓝/翡翠绿/暖沙/靛蓝（`brand` = seed） | `tokens/accent_palette.dart` |
 | ColorTokens | **医疗状态语义色（常驻）** normal/attention/warning/critical/success：M3 无对应角色、页面只按状态使用，明暗各一套、对比 ≥4.5:1；过渡期曾承载的角色已随页面迁移收敛 | `tokens/color_tokens.dart` |
 | SpacingTokens | 4 的倍数额度：x1=4 … x16=64 | `spacing_tokens.dart` |
 | RadiusTokens | small 8 / medium 12 / large 20 / xlarge 28 / pill | `radius_tokens.dart` |

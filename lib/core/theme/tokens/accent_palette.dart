@@ -66,12 +66,48 @@ abstract final class AccentPalettes {
     onBrand: Color(0xFFFFFFFF),
   );
 
+  /// 海军蓝（职业庄重，医疗档案方向）。
+  static const AccentPalette navy = AccentPalette(
+    id: 'navy',
+    labelZh: '海军蓝',
+    brand: Color(0xFF3A5671),
+    onBrand: Color(0xFFFFFFFF),
+  );
+
+  /// 翡翠绿（沉稳生命感，比鼠尾草绿更深）。
+  static const AccentPalette emerald = AccentPalette(
+    id: 'emerald',
+    labelZh: '翡翠绿',
+    brand: Color(0xFF2F7459),
+    onBrand: Color(0xFFFFFFFF),
+  );
+
+  /// 暖沙（暖中性，长时阅读舒适，色板唯一中性暖色系）。
+  static const AccentPalette sand = AccentPalette(
+    id: 'sand',
+    labelZh: '暖沙',
+    brand: Color(0xFF8A7A68),
+    onBrand: Color(0xFFFFFFFF),
+  );
+
+  /// 靛蓝（深蓝紫，AI/数据/智能方向）。
+  static const AccentPalette indigo = AccentPalette(
+    id: 'indigo',
+    labelZh: '靛蓝',
+    brand: Color(0xFF54608F),
+    onBrand: Color(0xFFFFFFFF),
+  );
+
   static const List<AccentPalette> all = [
     ocean,
     lavender,
     mint,
     coral,
     sage,
+    navy,
+    emerald,
+    sand,
+    indigo,
   ];
 
   /// 按 id 取主题，未知/空回退默认 [ocean]。
