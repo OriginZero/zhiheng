@@ -1174,6 +1174,38 @@ class $CarePlansTable extends CarePlans
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _recurrenceFrequencyMeta =
+      const VerificationMeta('recurrenceFrequency');
+  @override
+  late final GeneratedColumn<String> recurrenceFrequency =
+      GeneratedColumn<String>(
+        'recurrence_frequency',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _recurrenceIntervalMeta =
+      const VerificationMeta('recurrenceInterval');
+  @override
+  late final GeneratedColumn<int> recurrenceInterval = GeneratedColumn<int>(
+    'recurrence_interval',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _recurrenceWeekdaysMeta =
+      const VerificationMeta('recurrenceWeekdays');
+  @override
+  late final GeneratedColumn<String> recurrenceWeekdays =
+      GeneratedColumn<String>(
+        'recurrence_weekdays',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1207,6 +1239,9 @@ class $CarePlansTable extends CarePlans
     startAt,
     endAt,
     templateId,
+    recurrenceFrequency,
+    recurrenceInterval,
+    recurrenceWeekdays,
     createdAt,
     updatedAt,
   ];
@@ -1284,6 +1319,33 @@ class $CarePlansTable extends CarePlans
         templateId.isAcceptableOrUnknown(data['template_id']!, _templateIdMeta),
       );
     }
+    if (data.containsKey('recurrence_frequency')) {
+      context.handle(
+        _recurrenceFrequencyMeta,
+        recurrenceFrequency.isAcceptableOrUnknown(
+          data['recurrence_frequency']!,
+          _recurrenceFrequencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recurrence_interval')) {
+      context.handle(
+        _recurrenceIntervalMeta,
+        recurrenceInterval.isAcceptableOrUnknown(
+          data['recurrence_interval']!,
+          _recurrenceIntervalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recurrence_weekdays')) {
+      context.handle(
+        _recurrenceWeekdaysMeta,
+        recurrenceWeekdays.isAcceptableOrUnknown(
+          data['recurrence_weekdays']!,
+          _recurrenceWeekdaysMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1345,6 +1407,18 @@ class $CarePlansTable extends CarePlans
         DriftSqlType.string,
         data['${effectivePrefix}template_id'],
       ),
+      recurrenceFrequency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recurrence_frequency'],
+      ),
+      recurrenceInterval: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}recurrence_interval'],
+      ),
+      recurrenceWeekdays: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recurrence_weekdays'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1374,6 +1448,15 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
 
   /// 实例化该计划的模板 id（PlanDefinition 层，来源可追踪）。
   final String? templateId;
+
+  /// none / daily / weekly / monthly。
+  final String? recurrenceFrequency;
+
+  /// 间隔：每 N 天 / 每 N 周 / 每 N 月。
+  final int? recurrenceInterval;
+
+  /// JSON 数组，元素为 DateTime.weekday（1=周一 … 7=周日），仅每周重复使用。
+  final String? recurrenceWeekdays;
   final DateTime createdAt;
   final DateTime updatedAt;
   const CarePlanRow({
@@ -1386,6 +1469,9 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
     this.startAt,
     this.endAt,
     this.templateId,
+    this.recurrenceFrequency,
+    this.recurrenceInterval,
+    this.recurrenceWeekdays,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -1410,6 +1496,15 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
     }
     if (!nullToAbsent || templateId != null) {
       map['template_id'] = Variable<String>(templateId);
+    }
+    if (!nullToAbsent || recurrenceFrequency != null) {
+      map['recurrence_frequency'] = Variable<String>(recurrenceFrequency);
+    }
+    if (!nullToAbsent || recurrenceInterval != null) {
+      map['recurrence_interval'] = Variable<int>(recurrenceInterval);
+    }
+    if (!nullToAbsent || recurrenceWeekdays != null) {
+      map['recurrence_weekdays'] = Variable<String>(recurrenceWeekdays);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -1437,6 +1532,15 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
       templateId: templateId == null && nullToAbsent
           ? const Value.absent()
           : Value(templateId),
+      recurrenceFrequency: recurrenceFrequency == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurrenceFrequency),
+      recurrenceInterval: recurrenceInterval == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurrenceInterval),
+      recurrenceWeekdays: recurrenceWeekdays == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurrenceWeekdays),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -1457,6 +1561,13 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
       startAt: serializer.fromJson<DateTime?>(json['startAt']),
       endAt: serializer.fromJson<DateTime?>(json['endAt']),
       templateId: serializer.fromJson<String?>(json['templateId']),
+      recurrenceFrequency: serializer.fromJson<String?>(
+        json['recurrenceFrequency'],
+      ),
+      recurrenceInterval: serializer.fromJson<int?>(json['recurrenceInterval']),
+      recurrenceWeekdays: serializer.fromJson<String?>(
+        json['recurrenceWeekdays'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -1474,6 +1585,9 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
       'startAt': serializer.toJson<DateTime?>(startAt),
       'endAt': serializer.toJson<DateTime?>(endAt),
       'templateId': serializer.toJson<String?>(templateId),
+      'recurrenceFrequency': serializer.toJson<String?>(recurrenceFrequency),
+      'recurrenceInterval': serializer.toJson<int?>(recurrenceInterval),
+      'recurrenceWeekdays': serializer.toJson<String?>(recurrenceWeekdays),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -1489,6 +1603,9 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
     Value<DateTime?> startAt = const Value.absent(),
     Value<DateTime?> endAt = const Value.absent(),
     Value<String?> templateId = const Value.absent(),
+    Value<String?> recurrenceFrequency = const Value.absent(),
+    Value<int?> recurrenceInterval = const Value.absent(),
+    Value<String?> recurrenceWeekdays = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => CarePlanRow(
@@ -1501,6 +1618,15 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
     startAt: startAt.present ? startAt.value : this.startAt,
     endAt: endAt.present ? endAt.value : this.endAt,
     templateId: templateId.present ? templateId.value : this.templateId,
+    recurrenceFrequency: recurrenceFrequency.present
+        ? recurrenceFrequency.value
+        : this.recurrenceFrequency,
+    recurrenceInterval: recurrenceInterval.present
+        ? recurrenceInterval.value
+        : this.recurrenceInterval,
+    recurrenceWeekdays: recurrenceWeekdays.present
+        ? recurrenceWeekdays.value
+        : this.recurrenceWeekdays,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -1519,6 +1645,15 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
       templateId: data.templateId.present
           ? data.templateId.value
           : this.templateId,
+      recurrenceFrequency: data.recurrenceFrequency.present
+          ? data.recurrenceFrequency.value
+          : this.recurrenceFrequency,
+      recurrenceInterval: data.recurrenceInterval.present
+          ? data.recurrenceInterval.value
+          : this.recurrenceInterval,
+      recurrenceWeekdays: data.recurrenceWeekdays.present
+          ? data.recurrenceWeekdays.value
+          : this.recurrenceWeekdays,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -1536,6 +1671,9 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
           ..write('startAt: $startAt, ')
           ..write('endAt: $endAt, ')
           ..write('templateId: $templateId, ')
+          ..write('recurrenceFrequency: $recurrenceFrequency, ')
+          ..write('recurrenceInterval: $recurrenceInterval, ')
+          ..write('recurrenceWeekdays: $recurrenceWeekdays, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1553,6 +1691,9 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
     startAt,
     endAt,
     templateId,
+    recurrenceFrequency,
+    recurrenceInterval,
+    recurrenceWeekdays,
     createdAt,
     updatedAt,
   );
@@ -1569,6 +1710,9 @@ class CarePlanRow extends DataClass implements Insertable<CarePlanRow> {
           other.startAt == this.startAt &&
           other.endAt == this.endAt &&
           other.templateId == this.templateId &&
+          other.recurrenceFrequency == this.recurrenceFrequency &&
+          other.recurrenceInterval == this.recurrenceInterval &&
+          other.recurrenceWeekdays == this.recurrenceWeekdays &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -1583,6 +1727,9 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
   final Value<DateTime?> startAt;
   final Value<DateTime?> endAt;
   final Value<String?> templateId;
+  final Value<String?> recurrenceFrequency;
+  final Value<int?> recurrenceInterval;
+  final Value<String?> recurrenceWeekdays;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -1596,6 +1743,9 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
     this.startAt = const Value.absent(),
     this.endAt = const Value.absent(),
     this.templateId = const Value.absent(),
+    this.recurrenceFrequency = const Value.absent(),
+    this.recurrenceInterval = const Value.absent(),
+    this.recurrenceWeekdays = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1610,6 +1760,9 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
     this.startAt = const Value.absent(),
     this.endAt = const Value.absent(),
     this.templateId = const Value.absent(),
+    this.recurrenceFrequency = const Value.absent(),
+    this.recurrenceInterval = const Value.absent(),
+    this.recurrenceWeekdays = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -1629,6 +1782,9 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
     Expression<DateTime>? startAt,
     Expression<DateTime>? endAt,
     Expression<String>? templateId,
+    Expression<String>? recurrenceFrequency,
+    Expression<int>? recurrenceInterval,
+    Expression<String>? recurrenceWeekdays,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -1643,6 +1799,10 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
       if (startAt != null) 'start_at': startAt,
       if (endAt != null) 'end_at': endAt,
       if (templateId != null) 'template_id': templateId,
+      if (recurrenceFrequency != null)
+        'recurrence_frequency': recurrenceFrequency,
+      if (recurrenceInterval != null) 'recurrence_interval': recurrenceInterval,
+      if (recurrenceWeekdays != null) 'recurrence_weekdays': recurrenceWeekdays,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -1659,6 +1819,9 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
     Value<DateTime?>? startAt,
     Value<DateTime?>? endAt,
     Value<String?>? templateId,
+    Value<String?>? recurrenceFrequency,
+    Value<int?>? recurrenceInterval,
+    Value<String?>? recurrenceWeekdays,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -1673,6 +1836,9 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
       startAt: startAt ?? this.startAt,
       endAt: endAt ?? this.endAt,
       templateId: templateId ?? this.templateId,
+      recurrenceFrequency: recurrenceFrequency ?? this.recurrenceFrequency,
+      recurrenceInterval: recurrenceInterval ?? this.recurrenceInterval,
+      recurrenceWeekdays: recurrenceWeekdays ?? this.recurrenceWeekdays,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -1709,6 +1875,15 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
     if (templateId.present) {
       map['template_id'] = Variable<String>(templateId.value);
     }
+    if (recurrenceFrequency.present) {
+      map['recurrence_frequency'] = Variable<String>(recurrenceFrequency.value);
+    }
+    if (recurrenceInterval.present) {
+      map['recurrence_interval'] = Variable<int>(recurrenceInterval.value);
+    }
+    if (recurrenceWeekdays.present) {
+      map['recurrence_weekdays'] = Variable<String>(recurrenceWeekdays.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1733,6 +1908,9 @@ class CarePlansCompanion extends UpdateCompanion<CarePlanRow> {
           ..write('startAt: $startAt, ')
           ..write('endAt: $endAt, ')
           ..write('templateId: $templateId, ')
+          ..write('recurrenceFrequency: $recurrenceFrequency, ')
+          ..write('recurrenceInterval: $recurrenceInterval, ')
+          ..write('recurrenceWeekdays: $recurrenceWeekdays, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -6751,6 +6929,9 @@ typedef $$CarePlansTableCreateCompanionBuilder = CarePlansCompanion Function({
   Value<DateTime?> startAt,
   Value<DateTime?> endAt,
   Value<String?> templateId,
+  Value<String?> recurrenceFrequency,
+  Value<int?> recurrenceInterval,
+  Value<String?> recurrenceWeekdays,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -6765,6 +6946,9 @@ typedef $$CarePlansTableUpdateCompanionBuilder = CarePlansCompanion Function({
   Value<DateTime?> startAt,
   Value<DateTime?> endAt,
   Value<String?> templateId,
+  Value<String?> recurrenceFrequency,
+  Value<int?> recurrenceInterval,
+  Value<String?> recurrenceWeekdays,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -6821,6 +7005,21 @@ class $$CarePlansTableFilterComposer
 
   ColumnFilters<String> get templateId => $composableBuilder(
     column: $table.templateId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recurrenceFrequency => $composableBuilder(
+    column: $table.recurrenceFrequency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get recurrenceInterval => $composableBuilder(
+    column: $table.recurrenceInterval,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recurrenceWeekdays => $composableBuilder(
+    column: $table.recurrenceWeekdays,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6889,6 +7088,21 @@ class $$CarePlansTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get recurrenceFrequency => $composableBuilder(
+    column: $table.recurrenceFrequency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get recurrenceInterval => $composableBuilder(
+    column: $table.recurrenceInterval,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recurrenceWeekdays => $composableBuilder(
+    column: $table.recurrenceWeekdays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -6940,6 +7154,21 @@ class $$CarePlansTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get recurrenceFrequency => $composableBuilder(
+    column: $table.recurrenceFrequency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get recurrenceInterval => $composableBuilder(
+    column: $table.recurrenceInterval,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recurrenceWeekdays => $composableBuilder(
+    column: $table.recurrenceWeekdays,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -6987,6 +7216,9 @@ class $$CarePlansTableTableManager
                 Value<DateTime?> startAt = const Value.absent(),
                 Value<DateTime?> endAt = const Value.absent(),
                 Value<String?> templateId = const Value.absent(),
+                Value<String?> recurrenceFrequency = const Value.absent(),
+                Value<int?> recurrenceInterval = const Value.absent(),
+                Value<String?> recurrenceWeekdays = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -7000,6 +7232,9 @@ class $$CarePlansTableTableManager
                 startAt: startAt,
                 endAt: endAt,
                 templateId: templateId,
+                recurrenceFrequency: recurrenceFrequency,
+                recurrenceInterval: recurrenceInterval,
+                recurrenceWeekdays: recurrenceWeekdays,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -7015,6 +7250,9 @@ class $$CarePlansTableTableManager
                 Value<DateTime?> startAt = const Value.absent(),
                 Value<DateTime?> endAt = const Value.absent(),
                 Value<String?> templateId = const Value.absent(),
+                Value<String?> recurrenceFrequency = const Value.absent(),
+                Value<int?> recurrenceInterval = const Value.absent(),
+                Value<String?> recurrenceWeekdays = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -7028,6 +7266,9 @@ class $$CarePlansTableTableManager
                 startAt: startAt,
                 endAt: endAt,
                 templateId: templateId,
+                recurrenceFrequency: recurrenceFrequency,
+                recurrenceInterval: recurrenceInterval,
+                recurrenceWeekdays: recurrenceWeekdays,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

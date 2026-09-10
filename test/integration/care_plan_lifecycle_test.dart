@@ -185,6 +185,37 @@ void main() {
     expect(await repo.getCarePlan(plan.id), isNull);
   });
 
+  test('计划周期：模板创建可自定义重复规则并持久化', () async {
+    const custom = TaskRecurrence(
+      frequency: RecurrenceFrequency.weekly,
+      interval: 1,
+      weekdays: [2, 4], // 周二 / 周四
+    );
+    final plan = photoTemplate.buildCarePlan(
+      patientId: localPatientId,
+      diseaseId: 'd1',
+      startAt: DateTime(2026, 9, 8, 9),
+      endAtMonths: photoTemplate.defaultEndAtMonths,
+      recurrence: custom,
+    );
+    await repo.saveCarePlan(plan);
+
+    final loaded = await repo.getCarePlan(plan.id);
+    expect(loaded!.recurrence, isNotNull);
+    expect(loaded.recurrence!.frequency, RecurrenceFrequency.weekly);
+    expect(loaded.recurrence!.weekdays, [2, 4]);
+
+    // 首任务沿用计划周期。
+    final task = photoTemplate.buildFirstTask(
+      patientId: localPatientId,
+      diseaseId: 'd1',
+      carePlanId: plan.id,
+      dueAt: DateTime(2026, 9, 8, 9),
+      recurrence: custom,
+    );
+    expect(task.recurrence.weekdays, [2, 4]);
+  });
+
   test('档案可选项：体重/身高保存并读回，可清除', () async {
     await bootstrapLocalPatient(repo);
     final patient = await repo.watchPatient(localPatientId).first;

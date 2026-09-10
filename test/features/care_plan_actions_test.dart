@@ -60,17 +60,22 @@ void main() {
     await tester.tap(find.text('白癜风'));
     await settle();
 
-    // 点模板卡创建计划。
+    // 点模板卡 → 周期设置弹层 → 应用创建计划。
     await tester.scrollUntilVisible(find.text('308nm 光疗'), 120);
     await tester.pump();
     await tester.tap(find.text('308nm 光疗').first);
+    await settle();
+    expect(find.text('设置计划周期'), findsOneWidget, reason: '应用前先设置周期');
+    await tester.tap(find.widgetWithText(FilledButton, '应用并创建'));
     await settle(500);
-    expect(await planCount(), 1, reason: '首次点击创建一份计划');
+    expect(await planCount(), 1, reason: '应用模板创建一份计划');
 
-    // 防重：再次点击同一模板卡 → 不重复创建。
+    // 防重：再次点击同一模板卡 → 仍先弹设置，应用后不重复创建。
     await tester.tap(find.text('308nm 光疗').first);
+    await settle();
+    await tester.tap(find.widgetWithText(FilledButton, '应用并创建'));
     await settle(500);
-    expect(await planCount(), 1, reason: '同模板已有计划时二次点击不再创建');
+    expect(await planCount(), 1, reason: '同模板已有计划时二次创建不再生成');
 
     final plan = (await tester.runAsync(
       () => repo.watchCarePlans(localPatientId).first,

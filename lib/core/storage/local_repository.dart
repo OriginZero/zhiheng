@@ -62,6 +62,13 @@ CarePlan carePlanFromRow(CarePlanRow d) => CarePlan(
   status: CarePlanStatus.values.byName(d.status),
   startAt: d.startAt,
   endAt: d.endAt,
+  recurrence: d.recurrenceFrequency == null
+      ? null
+      : TaskRecurrence(
+          frequency: RecurrenceFrequency.values.byName(d.recurrenceFrequency!),
+          interval: d.recurrenceInterval ?? 1,
+          weekdays: TaskRecurrence.weekdaysFromJson(d.recurrenceWeekdays),
+        ),
   templateId: d.templateId,
   createdAt: d.createdAt,
   updatedAt: d.updatedAt,
@@ -366,6 +373,21 @@ class LocalRepository {
             status: plan.status.name,
             startAt: Value(plan.startAt),
             endAt: Value(plan.endAt),
+            recurrenceFrequency: Value(
+              (plan.recurrence?.isRecurring ?? false)
+                  ? plan.recurrence!.frequency.name
+                  : null,
+            ),
+            recurrenceInterval: Value(
+              (plan.recurrence?.isRecurring ?? false)
+                  ? plan.recurrence!.interval
+                  : null,
+            ),
+            recurrenceWeekdays: Value(
+              (plan.recurrence?.isRecurring ?? false)
+                  ? plan.recurrence!.weekdaysJson
+                  : null,
+            ),
             templateId: Value(plan.templateId),
             createdAt: plan.createdAt ?? now,
             updatedAt: now,
@@ -394,9 +416,16 @@ class LocalRepository {
         .map((rows) => rows.map(taskFromRow).toList());
   }
 
+  /// 未来 7 天待办（首页「近期待办」）。
+  ///
+  /// 窗口从明天 00:00 起（不含今天剩余时段）：今天到期且未完成的任务已由
+  /// 首页「今日管理」承载，不应在同一页「近期待办」重复出现。
   Stream<List<Task>> watchUpcomingTasks(String patientId, {int days = 7}) {
-    final start = _now();
-    final end = start.add(Duration(days: days));
+    final now = _now();
+    // 取明天零点而非 now：避免「今天到期」的边界任务（例如刚创建的任务）
+    // 同时命中今日与未来两个查询，导致首页同一任务渲染两次。
+    final start = DateTime(now.year, now.month, now.day + 1);
+    final end = now.add(Duration(days: days));
     return (_db.select(_db.tasks)
           ..where(
             (t) =>

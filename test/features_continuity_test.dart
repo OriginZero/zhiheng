@@ -181,10 +181,16 @@ void main() {
     );
     await tester.pump();
 
-    // 点击「308nm 光疗」模板卡（可能需滚动到可见）。
+    // 点击「308nm 光疗」模板卡（可能需滚动到可见）→ 周期设置弹层。
     await tester.scrollUntilVisible(find.text('308nm 光疗'), 120);
     await tester.pump();
     await tester.tap(find.text('308nm 光疗'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // 确认周期设置 → 应用创建。
+    expect(find.text('设置计划周期'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, '应用并创建'));
     await tester.pump();
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 500)),

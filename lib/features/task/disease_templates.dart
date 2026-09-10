@@ -44,6 +44,7 @@ class DiseaseTaskTemplate {
     required String diseaseId,
     required DateTime startAt,
     int? endAtMonths,
+    TaskRecurrence? recurrence,
   }) {
     final endAt = endAtMonths == null
         ? null
@@ -57,21 +58,27 @@ class DiseaseTaskTemplate {
       status: CarePlanStatus.active,
       startAt: startAt,
       endAt: endAt,
+      recurrence: recurrence ?? defaultRecurrence,
       templateId: id,
     );
   }
 
   /// 生成计划的首条任务（CarePlan → Task，链的锚点）。
+  ///
+  /// [recurrence] 为计划周期；缺省用模板默认。计划已存周期时调用方传入，
+  /// 保证任务链与计划一致。
   Task buildFirstTask({
     required String patientId,
     required String diseaseId,
     required String carePlanId,
     required DateTime dueAt,
+    TaskRecurrence? recurrence,
   }) {
-    final recurrence = TaskRecurrence(
-      frequency: defaultRecurrence.frequency,
-      interval: defaultRecurrence.interval,
-      weekdays: defaultRecurrence.weekdays,
+    final rule = recurrence ?? defaultRecurrence;
+    final taskRecurrence = TaskRecurrence(
+      frequency: rule.frequency,
+      interval: rule.interval,
+      weekdays: rule.weekdays,
       endAt: null, // 由计划生命周期控制，而非任务自身
       anchor: dueAt,
     );
@@ -86,7 +93,7 @@ class DiseaseTaskTemplate {
       source: source,
       priority: TaskPriority.required,
       dueAt: dueAt,
-      recurrence: recurrence,
+      recurrence: taskRecurrence,
       templateId: id,
     );
   }

@@ -1,4 +1,5 @@
 import 'enums.dart';
+import 'recurrence.dart';
 
 /// 患者档案。
 ///
@@ -135,6 +136,7 @@ class CarePlan {
     this.status = CarePlanStatus.active,
     this.startAt,
     this.endAt,
+    this.recurrence,
     this.templateId,
     this.createdAt,
     this.updatedAt,
@@ -150,6 +152,9 @@ class CarePlan {
   final CarePlanStatus status;
   final DateTime? startAt;
   final DateTime? endAt;
+
+  /// 计划的重复规则（任务链从此派生，用户可在应用模板前调整）。
+  final TaskRecurrence? recurrence;
 
   /// 实例化该计划的模板 id（PlanDefinition 层，来源可追踪）。
   final String? templateId;
@@ -170,6 +175,8 @@ class CarePlan {
     bool clearStartAt = false,
     DateTime? endAt,
     bool clearEndAt = false,
+    TaskRecurrence? recurrence,
+    bool clearRecurrence = false,
     String? templateId,
     bool clearTemplateId = false,
     DateTime? createdAt,
@@ -185,6 +192,8 @@ class CarePlan {
       status: status ?? this.status,
       startAt: clearStartAt ? null : (startAt ?? this.startAt),
       endAt: clearEndAt ? null : (endAt ?? this.endAt),
+      recurrence:
+          clearRecurrence ? null : (recurrence ?? this.recurrence),
       templateId:
           clearTemplateId ? null : (templateId ?? this.templateId),
       createdAt: createdAt ?? this.createdAt,

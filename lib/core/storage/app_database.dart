@@ -55,6 +55,16 @@ class CarePlans extends Table {
   /// 实例化该计划的模板 id（PlanDefinition 层，来源可追踪）。
   TextColumn get templateId => text().nullable()();
 
+  // ---- 计划的重复规则（任务链从此派生；null 视为不重复）----
+  /// none / daily / weekly / monthly。
+  TextColumn get recurrenceFrequency => text().nullable()();
+
+  /// 间隔：每 N 天 / 每 N 周 / 每 N 月。
+  IntColumn get recurrenceInterval => integer().nullable()();
+
+  /// JSON 数组，元素为 DateTime.weekday（1=周一 … 7=周日），仅每周重复使用。
+  TextColumn get recurrenceWeekdays => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -258,7 +268,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -304,6 +314,12 @@ class AppDatabase extends _$AppDatabase {
           if (from < 9) {
             await m.addColumn(patients, patients.weightKg);
             await m.addColumn(patients, patients.heightCm);
+          }
+          // v10：管理计划重复规则（任务链从此派生）。
+          if (from < 10) {
+            await m.addColumn(carePlans, carePlans.recurrenceFrequency);
+            await m.addColumn(carePlans, carePlans.recurrenceInterval);
+            await m.addColumn(carePlans, carePlans.recurrenceWeekdays);
           }
         },
       );

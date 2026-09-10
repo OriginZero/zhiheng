@@ -7,6 +7,7 @@ import '../../app/providers/task_providers.dart';
 import '../../core/storage/local_repository.dart';
 import '../../core/theme/theme.dart';
 import '../../features/task/disease_templates.dart';
+import '../../features/task/template_apply_sheet.dart';
 import '../phototherapy/phototherapy_task_flow.dart';
 import '../diabetes/diabetes_check_task_flow.dart';
 import '../diabetes/glucose_task_flow.dart';
@@ -207,7 +208,7 @@ class _TemplateCardState extends ConsumerState<_TemplateCard> {
       margin: const EdgeInsets.only(bottom: SpacingTokens.x2),
       child: InkWell(
         borderRadius: RadiusTokens.mediumShape,
-        onTap: _busy ? null : _create,
+        onTap: _busy ? null : _apply,
         child: Padding(
           padding: const EdgeInsets.all(SpacingTokens.x4),
           child: Column(
@@ -241,7 +242,7 @@ class _TemplateCardState extends ConsumerState<_TemplateCard> {
               ],
               SizedBox(height: SpacingTokens.x2),
               Text(
-                '按此模板创建 → 今天立即开始第一次治疗（出现在首页今日管理），'
+                '点击设置周期并创建 → 今天立即开始第一次治疗（出现在首页今日管理），'
                 '之后按实际治疗日自动排程下一次',
                 style: context.captionStyle.copyWith(color: scheme.primary),
               ),
@@ -252,7 +253,14 @@ class _TemplateCardState extends ConsumerState<_TemplateCard> {
     );
   }
 
-  Future<void> _create() async {
+  /// 先让用户设置计划周期，确认后再创建；取消则不创建。
+  Future<void> _apply() async {
+    final recurrence = await showTemplateApplySheet(context, template);
+    if (recurrence == null || !mounted) return;
+    await _create(recurrence);
+  }
+
+  Future<void> _create(TaskRecurrence recurrence) async {
     if (_busy) return;
     _busy = true;
     try {
@@ -277,7 +285,7 @@ class _TemplateCardState extends ConsumerState<_TemplateCard> {
 
       // 模板创建后立即开始：首次任务就是现在（今天出现在首页「今日管理」）。
       // 光疗链随后按实际完成时刻排程下一次（见 recurrence.nextPhototherapyOccurrence），
-      // 因此从任何一天开始都保持每周 2～3 次、间隔 ≥2 天的模板节奏。
+      // 因此从任何一天开始都保持用户设定的周期节奏。
       final dueAt = DateTime.now();
 
       // 1. 模板实例化为管理计划（PlanDefinition → CarePlan）。
@@ -288,6 +296,7 @@ class _TemplateCardState extends ConsumerState<_TemplateCard> {
         endAtMonths: template.defaultEndAtMonths > 0
             ? template.defaultEndAtMonths
             : null,
+        recurrence: recurrence,
       );
       await repo.saveCarePlan(plan);
 
@@ -297,6 +306,7 @@ class _TemplateCardState extends ConsumerState<_TemplateCard> {
         diseaseId: disease.id,
         carePlanId: plan.id,
         dueAt: dueAt,
+        recurrence: recurrence,
       );
       await repo.saveTask(task);
 
@@ -380,6 +390,9 @@ class _PlanTile extends ConsumerWidget {
     final template = DiseaseTemplates.all
         .where((t) => t.id == plan.templateId)
         .firstOrNull;
+    // 显示用户设定的周期；旧计划无周期时回退模板默认。
+    final recurrenceLabel =
+        plan.recurrence?.descriptionZh ?? template?.defaultRecurrence.descriptionZh;
 
     final actions = switch (plan.status) {
       CarePlanStatus.active => [
@@ -429,10 +442,10 @@ class _PlanTile extends ConsumerWidget {
               SizedBox(height: SpacingTokens.x1),
               Text(plan.description!, style: context.secondaryLabelStyle),
             ],
-            if (template != null) ...[
+            if (recurrenceLabel != null) ...[
               SizedBox(height: SpacingTokens.x1),
               Text(
-                '周期：${template.defaultRecurrence.descriptionZh}'
+                '周期：$recurrenceLabel'
                 '${plan.endAt != null ? ' · 至 ${DateFormat('yyyy/M').format(plan.endAt!)}' : ''}',
                 style: context.captionStyle.copyWith(color: scheme.primary),
               ),
@@ -502,6 +515,7 @@ class _PlanTile extends ConsumerWidget {
           diseaseId: plan.diseaseId!,
           carePlanId: plan.id,
           dueAt: now,
+          recurrence: plan.recurrence,
         );
         await repo.saveTask(task);
         restarted = true;
